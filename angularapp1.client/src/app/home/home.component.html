@@ -1,0 +1,39 @@
+<div class="home">
+  <div class="home__bg" aria-hidden="true">
+    <span class="home__blob home__blob--1"></span>
+    <span class="home__blob home__blob--2"></span>
+    <span class="home__blob home__blob--3"></span>
+  </div>
+
+  <main class="home__panel">
+    <header class="home__header">
+      <div class="home__logo-glow" aria-hidden="true"></div>
+      <img
+        class="home__logo"
+        src="assets/rekord-logo.png"
+        alt="REKORD – Systemy Informatyczne"
+      />
+      <p class="home__subtitle">System kluczykowy · Bielsko-Biała</p>
+    </header>
+
+    <nav class="home__actions" aria-label="Główne operacje">
+      <button
+        class="home__btn home__btn--take"
+        type="button"
+        routerLink="/scanner"
+        [queryParams]="{ mode: 'take' }"
+      >
+        ZABIERZ AUTO
+      </button>
+
+      <button
+        class="home__btn home__btn--return"
+        type="button"
+        routerLink="/scanner"
+        [queryParams]="{ mode: 'return' }"
+      >
+        ODDAJ AUTO
+      </button>
+    </nav>
+  </main>
+</div>

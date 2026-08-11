@@ -1,0 +1,86 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(139, 196, 138, 0.28) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 90%, rgba(123, 167, 232, 0.22) 0%, transparent 45%),
+    linear-gradient(165deg, #f4f8f4 0%, #eef3f9 40%, #e8eef6 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input {
+  font-family: inherit;
+  outline: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+
+  img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+    filter: contrast(1.06) saturate(1.08);
+  }
+
+  &--scanner {
+    width: 100%;
+    max-width: 240px;
+    padding: 0.25rem 0;
+  }
+}
+
+#qr-reader {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 380px;
+
+  video {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 380px !important;
+    object-fit: cover !important;
+  }
+
+  #qr-reader__scan_region,
+  #qr-reader__scan_region > div {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 380px !important;
+  }
+}

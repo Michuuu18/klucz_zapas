@@ -1,0 +1,66 @@
+<div class="scanner">
+  <button class="scanner__back" type="button" routerLink="/">
+    WSTECZ
+  </button>
+
+  <header class="scanner__header">
+    <div class="brand-logo brand-logo--scanner">
+      <img
+        src="assets/rekord-logo.png"
+        alt="REKORD – Systemy Informatyczne"
+      />
+    </div>
+    <h1 class="scanner__title">{{ pageTitle }}</h1>
+  </header>
+
+  <div class="scanner__card">
+    <h2 class="scanner__card-title">Skanowanie kluczyka</h2>
+    <p class="scanner__card-hint">
+      Skieruj kamerę na kod QR przypisany do kluczyka.
+    </p>
+
+    <div class="scanner__viewport">
+      <div [id]="scannerElementId" class="scanner__reader"></div>
+
+      @if (cameraStatus === 'loading') {
+        <div class="scanner__overlay">
+          <span class="scanner__overlay-spinner"></span>
+          <p>Łączenie z kamerą…</p>
+          <small>Przeglądarka poprosi o dostęp do kamery</small>
+        </div>
+      }
+
+      @if (cameraStatus === 'denied' || cameraStatus === 'error') {
+        <div class="scanner__overlay scanner__overlay--error">
+          <p>{{ cameraError }}</p>
+          <button
+            class="scanner__camera-btn"
+            type="button"
+            (click)="startScanner()"
+          >
+            WŁĄCZ KAMERĘ
+          </button>
+        </div>
+      }
+    </div>
+
+    <section class="scanner__manual">
+      <label class="scanner__manual-label" for="manual-code">
+        Tryb ręczny
+      </label>
+      <div class="scanner__manual-row">
+        <input
+          id="manual-code"
+          class="scanner__manual-input"
+          type="text"
+          placeholder="Wpisz kod z kluczyka"
+          [(ngModel)]="manualCode"
+          (keydown.enter)="submitManualCode()"
+        />
+        <button class="scanner__manual-btn" type="button" (click)="submitManualCode()">
+          DALEJ
+        </button>
+      </div>
+    </section>
+  </div>
+</div>

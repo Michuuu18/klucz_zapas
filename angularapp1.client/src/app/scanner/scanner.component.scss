@@ -1,0 +1,226 @@
+.scanner {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1.25rem 2.5rem;
+}
+
+.scanner__back {
+  align-self: flex-start;
+  margin-bottom: 1.5rem;
+  padding: 0.45rem 1.1rem;
+  border: 1.5px solid #b8bec8;
+  border-radius: 8px;
+  background: transparent;
+  color: #5c6573;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.55);
+    border-color: #9aa3b0;
+  }
+}
+
+.scanner__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  width: 100%;
+  max-width: 560px;
+}
+
+.scanner__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2c3440;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.scanner__card {
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  box-shadow: 0 6px 24px rgba(30, 50, 80, 0.1);
+}
+
+.scanner__card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e3a6e;
+  margin-bottom: 0.5rem;
+}
+
+.scanner__card-hint {
+  font-size: 0.9rem;
+  color: #7a8494;
+  margin-bottom: 1.25rem;
+}
+
+.scanner__viewport {
+  position: relative;
+  width: 100%;
+  height: min(55vh, 480px);
+  min-height: 380px;
+  border: 2.5px solid #27529f;
+  border-radius: 12px;
+  background: #0f1419;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.scanner__reader {
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+
+  :is(#qr-reader__scan_region, #qr-reader__scan_region > div) {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 380px !important;
+  }
+
+  video {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 380px !important;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  img {
+    display: none !important;
+  }
+}
+
+.scanner__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  background: rgba(245, 247, 250, 0.95);
+  color: #4a5568;
+
+  p {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2c3440;
+  }
+
+  small {
+    font-size: 0.78rem;
+    color: #7a8494;
+  }
+
+  &--error p {
+    color: #b03a31;
+    max-width: 280px;
+    line-height: 1.4;
+  }
+}
+
+.scanner__overlay-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #c8d4e8;
+  border-top-color: #27529f;
+  border-radius: 50%;
+  animation: scanner-spin 0.8s linear infinite;
+}
+
+@keyframes scanner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scanner__camera-btn {
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  background-color: #27529f;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 12px rgba(39, 82, 159, 0.28);
+
+  &:hover {
+    background-color: #1f4485;
+  }
+}
+
+.scanner__manual {
+  border-top: 1px solid #e8ecf1;
+  padding-top: 1.25rem;
+}
+
+.scanner__manual-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.65rem;
+}
+
+.scanner__manual-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.scanner__manual-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #c8ced8;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  background: #fff;
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: #a0a8b4;
+  }
+
+  &:focus {
+    border-color: #27529f;
+  }
+}
+
+.scanner__manual-btn {
+  flex-shrink: 0;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  background-color: #27529f;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 12px rgba(39, 82, 159, 0.28);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background-color: #1f4485;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}

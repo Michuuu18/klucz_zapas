@@ -1,0 +1,75 @@
+<div class="details">
+  <button class="details__back" type="button" (click)="goBack()">
+    WSTECZ
+  </button>
+
+  <header class="details__header">
+    <div class="brand-logo brand-logo--scanner">
+      <img src="assets/rekord-logo.png" alt="REKORD – Systemy Informatyczne" />
+    </div>
+    <h1 class="details__title">{{ pageTitle }}</h1>
+  </header>
+
+  @if (loading) {
+    <div class="details__card">
+      <p class="details__card-hint">Ładowanie danych pojazdu…</p>
+    </div>
+  } @else if (record) {
+    <div class="details__card">
+      <div class="details__badge" [class.details__badge--return]="mode === 'return'">
+        {{ mode === 'return' ? 'Oddawanie auta' : 'Pobieranie auta' }}
+      </div>
+
+      <h2 class="details__card-title">Dane pojazdu</h2>
+      <p class="details__card-hint">
+        Kod QR: <strong>{{ record.qrCode }}</strong>
+      </p>
+
+      <dl class="details__list">
+        <div class="details__row">
+          <dt>Marka samochodu</dt>
+          <dd>{{ record.brand }}</dd>
+        </div>
+        <div class="details__row">
+          <dt>Rejestracja</dt>
+          <dd class="details__registration">{{ record.registration }}</dd>
+        </div>
+        <div class="details__row">
+          <dt>Nr kluczyka</dt>
+          <dd class="details__key-number">{{ record.keyNumber }}</dd>
+        </div>
+      </dl>
+
+      @if (error) {
+        <p class="details__error">{{ error }}</p>
+      }
+
+      <button
+        class="details__confirm"
+        type="button"
+        [disabled]="confirming"
+        (click)="confirm()"
+      >
+        {{ confirming
+          ? 'Przetwarzanie…'
+          : (mode === 'return' ? 'POTWIERDŹ ODDANIE' : 'POTWIERDŹ POBRANIE') }}
+      </button>
+    </div>
+  } @else {
+    <div class="details__card details__card--error">
+      <h2 class="details__card-title">{{ error || 'Nie znaleziono kluczyka' }}</h2>
+      <p class="details__card-hint">
+        Kod <strong>{{ code }}</strong>
+        @if (!error || error === 'Nie znaleziono kluczyka') {
+          nie jest przypisany do żadnego pojazdu.
+        }
+      </p>
+      <button class="details__confirm details__confirm--secondary" type="button" (click)="loadCar()">
+        SPRÓBUJ PONOWNIE
+      </button>
+      <button class="details__confirm details__confirm--secondary" type="button" (click)="goBack()" style="margin-top: 0.75rem;">
+        WSTECZ DO SKANERA
+      </button>
+    </div>
+  }
+</div>

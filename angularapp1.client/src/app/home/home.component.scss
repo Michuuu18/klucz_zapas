@@ -1,0 +1,139 @@
+.home {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  overflow: hidden;
+}
+
+.home__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.home__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+
+  &--1 {
+    width: 340px;
+    height: 340px;
+    top: -80px;
+    right: -60px;
+    background: radial-gradient(circle, #8bc48a 0%, transparent 70%);
+  }
+
+  &--2 {
+    width: 420px;
+    height: 420px;
+    bottom: -120px;
+    left: -100px;
+    background: radial-gradient(circle, #7ba7e8 0%, transparent 70%);
+  }
+
+  &--3 {
+    width: 260px;
+    height: 260px;
+    top: 45%;
+    left: 55%;
+    background: radial-gradient(circle, #c5dfc4 0%, transparent 70%);
+  }
+}
+
+.home__panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 450px;
+  padding: 2.25rem 1.75rem 1.75rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 20px 50px rgba(39, 82, 159, 0.12),
+    0 4px 16px rgba(27, 94, 32, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+.home__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+
+.home__logo-glow {
+  position: absolute;
+  top: 1.5rem;
+  width: 280px;
+  height: 100px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(139, 196, 138, 0.35) 0%,
+    rgba(238, 243, 249, 0) 70%
+  );
+  pointer-events: none;
+}
+
+.home__logo {
+  position: relative;
+  width: 100%;
+  max-width: 290px;
+  height: auto;
+  margin-bottom: 0.55rem;
+  mix-blend-mode: multiply;
+  filter: contrast(1.08) saturate(1.1);
+}
+
+.home__subtitle {
+  font-size: 0.95rem;
+  color: #6b7b8b;
+  letter-spacing: 0.01em;
+}
+
+.home__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.home__btn {
+  display: block;
+  width: 100%;
+  padding: 1.15rem 1.25rem;
+  border-radius: 16px;
+  color: #fff;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+
+  &--take {
+    background: linear-gradient(135deg, #2f5fa8 0%, #27529f 55%, #1e3a6e 100%);
+  }
+
+  &--return {
+    background: linear-gradient(135deg, #c44a3f 0%, #b03a31 55%, #8f2e27 100%);
+  }
+}
+
