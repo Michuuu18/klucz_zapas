@@ -7,6 +7,13 @@ Aplikacja do pobierania i oddawania kluczyków samochodowych.
 - `angularapp1.client` — frontend Angular
 - `AngularApp1.Server` — backend ASP.NET Core (API)
 
+## Adresy (dla wszystkich takie same)
+
+| Co | Adres |
+|----|--------|
+| Frontend | `https://localhost:4200` |
+| Backend API | `http://localhost:5296` |
+
 ## Jak uruchomić
 
 Muszą działać **dwa procesy** naraz:
@@ -18,22 +25,21 @@ cd AngularApp1.Server
 dotnet run --launch-profile api
 ```
 
-API działa na: `http://localhost:5296`
-
 ### 2. Frontend — w drugim terminalu
 
 ```bash
 cd angularapp1.client
+npm install
 npm start
 ```
 
-Wejdź na: `https://localhost:52728`
+Wejdź na: **https://localhost:4200**
 
 ### Albo Visual Studio
 
 1. Otwórz `AngularApp1.slnx`
 2. Startowy projekt: **AngularApp1.Server**
-3. Profil: **https** (odpala API + frontend przez SpaProxy)
+3. Profil: **https**
 4. **F5**
 
 > Jeśli widzisz „Ładowanie danych pojazdu…” bez końca — backend nie działa. Uruchom `dotnet run --launch-profile api`.
