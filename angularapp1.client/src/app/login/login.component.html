@@ -1,0 +1,51 @@
+﻿<div class="login">
+  <div class="login__bg" aria-hidden="true">
+    <span class="login__blob login__blob--1"></span>
+    <span class="login__blob login__blob--2"></span>
+  </div>
+
+  <main class="login__panel">
+    <header class="login__header">
+      <img
+        class="login__logo"
+        src="assets/rekord-logo.png"
+        alt="REKORD – Systemy Informatyczne"
+      />
+      <p class="login__subtitle">System kluczykowy · Bielsko-Biała</p>
+    </header>
+
+    <form class="login__form" (ngSubmit)="submit()">
+      <label class="login__label" for="username">Login</label>
+      <input
+        id="username"
+        class="login__input"
+        type="text"
+        name="username"
+        autocomplete="username"
+        placeholder="np. admin"
+        [(ngModel)]="username"
+        [disabled]="loading"
+      />
+
+      <label class="login__label" for="password">Hasło</label>
+      <input
+        id="password"
+        class="login__input"
+        type="password"
+        name="password"
+        autocomplete="current-password"
+        placeholder="••••••••"
+        [(ngModel)]="password"
+        [disabled]="loading"
+      />
+
+      @if (error) {
+        <p class="login__error">{{ error }}</p>
+      }
+
+      <button class="login__btn" type="submit" [disabled]="loading">
+        {{ loading ? 'LOGOWANIE…' : 'ZALOGUJ SIĘ' }}
+      </button>
+    </form>
+  </main>
+</div>

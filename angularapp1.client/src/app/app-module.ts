@@ -5,8 +5,10 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
+import { AdminComponent } from './admin/admin.component';
 import { HomeComponent } from './home/home.component';
 import { KeyDetailsComponent } from './key-details/key-details.component';
+import { LoginComponent } from './login/login.component';
 import { ScannerComponent } from './scanner/scanner.component';
 
 @NgModule({
@@ -15,6 +17,8 @@ import { ScannerComponent } from './scanner/scanner.component';
     HomeComponent,
     ScannerComponent,
     KeyDetailsComponent,
+    LoginComponent,
+    AdminComponent,
   ],
   imports: [
     BrowserModule,

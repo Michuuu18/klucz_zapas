@@ -10,6 +10,7 @@ builder.Services.AddControllers()
     });
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<CarStore>();
+builder.Services.AddSingleton<UserStore>();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
