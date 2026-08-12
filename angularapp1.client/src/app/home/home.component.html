@@ -6,6 +6,20 @@
   </div>
 
   <main class="home__panel">
+    <div class="home__user-bar">
+      <span class="home__user-name">{{ displayName }}</span>
+      <div class="home__user-actions">
+        @if (isAdmin) {
+          <button class="home__user-btn" type="button" (click)="goToAdminPanel()">
+            PANEL ADMINA
+          </button>
+        }
+        <button class="home__user-btn home__user-btn--logout" type="button" (click)="logout()">
+          WYLOGUJ
+        </button>
+      </div>
+    </div>
+
     <header class="home__header">
       <div class="home__logo-glow" aria-hidden="true"></div>
       <img

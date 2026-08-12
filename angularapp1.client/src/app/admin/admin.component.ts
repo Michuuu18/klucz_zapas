@@ -3,27 +3,23 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-admin',
   standalone: false,
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.scss',
+  templateUrl: './admin.component.html',
+  styleUrl: './admin.component.scss',
 })
-export class HomeComponent {
+export class AdminComponent {
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
-  ) {}
+  ) { }
 
   get displayName(): string {
-    return this.auth.currentUser()?.displayName ?? 'Pracownik';
+    return this.auth.currentUser()?.displayName ?? 'Administrator';
   }
 
-  get isAdmin(): boolean {
-    return this.auth.currentUser()?.role === 'Admin';
-  }
-
-  goToAdminPanel(): void {
-    this.router.navigate(['/admin']);
+  goToEmployeePanel(): void {
+    this.router.navigate(['/panel']);
   }
 
   logout(): void {

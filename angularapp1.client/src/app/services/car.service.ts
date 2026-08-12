@@ -9,6 +9,10 @@ export class CarService {
 
   constructor(private readonly http: HttpClient) {}
 
+  getAll(): Observable<Car[]> {
+    return this.http.get<Car[]>(this.apiUrl);
+  }
+
   getByQrCode(code: string): Observable<Car> {
     return this.http.get<Car>(`${this.apiUrl}/by-qr/${encodeURIComponent(code)}`);
   }
