@@ -1,5 +1,7 @@
 using System.Text.Json;
+using AngularApp1.Server.Data;
 using AngularApp1.Server.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,15 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<CarStore>();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Brak ConnectionStrings:DefaultConnection w appsettings.json");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<CarStore>();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -20,6 +30,22 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        DbInitializer.Initialize(db);
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+        logger.LogError(ex,
+            "Nie udało się połączyć z PostgreSQL. Sprawdź hasło w appsettings.json i czy baza 'system_kluczykowy' istnieje w pgAdmin.");
+        throw;
+    }
+}
 
 app.UseDefaultFiles();
 app.MapStaticAssets();
