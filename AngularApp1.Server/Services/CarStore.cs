@@ -1,89 +1,73 @@
+using AngularApp1.Server.Data;
 using AngularApp1.Server.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AngularApp1.Server.Services;
 
 public class CarStore
 {
-    private readonly List<Car> _cars =
-    [
-        new() { Id = 1, Brand = "Toyota Corolla", Registration = "BB 1234A", KeyNumber = "K-001", QrCode = "QR001", Status = "FREE" },
-        new() { Id = 2, Brand = "Volkswagen Passat", Registration = "BB 5678B", KeyNumber = "K-002", QrCode = "QR002", Status = "FREE" },
-        new() { Id = 3, Brand = "Skoda Octavia", Registration = "SB 9012C", KeyNumber = "K-003", QrCode = "QR003", Status = "FREE" },
-        new() { Id = 4, Brand = "Ford Transit", Registration = "BB 3456D", KeyNumber = "K-004", QrCode = "QR004", Status = "FREE" },
-        new() { Id = 5, Brand = "BMW 320d", Registration = "KR 7890E", KeyNumber = "K-005", QrCode = "QR005", Status = "FREE" },
-    ];
+    private readonly AppDbContext _db;
 
-    private readonly object _lock = new();
+    public CarStore(AppDbContext db)
+    {
+        _db = db;
+    }
 
     public IReadOnlyList<Car> GetAll()
     {
-        lock (_lock)
-        {
-            return _cars.Select(Clone).ToList();
-        }
+        return _db.Cars
+            .AsNoTracking()
+            .OrderBy(c => c.Id)
+            .ToList();
     }
 
     public Car? FindByQrCode(string qrCode)
     {
-        lock (_lock)
-        {
-            var car = _cars.FirstOrDefault(c =>
-                string.Equals(c.QrCode, qrCode.Trim(), StringComparison.OrdinalIgnoreCase));
-            return car is null ? null : Clone(car);
-        }
+        var code = qrCode.Trim().ToLowerInvariant();
+        return _db.Cars
+            .AsNoTracking()
+            .FirstOrDefault(c => c.QrCode.ToLower() == code);
     }
 
     public (Car? car, string? error) Take(string qrCode)
     {
-        lock (_lock)
+        var car = FindTracked(qrCode);
+        if (car is null)
         {
-            var car = FindInternal(qrCode);
-            if (car is null)
-            {
-                return (null, "Nie znaleziono kluczyka.");
-            }
-
-            if (car.Status == "IN_USE")
-            {
-                return (null, "To auto jest już zabrane.");
-            }
-
-            car.Status = "IN_USE";
-            return (Clone(car), null);
+            return (null, "Nie znaleziono kluczyka.");
         }
+
+        if (car.Status == "IN_USE")
+        {
+            return (null, "To auto jest już zabrane.");
+        }
+
+        car.Status = "IN_USE";
+        _db.SaveChanges();
+        return (car, null);
     }
 
     public (Car? car, string? error) Return(string qrCode)
     {
-        lock (_lock)
+        var car = FindTracked(qrCode);
+        if (car is null)
         {
-            var car = FindInternal(qrCode);
-            if (car is null)
-            {
-                return (null, "Nie znaleziono kluczyka.");
-            }
-
-            if (car.Status == "FREE")
-            {
-                return (null, "To auto jest już oddane.");
-            }
-
-            car.Status = "FREE";
-            return (Clone(car), null);
+            return (null, "Nie znaleziono kluczyka.");
         }
+
+        if (car.Status == "FREE")
+        {
+            return (null, "To auto jest już oddane.");
+        }
+
+        car.Status = "FREE";
+        _db.SaveChanges();
+        return (car, null);
     }
 
-    private Car? FindInternal(string qrCode) =>
-        _cars.FirstOrDefault(c =>
-            string.Equals(c.QrCode, qrCode.Trim(), StringComparison.OrdinalIgnoreCase));
-
-    private static Car Clone(Car car) => new()
+    private Car? FindTracked(string qrCode)
     {
-        Id = car.Id,
-        Brand = car.Brand,
-        Registration = car.Registration,
-        KeyNumber = car.KeyNumber,
-        QrCode = car.QrCode,
-        Status = car.Status,
-    };
+        var code = qrCode.Trim().ToLowerInvariant();
+        return _db.Cars.FirstOrDefault(c => c.QrCode.ToLower() == code);
+    }
 }

@@ -1,68 +1,62 @@
-# System kluczykowy (Angular + ASP.NET Core)
+﻿# System kluczykowy
 
-Aplikacja do pobierania i oddawania kluczyków samochodowych.
+Prosta aplikacja do zabierania i oddawania kluczykow samochodowych.
+Frontend: Angular. Backend: ASP.NET Core + PostgreSQL.
 
-## Struktura
+## 1. Przygotuj baze w pgAdmin
 
-- `angularapp1.client` — frontend Angular
-- `AngularApp1.Server` — backend ASP.NET Core (API)
+1. Otworz pgAdmin.
+2. Polacz sie z serwerem PostgreSQL (localhost).
+3. PPM na Databases -> Create -> Database.
+4. Name: `system_kluczykowy`
+5. Save.
 
-## Adresy (dla wszystkich takie same)
+## 2. Ustaw haslo w projekcie
 
-| Co | Adres |
-|----|--------|
-| Frontend | `https://localhost:4200` |
-| Backend API | `http://localhost:5296` |
+Otworz plik:
+`AngularApp1.Server/appsettings.json`
 
-## Jak uruchomić
-
-Muszą działać **dwa procesy** naraz:
-
-### 1. Backend (API) — w pierwszym terminalu
-
-```bash
-cd AngularApp1.Server
-dotnet run --launch-profile api
+Zmien:
 ```
-
-### 2. Frontend — w drugim terminalu
-
-```bash
-cd angularapp1.client
-npm install
-npm start
+Password=TWOJE_HASLO
 ```
+na haslo uzytkownika `postgres` z instalacji PostgreSQL.
 
-Wejdź na: **https://localhost:4200**
+Zrob to samo w:
+`AngularApp1.Server/appsettings.Development.json`
 
-### Albo Visual Studio
+## 3. Uruchom aplikacje
 
-1. Otwórz `AngularApp1.slnx`
-2. Startowy projekt: **AngularApp1.Server**
-3. Profil: **https**
-4. **F5**
+1. Uruchom: `1-URUCHOM-API.bat`
+2. Uruchom: `2-URUCHOM-FRONT.bat`
+3. Otworz: **https://localhost:4200**
 
-> Jeśli widzisz „Ładowanie danych pojazdu…” bez końca — backend nie działa. Uruchom `dotnet run --launch-profile api`.
+Przy pierwszym starcie backend sam utworzy tabele `cars` i doda auta testowe.
 
-## Jak korzystać
+## Jak korzystac
 
-1. Na ekranie głównym wybierz **ZABIERZ AUTO** lub **ODDAJ AUTO**
-2. Zeskanuj kod QR albo wpisz kod ręcznie (np. `QR001`)
-3. Sprawdź dane pojazdu i potwierdź
+1. Kliknij **ZABIERZ AUTO** albo **ODDAJ AUTO**
+2. Zeskanuj kod QR lub wpisz go recznie
+3. Potwierdz operacje
 
 ## Kody testowe
 
-| Kod   | Samochód           | Rejestracja |
-|-------|--------------------|-------------|
-| QR001 | Toyota Corolla     | BB 1234A    |
-| QR002 | Volkswagen Passat  | BB 5678B    |
-| QR003 | Skoda Octavia      | SB 9012C    |
-| QR004 | Ford Transit       | BB 3456D    |
-| QR005 | BMW 320d           | KR 7890E    |
+- `QR001`
+- `QR002`
+- `QR003`
+- `QR004`
+- `QR005`
 
-## API
+## Gdy nie dziala
 
-- `GET /api/cars`
-- `GET /api/cars/by-qr/{code}`
-- `POST /api/cars/take` `{ "qrCode": "QR001" }`
-- `POST /api/cars/return` `{ "qrCode": "QR001" }`
+- Jesli blad polaczenia z baza: sprawdz haslo w `appsettings.json`.
+- Jesli baza nie istnieje: utworz `system_kluczykowy` w pgAdmin.
+- Jesli widzisz `localhost:5000` / `5296` w przegladarce: to samo API.
+  Strona jest na **https://localhost:4200**.
+
+## Visual Studio (opcjonalnie)
+
+1. Otworz `AngularApp1.slnx`
+2. Startowy projekt: `AngularApp1.Server`
+3. Profil: `https`
+4. F5
