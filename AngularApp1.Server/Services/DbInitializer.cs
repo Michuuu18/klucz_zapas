@@ -8,7 +8,7 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext db)
     {
-        // Jak w kursie RestaurantAPI: schemat bazy tworzony przez migracje EF Core
+        
         db.Database.Migrate();
 
         if (db.Cars.Any())
