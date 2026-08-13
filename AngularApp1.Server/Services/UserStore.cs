@@ -4,15 +4,6 @@ using AngularApp1.Server.Models;
 
 namespace AngularApp1.Server.Services;
 
-/// <summary>
-/// Prosty magazyn użytkowników w pamięci (na potrzeby wewnętrznego panelu).
-/// Domyślne konta:
-///   admin      / admin123      -> rola Admin
-///   pracownik  / pracownik123  -> rola Pracownik
-/// Hasła nie są przechowywane jawnie - trzymamy tylko ich hash SHA-256.
-/// Aby dodać kolejnego pracownika, wystarczy dopisać wpis do listy poniżej
-/// (użyj metody Hash("nowe_haslo") do wygenerowania wartości PasswordHash).
-/// </summary>
 public class UserStore
 {
     private readonly List<User> _users;
