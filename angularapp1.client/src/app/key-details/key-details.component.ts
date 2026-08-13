@@ -55,6 +55,10 @@ export class KeyDetailsComponent implements OnInit {
         if (status === 0 || status === 502 || status === 504) {
           this.error =
             'Brak połączenia z serwerem API. Uruchom AngularApp1.Server (dotnet run) i odśwież stronę.';
+        } else if (status === 401) {
+          this.error = 'Sesja wygasła. Wyloguj się i zaloguj ponownie.';
+        } else if (status === 403) {
+          this.error = 'Brak uprawnień do pobrania danych pojazdu.';
         } else if (status === 404) {
           this.error = 'Nie znaleziono kluczyka';
         } else {

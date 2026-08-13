@@ -9,7 +9,7 @@ const STORAGE_KEY = 'klucz-zapas.currentUser';
 export class AuthService {
   private readonly apiUrl = '/api/auth';
 
-  /** Aktualnie zalogowany użytkownik (null = brak sesji). */
+  /** Aktualnie zalogowany użytkownik + JWT (null = brak sesji). */
   readonly currentUser = signal<AppUser | null>(this.readFromStorage());
 
   constructor(private readonly http: HttpClient) {}
@@ -28,8 +28,13 @@ export class AuthService {
     sessionStorage.removeItem(STORAGE_KEY);
   }
 
+  /** Token JWT do nagłówka Authorization: Bearer ... */
+  getToken(): string | null {
+    return this.currentUser()?.token ?? null;
+  }
+
   isAuthenticated(): boolean {
-    return this.currentUser() !== null;
+    return !!this.getToken();
   }
 
   hasRole(role: 'Admin' | 'Pracownik'): boolean {
@@ -47,7 +52,13 @@ export class AuthService {
       return null;
     }
     try {
-      return JSON.parse(raw) as AppUser;
+      const user = JSON.parse(raw) as AppUser;
+      // Stara sesja bez tokena (sprzed JWT) — wymuś ponowne logowanie.
+      if (!user?.token) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      return user;
     } catch {
       return null;
     }
