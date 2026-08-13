@@ -12,10 +12,6 @@ builder.Services.AddControllers()
     });
 builder.Services.AddOpenApi();
 
-builder.Services.AddSingleton<CarStore>();
-builder.Services.AddSingleton<UserStore>();
-
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Brak ConnectionStrings:DefaultConnection w appsettings.json");
 
@@ -23,6 +19,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<CarStore>();
+builder.Services.AddSingleton<UserStore>();
 
 builder.Services.AddCors(options =>
 {
