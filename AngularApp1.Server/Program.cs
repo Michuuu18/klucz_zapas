@@ -1,7 +1,14 @@
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
+using AngularApp1.Server;
+using AngularApp1.Server.Authorization;
 using AngularApp1.Server.Data;
 using AngularApp1.Server.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +18,53 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 builder.Services.AddOpenApi();
+
+// --- JWT Authentication (wzorowane na RestaurantAPI Startup.cs) ---
+var authenticationSettings = new AuthenticationSettings();
+builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
+
+if (string.IsNullOrWhiteSpace(authenticationSettings.JwtKey) || authenticationSettings.JwtKey.Length < 32)
+{
+    throw new InvalidOperationException(
+        "Brak lub za krótki Authentication:JwtKey w appsettings.json (min. 32 znaki).");
+}
+
+builder.Services.AddSingleton(authenticationSettings);
+builder.Services.AddSingleton<JwtService>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.MapInboundClaims = false;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidIssuer = authenticationSettings.JwtIssuer,
+        ValidAudience = authenticationSettings.JwtIssuer,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey)),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        RoleClaimType = ClaimTypes.Role,
+        NameClaimType = ClaimTypes.Name,
+        ClockSkew = TimeSpan.FromMinutes(1),
+    };
+});
+
+// Policies jak w RestaurantAPI/Authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("PracownikOrAdmin", policy =>
+        policy.AddRequirements(new RoleRequirement("Pracownik")));
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"));
+});
+builder.Services.AddSingleton<IAuthorizationHandler, RoleRequirementHandler>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Brak ConnectionStrings:DefaultConnection w appsettings.json");
@@ -57,8 +111,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-app.UseHttpsRedirection();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// Kolejność jak w RestaurantAPI: Authentication PRZED Authorization
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 app.MapFallbackToFile("/index.html");
 

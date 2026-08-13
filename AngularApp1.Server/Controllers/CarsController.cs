@@ -1,11 +1,16 @@
 using AngularApp1.Server.Models;
 using AngularApp1.Server.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AngularApp1.Server.Controllers;
 
+/// <summary>
+/// Endpointy aut — chronione JWT jak RestaurantController [Authorize] w kursie.
+/// </summary>
 [ApiController]
 [Route("api/cars")]
+[Authorize]
 public class CarsController : ControllerBase
 {
     private readonly CarStore _cars;
