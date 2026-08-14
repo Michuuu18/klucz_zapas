@@ -16,14 +16,21 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 1.25rem;
+}
+
+.registry__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 h1 {
   margin: 0;
   font-size: 1.55rem;
+  font-weight: 800;
 }
 
 h2 {
@@ -31,17 +38,11 @@ h2 {
   font-size: 1.15rem;
 }
 
-.registry__subtitle {
-  margin: 0.35rem 0 0;
+.registry__sync {
+  margin: 0;
   color: #5a6f82;
-  font-size: 0.95rem;
-}
-
-.registry__user {
-  margin: 0.25rem 0 0;
-  color: #1565a8;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .registry__actions {

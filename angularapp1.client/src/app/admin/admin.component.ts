@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -14,9 +14,14 @@ type FormMode = 'closed' | 'create' | 'edit';
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss',
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
+  private static readonly AUTO_REFRESH_MS = 3000;
+  private refreshTimer?: ReturnType<typeof setInterval>;
+
   readonly rows = signal<Car[]>([]);
   readonly loading = signal(false);
+  readonly autoRefreshing = signal(false);
+  readonly lastSyncedAt = signal<Date | null>(null);
   readonly saving = signal(false);
   readonly returningId = signal<number | null>(null);
   readonly takingId = signal<number | null>(null);
@@ -50,21 +55,38 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadRegistry();
+    this.refreshTimer = setInterval(() => this.loadRegistry(true), AdminComponent.AUTO_REFRESH_MS);
   }
 
-  loadRegistry(): void {
-    this.loading.set(true);
-    this.error.set('');
+  ngOnDestroy(): void {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
+  }
+
+  loadRegistry(silent = false): void {
+    if (!silent) {
+      this.loading.set(true);
+      this.error.set('');
+    } else {
+      this.autoRefreshing.set(true);
+    }
+
     this.cars.getRegistry().subscribe({
       next: (data) => {
         this.rows.set(data);
+        this.lastSyncedAt.set(new Date());
         this.loading.set(false);
+        this.autoRefreshing.set(false);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(
-          err?.error?.message ?? err?.message ?? 'Nie udało się pobrać rejestru.',
-        );
+        this.autoRefreshing.set(false);
+        if (!silent) {
+          this.error.set(
+            err?.error?.message ?? err?.message ?? 'Nie udało się pobrać rejestru.',
+          );
+        }
       },
     });
   }

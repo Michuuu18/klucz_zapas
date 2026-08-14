@@ -1,11 +1,16 @@
 <div class="registry">
   <header class="registry__top">
-    <div>
-      <h1>Rejestr aut</h1>
-      <p class="registry__subtitle">
-        Panel administratora — podgląd floty, szybkie zabieranie i zwracanie kluczyków
-      </p>
-      <p class="registry__user">Zalogowano jako {{ displayName }}</p>
+    <div class="registry__head">
+      <h1>Panel administratora</h1>
+      @if (lastSyncedAt()) {
+        <p class="registry__sync">
+          @if (autoRefreshing()) {
+            Synchronizacja…
+          } @else {
+            Zsynchronizowano {{ lastSyncedAt() | date: 'HH:mm:ss' }}
+          }
+        </p>
+      }
     </div>
     <div class="registry__actions">
       <button type="button" class="btn btn--primary" (click)="openCreate()">Dodaj auto</button>
