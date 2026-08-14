@@ -39,6 +39,16 @@
         [disabled]="loading"
       />
 
+      <label class="login__remember">
+        <input
+          type="checkbox"
+          name="rememberMe"
+          [(ngModel)]="rememberMe"
+          [disabled]="loading"
+        />
+        <span>Zapamiętaj mnie</span>
+      </label>
+
       @if (error) {
         <p class="login__error">{{ error }}</p>
       }

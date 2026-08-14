@@ -7,6 +7,7 @@ using AngularApp1.Server.Data;
 using AngularApp1.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -84,6 +85,13 @@ builder.Services.AddCors(options =>
             .SetIsOriginAllowed(_ => true));
 });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -112,7 +120,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 
-if (!app.Environment.IsDevelopment())
+app.UseForwardedHeaders();
+
+var useHttpsRedirection = builder.Configuration.GetValue("UseHttpsRedirection", !app.Environment.IsDevelopment());
+if (useHttpsRedirection)
 {
     app.UseHttpsRedirection();
 }

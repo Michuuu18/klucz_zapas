@@ -1,21 +1,25 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { ActivatedRoute, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-/** Wymaga zalogowania (dowolna rola). */
-export const authGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+function redirectToLogin(returnUrl: string) {
   const router = inject(Router);
+  return router.createUrlTree(['/login'], { queryParams: { returnUrl } });
+}
+
+/** Wymaga zalogowania (dowolna rola). */
+export const authGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
 
   if (auth.isAuthenticated()) {
     return true;
   }
 
-  return router.createUrlTree(['/login']);
+  return redirectToLogin(state.url);
 };
 
 /** Wymaga roli Admin. */
-export const adminGuard: CanActivateFn = () => {
+export const adminGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -23,11 +27,15 @@ export const adminGuard: CanActivateFn = () => {
     return true;
   }
 
-  return router.createUrlTree(auth.isAuthenticated() ? ['/panel'] : ['/login']);
+  if (!auth.isAuthenticated()) {
+    return redirectToLogin(state.url);
+  }
+
+  return router.createUrlTree(['/panel']);
 };
 
 /** Wymaga roli Pracownik (Admin też ma dostęp). */
-export const employeeGuard: CanActivateFn = () => {
+export const employeeGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -35,16 +43,26 @@ export const employeeGuard: CanActivateFn = () => {
     return true;
   }
 
-  return router.createUrlTree(auth.isAuthenticated() ? ['/admin'] : ['/login']);
+  if (!auth.isAuthenticated()) {
+    return redirectToLogin(state.url);
+  }
+
+  return router.createUrlTree(['/admin']);
 };
 
 /** Blokuje dostęp do /login jeśli użytkownik jest już zalogowany. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const route = inject(ActivatedRoute);
 
   if (!auth.isAuthenticated()) {
     return true;
+  }
+
+  const returnUrl = route.snapshot.queryParamMap.get('returnUrl') ?? '';
+  if (returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+    return router.parseUrl(returnUrl);
   }
 
   const user = auth.currentUser();
