@@ -1,21 +1,253 @@
-<div class="admin">
-  <header class="admin__header">
-    <div class="admin__header-left">
-     
-      <div>
-        <h1 class="admin__title">Panel administratora</h1>
-        <p class="admin__subtitle">Zalogowano jako {{ displayName }}</p>
-      </div>
+<div class="registry">
+  <header class="registry__top">
+    <div>
+      <h1>Rejestr aut</h1>
+      <p class="registry__subtitle">
+        Panel administratora — podgląd floty, szybkie zabieranie i zwracanie kluczyków
+      </p>
+      <p class="registry__user">Zalogowano jako {{ displayName }}</p>
     </div>
-    <div class="admin__header-actions">
-      
-      <button class="admin__btn admin__btn--logout" type="button" (click)="logout()">
-        WYLOGUJ
-      </button>
+    <div class="registry__actions">
+      <button type="button" class="btn btn--primary" (click)="openCreate()">Dodaj auto</button>
+      <button type="button" class="btn btn--ghost" (click)="loadRegistry()" [disabled]="loading()">Odśwież</button>
+      <button type="button" class="btn btn--qr" (click)="openQrPanel()">Generuj kod QR</button>
+      <button type="button" class="btn btn--ghost" (click)="logout()">Wyloguj</button>
     </div>
   </header>
 
-  <section class="admin__card admin__card--placeholder">
-    
-  </section>
+  @if (error()) {
+    <div class="alert">{{ error() }}</div>
+  }
+
+  @if (formMode() !== 'closed') {
+    <section class="form-card">
+      <div class="form-card__head">
+        <h2>{{ formTitle() }}</h2>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="closeForm()">Zamknij</button>
+      </div>
+
+      @if (formError()) {
+        <div class="alert">{{ formError() }}</div>
+      }
+
+      <form class="form-grid" (ngSubmit)="saveForm()">
+        <label>
+          Marka
+          <input type="text" name="brand" [(ngModel)]="form.brand" required />
+        </label>
+        <label>
+          Model
+          <input type="text" name="model" [(ngModel)]="form.model" required />
+        </label>
+        <label>
+          Tablice rejestracyjne
+          <input type="text" name="registration" [(ngModel)]="form.registration" required placeholder="np. BB 1234A" />
+        </label>
+        <label>
+          Nazwa kluczyka
+          <input type="text" name="keyNumber" [(ngModel)]="form.keyNumber" required placeholder="np. K-001" />
+        </label>
+        <label class="form-grid__full">
+          Kod QR
+          <input type="text" name="qrCode" [(ngModel)]="form.qrCode" required placeholder="np. QR001" />
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" [disabled]="saving()">
+            @if (saving()) { Zapisywanie… } @else { Zapisz }
+          </button>
+          <button type="button" class="btn btn--ghost" (click)="closeForm()" [disabled]="saving()">Anuluj</button>
+          @if (formMode() === 'edit' && editingId() != null) {
+            <button type="button" class="btn btn--danger form-actions__delete" [disabled]="saving()" (click)="deleteFromForm()">
+              Usuń auto
+            </button>
+          }
+        </div>
+      </form>
+    </section>
+  }
+
+  @if (showQrPanel()) {
+    <section class="form-card form-card--qr">
+      <div class="form-card__head">
+        <h2>Generuj kod QR</h2>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="closeQrPanel()">Zamknij</button>
+      </div>
+
+      @if (qrError()) {
+        <div class="alert">{{ qrError() }}</div>
+      }
+
+      <div class="form-grid">
+        <label>
+          Auto
+          <select [ngModel]="qrCarId()" (ngModelChange)="onQrCarChange($event)" name="qrCarId" required>
+            <option [ngValue]="null">Wybierz auto...</option>
+            @for (row of rows(); track row.id) {
+              <option [ngValue]="row.id">
+                {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }}
+              </option>
+            }
+          </select>
+        </label>
+        <label>
+          Kod QR
+          <input
+            type="text"
+            name="qrKeyName"
+            [ngModel]="qrKeyName()"
+            (ngModelChange)="qrKeyName.set($event)"
+            placeholder="np. QR001"
+            required
+          />
+        </label>
+      </div>
+
+      <div class="qr-preview">
+        @if (qrDataUrl()) {
+          <img [src]="qrDataUrl()" alt="Wygenerowany kod QR" width="180" height="180" />
+        } @else {
+          <div class="qr-preview__box">podgląd kodu QR</div>
+        }
+        <p class="muted">
+          @if (qrDataUrl()) {
+            Kod wygenerowany — możesz go pobrać.
+          } @else {
+            Wybierz auto i podaj kod QR, aby wygenerować obraz.
+          }
+        </p>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn--qr" [disabled]="!qrCanGenerate() || qrGenerating()" (click)="generateQr()">
+          @if (qrGenerating()) { Generowanie… } @else { Generuj }
+        </button>
+        @if (qrDataUrl()) {
+          <button type="button" class="btn btn--primary" (click)="downloadQr()">Pobierz</button>
+        }
+        <button type="button" class="btn btn--ghost" (click)="closeQrPanel()">Anuluj</button>
+      </div>
+    </section>
+  }
+
+  @if (loading()) {
+    <p class="muted">Ładowanie rejestru…</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Tablice</th>
+            <th>Auto</th>
+            <th>Kluczyk / QR</th>
+            <th>Status</th>
+            <th>Posiada</th>
+            <th>Zabrane o</th>
+            <th>Zwrócone o</th>
+            <th>Zwrócił</th>
+            <th>Akcje</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr [class.row--in-use]="row.status === 'IN_USE'">
+              <td><strong class="plate">{{ row.registration || '—' }}</strong></td>
+              <td><strong>{{ row.brand }} {{ row.model }}</strong></td>
+              <td>
+                <div class="key-meta">
+                  <span>{{ row.keyNumber || '—' }}</span>
+                  <code>{{ row.qrCode || '—' }}</code>
+                </div>
+              </td>
+              <td class="status-cell">
+                <span
+                  class="badge"
+                  [class.badge--free]="row.status === 'FREE'"
+                  [class.badge--busy]="row.status === 'IN_USE'"
+                  [class.badge--lost]="row.status === 'LOST'"
+                >
+                  {{ statusLabel(row.status) }}
+                </span>
+              </td>
+              <td>
+                @if (row.status === 'IN_USE' && row.heldBy) {
+                  {{ row.heldBy }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td>
+                @if (row.status === 'IN_USE' && row.takenAt) {
+                  {{ row.takenAt | date: 'dd.MM.yyyy HH:mm' }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td>
+                @if (row.status === 'FREE' && row.returnedAt) {
+                  {{ row.returnedAt | date: 'dd.MM.yyyy HH:mm' }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td>
+                @if (row.status === 'FREE' && row.returnedBy) {
+                  {{ row.returnedBy }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="actions-cell">
+                <div class="row-actions">
+                  <div class="row-actions__primary">
+                    @if (row.status === 'FREE') {
+                      <button
+                        type="button"
+                        class="btn btn--take btn--sm"
+                        [disabled]="takingId() === row.id"
+                        (click)="takeCar(row)"
+                      >
+                        @if (takingId() === row.id) { … } @else { Zabierz }
+                      </button>
+                    } @else if (row.status === 'IN_USE') {
+                      <button
+                        type="button"
+                        class="btn btn--return btn--sm"
+                        [disabled]="returningId() === row.id"
+                        (click)="returnCar(row)"
+                      >
+                        @if (returningId() === row.id) { … } @else { Zwróć }
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn--found btn--sm"
+                        [disabled]="lostActionId() === row.id"
+                        (click)="markFound(row)"
+                      >
+                        @if (lostActionId() === row.id) { … } @else { Znaleziony }
+                      </button>
+                    }
+                  </div>
+                  <div class="row-actions__secondary">
+                    @if (row.status === 'FREE') {
+                      <button
+                        type="button"
+                        class="btn btn--lost btn--sm"
+                        [disabled]="lostActionId() === row.id"
+                        (click)="markLost(row)"
+                      >
+                        @if (lostActionId() === row.id) { … } @else { Zagubiony }
+                      </button>
+                    }
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="openEdit(row)">Edytuj</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>

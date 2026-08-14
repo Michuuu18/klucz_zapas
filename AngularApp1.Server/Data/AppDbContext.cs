@@ -19,11 +19,16 @@ public class AppDbContext : DbContext
             entity.ToTable("cars");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Brand).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Model).HasMaxLength(100).IsRequired();
             entity.Property(x => x.Registration).HasMaxLength(30).IsRequired();
             entity.Property(x => x.KeyNumber).HasMaxLength(50).IsRequired();
             entity.Property(x => x.QrCode).HasMaxLength(50).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.HeldBy).HasMaxLength(255);
+            entity.Property(x => x.ReturnedBy).HasMaxLength(255);
+            entity.Property(x => x.LostBy).HasMaxLength(255);
             entity.HasIndex(x => x.QrCode).IsUnique();
+            entity.HasIndex(x => x.Registration).IsUnique();
         });
     }
 }
