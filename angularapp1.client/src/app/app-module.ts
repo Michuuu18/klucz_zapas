@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 
@@ -23,6 +24,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
   ],
   imports: [
     BrowserModule,
+    CommonModule,
     FormsModule,
     AppRoutingModule,
   ],

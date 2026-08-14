@@ -8,7 +8,6 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext db)
     {
-        
         db.Database.Migrate();
 
         if (db.Cars.Any())
@@ -17,12 +16,12 @@ public static class DbInitializer
         }
 
         db.Cars.AddRange(
-            new Car { Brand = "Toyota Corolla", Registration = "BB 1234A", KeyNumber = "K-001", QrCode = "QR001", Status = "FREE" },
-            new Car { Brand = "Volkswagen Passat", Registration = "BB 5678B", KeyNumber = "K-002", QrCode = "QR002", Status = "FREE" },
-            new Car { Brand = "Skoda Octavia", Registration = "SB 9012C", KeyNumber = "K-003", QrCode = "QR003", Status = "FREE" },
-            new Car { Brand = "Ford Transit", Registration = "BB 3456D", KeyNumber = "K-004", QrCode = "QR004", Status = "FREE" },
-            new Car { Brand = "BMW 320d", Registration = "KR 7890E", KeyNumber = "K-005", QrCode = "QR005", Status = "FREE" },
-             new Car { Brand = "BMW 335i", Registration = "SZ 9707", KeyNumber = "K-006", QrCode = "QR006", Status = "FREE" }
+            new Car { Brand = "Toyota", Model = "Corolla", Registration = "BB 1234A", KeyNumber = "K-001", QrCode = "QR001", Status = "FREE" },
+            new Car { Brand = "Volkswagen", Model = "Passat", Registration = "BB 5678B", KeyNumber = "K-002", QrCode = "QR002", Status = "FREE" },
+            new Car { Brand = "Skoda", Model = "Octavia", Registration = "SB 9012C", KeyNumber = "K-003", QrCode = "QR003", Status = "FREE" },
+            new Car { Brand = "Ford", Model = "Transit", Registration = "BB 3456D", KeyNumber = "K-004", QrCode = "QR004", Status = "FREE" },
+            new Car { Brand = "BMW", Model = "320d", Registration = "KR 7890E", KeyNumber = "K-005", QrCode = "QR005", Status = "FREE" },
+            new Car { Brand = "BMW", Model = "335i", Registration = "SZ 9707", KeyNumber = "K-006", QrCode = "QR006", Status = "FREE" }
         );
 
         db.SaveChanges();
