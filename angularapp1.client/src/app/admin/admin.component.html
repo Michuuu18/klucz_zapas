@@ -52,29 +52,6 @@
     </div>
   </header>
 
-  <section class="stats-grid">
-    <article class="stat-card">
-      <span class="stat-card__label">Wszystkie auta</span>
-      <strong class="stat-card__value">{{ rows().length }}</strong>
-      <span class="stat-card__hint">pełny rejestr pojazdów</span>
-    </article>
-    <article class="stat-card stat-card--free">
-      <span class="stat-card__label">Dostępne</span>
-      <strong class="stat-card__value">{{ freeCarsCount() }}</strong>
-      <span class="stat-card__hint">gotowe do pobrania</span>
-    </article>
-    <article class="stat-card stat-card--busy">
-      <span class="stat-card__label">W użyciu</span>
-      <strong class="stat-card__value">{{ inUseCarsCount() }}</strong>
-      <span class="stat-card__hint">aktualnie poza firmą</span>
-    </article>
-    <article class="stat-card stat-card--lost">
-      <span class="stat-card__label">Zagubione</span>
-      <strong class="stat-card__value">{{ lostCarsCount() }}</strong>
-      <span class="stat-card__hint">wymagają uwagi</span>
-    </article>
-  </section>
-
   @if (error()) {
   <div class="alert">{{ error() }}</div>
   }
@@ -190,7 +167,7 @@
   @if (showHistoryPanel()) {
   <section class="form-card">
     <div class="form-card__head">
-      <h2>Historia kluczy (ostatnie 30 dni)</h2>
+      <h2>Historia kluczy (ostatnie 14 dni)</h2>
       <button type="button" class="btn btn--ghost btn--sm" (click)="closeHistoryPanel()">Zamknij</button>
     </div>
 
@@ -209,50 +186,26 @@
     </div>
 
     @if (selectedHistoryCarId()) {
-    @if (selectedHistoryCar(); as car) {
-    <div class="history-summary">
-      <div><span class="muted">Auto:</span> <strong>{{ car.brand }} {{ car.model }}</strong></div>
-      <div><span class="muted">Tablice:</span> <strong>{{ car.registration || '—' }}</strong></div>
-      <div><span class="muted">Kluczyk:</span> <strong>{{ car.keyNumber || '—' }}</strong></div>
-      <div><span class="muted">QR:</span> <code>{{ car.qrCode || '—' }}</code></div>
-      <div><span class="muted">Status teraz:</span> <strong>{{ statusLabel(car.status) }}</strong></div>
-      <div><span class="muted">Posiada teraz:</span> <strong>{{ car.heldBy || '—' }}</strong></div>
-    </div>
-    }
-
     <div class="table-wrap" style="margin-top: 1rem;">
       <table>
         <thead>
           <tr>
-            <th>Kto zabrał</th>
+            <th>Użytkownik</th>
             <th>Zabrano o</th>
-            <th>Kto oddał</th>
             <th>Zwrócono o</th>
-            <th>Czas używania</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
           @if (historyLoading()) {
-          <tr><td colspan="6" class="muted" style="text-align: center; padding: 2rem;">Wczytywanie historii...</td></tr>
+          <tr><td colspan="4" class="muted" style="text-align: center; padding: 2rem;">Wczytywanie historii...</td></tr>
           } @else if (historyRows().length === 0) {
-          <tr><td colspan="6" class="muted" style="text-align: center; padding: 2rem;">Brak historii dla tego kluczyka w wybranym okresie.</td></tr>
+          <tr><td colspan="4" class="muted" style="text-align: center; padding: 2rem;">Brak historii dla tego kluczyka w wybranym okresie.</td></tr>
           } @else {
           @for (record of historyRows(); track record.id) {
           <tr>
-            <td>
-              <strong>{{ record.userDisplayName || record.user }}</strong>
-              <div class="muted">{{ record.user }}</div>
-            </td>
+            <td><strong>{{ record.user }}</strong></td>
             <td>{{ record.takenAt | date: 'dd.MM.yyyy HH:mm' }}</td>
-            <td>
-              @if (record.returnedBy) {
-              <strong>{{ record.returnedByDisplayName || record.returnedBy }}</strong>
-              <div class="muted">{{ record.returnedBy }}</div>
-              } @else {
-              <span class="muted">—</span>
-              }
-            </td>
             <td>
               @if (record.returnedAt) {
               {{ record.returnedAt | date: 'dd.MM.yyyy HH:mm' }}
@@ -261,10 +214,7 @@
               }
             </td>
             <td>
-              {{ formatDuration(record.durationMinutes) }}
-            </td>
-            <td>
-              @if (record.status === 'W użyciu') {
+              @if (!record.returnedAt) {
               <span class="badge badge--busy">W użyciu</span>
               } @else {
               <span class="badge badge--free">Zwrócony</span>

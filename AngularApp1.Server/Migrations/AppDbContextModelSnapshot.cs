@@ -26,7 +26,6 @@ namespace AngularApp1.Server.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("id")
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
@@ -92,8 +91,7 @@ namespace AngularApp1.Server.Migrations
 
                     b.ToTable("cars", (string)null);
                 });
-
-            modelBuilder.Entity("CarLog", b =>
+                modelBuilder.Entity("AngularApp1.Server.Models.CarLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -103,25 +101,23 @@ namespace AngularApp1.Server.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnName("action")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<int>("CarId")
-                        .HasColumnName("carid")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnName("timestamp")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnName("username")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CarId");
 
                     b.ToTable("car_logs", (string)null);
                 });
