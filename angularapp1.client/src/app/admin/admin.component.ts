@@ -42,19 +42,6 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly historyRows = signal<HistoryRecord[]>([]);
   readonly historyLoading = signal(false);
 
-  toggleSettingsMenu(): void {
-    this.settingsMenuOpen.set(!this.settingsMenuOpen());
-  }
-
-  toggleDarkMode(): void {
-    console.log('Akcja: Zmiana trybu strony (Dark/Light) - do implementacji');
-  }
-
-  toggleLanguage(): void {
-    console.log('Akcja: Zmiana języka (PL/ENG) - do implementacji');
-  }
-
-
   form: CarWritePayload = this.emptyForm();
 
   readonly qrCanGenerate = computed(
@@ -72,6 +59,18 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly selectedHistoryCar = computed(
     () => this.rows().find((row) => row.id === this.selectedHistoryCarId()) ?? null,
   );
+
+  toggleSettingsMenu(): void {
+    this.settingsMenuOpen.set(!this.settingsMenuOpen());
+  }
+
+  toggleDarkMode(): void {
+    // Placeholder: can be wired to theme switch later.
+  }
+
+  toggleLanguage(): void {
+    // Placeholder: can be wired to i18n switch later.
+  }
 
   constructor(
     private readonly cars: CarService,
@@ -159,6 +158,47 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   closeQrPanel(): void {
     this.showQrPanel.set(false);
+  }
+
+  openHistoryPanel(): void {
+    const opening = !this.showHistoryPanel();
+    this.showHistoryPanel.set(opening);
+    if (opening) {
+      this.formMode.set('closed');
+      this.showQrPanel.set(false);
+      this.selectedHistoryCarId.set(null);
+      this.historyRows.set([]);
+    }
+  }
+
+  closeHistoryPanel(): void {
+    this.showHistoryPanel.set(false);
+  }
+
+  onHistoryCarChange(carId: number | string | null): void {
+    const id = carId === null || carId === '' || carId === 'null' ? null : Number(carId);
+    const parsedId = Number.isNaN(id as number) ? null : id;
+    this.selectedHistoryCarId.set(parsedId);
+
+    if (parsedId) {
+      this.loadHistoryForCar(parsedId);
+    } else {
+      this.historyRows.set([]);
+    }
+  }
+
+  loadHistoryForCar(carId: number): void {
+    this.historyLoading.set(true);
+    this.cars.getHistory(carId).subscribe({
+      next: (data) => {
+        this.historyRows.set(data);
+        this.historyLoading.set(false);
+      },
+      error: () => {
+        this.historyRows.set([]);
+        this.historyLoading.set(false);
+      },
+    });
   }
 
   async generateQr(): Promise<void> {
@@ -494,46 +534,4 @@ export class AdminComponent implements OnInit, OnDestroy {
       qrCode: '',
     };
   }
-  openHistoryPanel(): void {
-    const opening = !this.showHistoryPanel();
-    this.showHistoryPanel.set(opening);
-    if (opening) {
-      this.formMode.set('closed');
-      this.showQrPanel.set(false);
-      this.selectedHistoryCarId.set(null);
-      this.historyRows.set([]);
-    }
-  }
-
-  closeHistoryPanel(): void {
-    this.showHistoryPanel.set(false);
-  }
-
-  onHistoryCarChange(carId: number | string | null): void {
-    const id = carId === null || carId === '' || carId === 'null' ? null : Number(carId);
-    const parsedId = Number.isNaN(id as number) ? null : id;
-    this.selectedHistoryCarId.set(parsedId);
-
-    if (parsedId) {
-      this.loadHistoryForCar(parsedId);
-    } else {
-      this.historyRows.set([]);
-    }
-  }
-
-  loadHistoryForCar(carId: number): void {
-    this.historyLoading.set(true);
-    this.cars.getHistory(carId).subscribe({
-      next: (data) => {
-        this.historyRows.set(data);
-        this.historyLoading.set(false);
-      },
-      error: () => {
-        this.historyRows.set([]);
-        this.historyLoading.set(false);
-      },
-    });
-  }
 }
-
-
