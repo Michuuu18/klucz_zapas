@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { Car, CarWritePayload } from '../models/car.model';
+import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 import { CarService } from '../services/car.service';
 
 type FormMode = 'closed' | 'create' | 'edit';
@@ -36,6 +36,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly qrDataUrl = signal<string | null>(null);
   readonly qrGenerating = signal(false);
   readonly qrError = signal('');
+  readonly settingsMenuOpen = signal(false);
+  readonly showHistoryPanel = signal(false);
+  readonly selectedHistoryCarId = signal<number | null>(null);
+  readonly historyRows = signal<HistoryRecord[]>([]);
+  readonly historyLoading = signal(false);
 
   form: CarWritePayload = this.emptyForm();
 
@@ -54,6 +59,18 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly selectedHistoryCar = computed(
     () => this.rows().find((row) => row.id === this.selectedHistoryCarId()) ?? null,
   );
+
+  toggleSettingsMenu(): void {
+    this.settingsMenuOpen.set(!this.settingsMenuOpen());
+  }
+
+  toggleDarkMode(): void {
+    // Placeholder: can be wired to theme switch later.
+  }
+
+  toggleLanguage(): void {
+    // Placeholder: can be wired to i18n switch later.
+  }
 
   constructor(
     private readonly cars: CarService,
@@ -113,6 +130,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.formError.set('');
     this.formMode.set('create');
     this.showQrPanel.set(false);
+    this.showHistoryPanel.set(false);
   }
 
   openQrPanel(): void {
@@ -124,6 +142,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.qrKeyName.set('');
       this.qrDataUrl.set(null);
       this.qrError.set('');
+      this.showHistoryPanel.set(false);
     }
   }
 
@@ -139,6 +158,47 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   closeQrPanel(): void {
     this.showQrPanel.set(false);
+  }
+
+  openHistoryPanel(): void {
+    const opening = !this.showHistoryPanel();
+    this.showHistoryPanel.set(opening);
+    if (opening) {
+      this.formMode.set('closed');
+      this.showQrPanel.set(false);
+      this.selectedHistoryCarId.set(null);
+      this.historyRows.set([]);
+    }
+  }
+
+  closeHistoryPanel(): void {
+    this.showHistoryPanel.set(false);
+  }
+
+  onHistoryCarChange(carId: number | string | null): void {
+    const id = carId === null || carId === '' || carId === 'null' ? null : Number(carId);
+    const parsedId = Number.isNaN(id as number) ? null : id;
+    this.selectedHistoryCarId.set(parsedId);
+
+    if (parsedId) {
+      this.loadHistoryForCar(parsedId);
+    } else {
+      this.historyRows.set([]);
+    }
+  }
+
+  loadHistoryForCar(carId: number): void {
+    this.historyLoading.set(true);
+    this.cars.getHistory(carId).subscribe({
+      next: (data) => {
+        this.historyRows.set(data);
+        this.historyLoading.set(false);
+      },
+      error: () => {
+        this.historyRows.set([]);
+        this.historyLoading.set(false);
+      },
+    });
   }
 
   async generateQr(): Promise<void> {
@@ -230,6 +290,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.formError.set('');
     this.formMode.set('edit');
     this.showQrPanel.set(false);
+    this.showHistoryPanel.set(false);
   }
 
   closeForm(): void {
