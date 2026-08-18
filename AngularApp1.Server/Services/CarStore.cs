@@ -1,16 +1,22 @@
 using AngularApp1.Server.Data;
 using AngularApp1.Server.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Microsoft.Extensions.Logging;
 
 namespace AngularApp1.Server.Services;
 
 public class CarStore
 {
     private readonly AppDbContext _db;
+    private readonly UserStore _users;
+    private readonly ILogger<CarStore> _logger;
 
-    public CarStore(AppDbContext db)
+    public CarStore(AppDbContext db, UserStore users, ILogger<CarStore> logger)
     {
         _db = db;
+        _users = users;
+        _logger = logger;
     }
 
     public IReadOnlyList<Car> GetAll()
@@ -65,14 +71,26 @@ public class CarStore
         car.TakenAt = DateTime.UtcNow;
         car.ReturnedBy = null;
         car.ReturnedAt = null;
-        _db.CarLogs.Add(new CarLog
-        {
-            CarId = car.Id,
-            Username = loginId,
-            Action = "TAKE",
-            Timestamp = DateTime.UtcNow,
-        });
+
+        // Najpierw zapisujemy „rdzeń” operacji (auta). Log historii jest opcjonalny,
+        // bo na niektórych środowiskach tabela `car_logs` może nie istnieć.
         _db.SaveChanges();
+
+        try
+        {
+            _db.CarLogs.Add(new CarLog
+            {
+                CarId = car.Id,
+                Username = loginId,
+                Action = "TAKE",
+                Timestamp = DateTime.UtcNow,
+            });
+            _db.SaveChanges();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            _logger.LogWarning("Pomijam log historii (brak tabeli car_logs). Akcja TAKE carId={CarId}", car.Id);
+        }
         return (car, null);
     }
 
@@ -94,14 +112,24 @@ public class CarStore
         car.TakenAt = null;
         car.ReturnedBy = loginId;
         car.ReturnedAt = DateTime.UtcNow;
-        _db.CarLogs.Add(new CarLog
-        {
-            CarId = car.Id,
-            Username = loginId,
-            Action = "RETURN",
-            Timestamp = DateTime.UtcNow,
-        });
+
         _db.SaveChanges();
+
+        try
+        {
+            _db.CarLogs.Add(new CarLog
+            {
+                CarId = car.Id,
+                Username = loginId,
+                Action = "RETURN",
+                Timestamp = DateTime.UtcNow,
+            });
+            _db.SaveChanges();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            _logger.LogWarning("Pomijam log historii (brak tabeli car_logs). Akcja RETURN carId={CarId}", car.Id);
+        }
         return (car, null);
     }
 
@@ -124,6 +152,22 @@ public class CarStore
         car.ReturnedBy = loginId;
         car.ReturnedAt = DateTime.UtcNow;
         _db.SaveChanges();
+
+        try
+        {
+            _db.CarLogs.Add(new CarLog
+            {
+                CarId = car.Id,
+                Username = loginId,
+                Action = "RETURN",
+                Timestamp = DateTime.UtcNow,
+            });
+            _db.SaveChanges();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            _logger.LogWarning("Pomijam log historii (brak tabeli car_logs). Akcja RETURN(byId) carId={CarId}", car.Id);
+        }
         return (car, null);
     }
 
@@ -230,6 +274,22 @@ public class CarStore
         car.LostAt = DateTime.UtcNow;
         car.LostBy = markedBy;
         _db.SaveChanges();
+
+        try
+        {
+            _db.CarLogs.Add(new CarLog
+            {
+                CarId = car.Id,
+                Username = markedBy,
+                Action = "LOST",
+                Timestamp = DateTime.UtcNow,
+            });
+            _db.SaveChanges();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            _logger.LogWarning("Pomijam log historii (brak tabeli car_logs). Akcja LOST carId={CarId}", car.Id);
+        }
         return (car, null);
     }
 
@@ -250,6 +310,22 @@ public class CarStore
         car.LostAt = null;
         car.LostBy = null;
         _db.SaveChanges();
+
+        try
+        {
+            _db.CarLogs.Add(new CarLog
+            {
+                CarId = car.Id,
+                Username = "system",
+                Action = "FOUND",
+                Timestamp = DateTime.UtcNow,
+            });
+            _db.SaveChanges();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            _logger.LogWarning("Pomijam log historii (brak tabeli car_logs). Akcja FOUND carId={CarId}", car.Id);
+        }
         return (car, null);
     }
 
@@ -299,12 +375,22 @@ public class CarStore
     }
     public IReadOnlyList<CarHistoryRecord> GetHistory(int carId)
     {
-        var cutoff = DateTime.UtcNow.AddDays(-14);
-        var logs = _db.CarLogs
-            .AsNoTracking()
-            .Where(l => l.CarId == carId && l.Timestamp >= cutoff)
-            .OrderBy(l => l.Timestamp)
-            .ToList();
+        var cutoff = DateTime.UtcNow.AddDays(-30);
+        List<CarLog> logs;
+        try
+        {
+            logs = _db.CarLogs
+                .AsNoTracking()
+                .Where(l => l.CarId == carId && l.Timestamp >= cutoff)
+                .OrderBy(l => l.Timestamp)
+                .ToList();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            // 42P01 = undefined_table. Jeśli ktoś nie odpalił migracji (tabela car_logs),
+            // to zamiast wywalać UI zwracamy pustą historię.
+            return [];
+        }
 
         var sessions = new List<CarHistoryRecord>();
         CarHistoryRecord? open = null;
@@ -316,9 +402,15 @@ public class CarStore
                 open = new CarHistoryRecord
                 {
                     Id = log.Id,
+                    CarId = carId,
                     User = log.Username,
+                    UserDisplayName = GetDisplayName(log.Username),
                     TakenAt = log.Timestamp,
                     ReturnedAt = null,
+                    ReturnedBy = null,
+                    ReturnedByDisplayName = null,
+                    DurationMinutes = null,
+                    Status = "W użyciu",
                 };
                 sessions.Add(open);
             }
@@ -327,6 +419,10 @@ public class CarStore
                 if (open is not null && open.ReturnedAt is null)
                 {
                     open.ReturnedAt = log.Timestamp;
+                    open.ReturnedBy = log.Username;
+                    open.ReturnedByDisplayName = GetDisplayName(log.Username);
+                    open.DurationMinutes = (int)Math.Round((log.Timestamp - open.TakenAt).TotalMinutes);
+                    open.Status = "Zwrócony";
                     open = null;
                 }
                 else
@@ -334,9 +430,15 @@ public class CarStore
                     sessions.Add(new CarHistoryRecord
                     {
                         Id = log.Id,
+                        CarId = carId,
                         User = log.Username,
+                        UserDisplayName = GetDisplayName(log.Username),
                         TakenAt = log.Timestamp,
                         ReturnedAt = log.Timestamp,
+                        ReturnedBy = log.Username,
+                        ReturnedByDisplayName = GetDisplayName(log.Username),
+                        DurationMinutes = 0,
+                        Status = "Zwrócony",
                     });
                 }
             }
@@ -344,5 +446,10 @@ public class CarStore
 
         sessions.Reverse(); 
         return sessions;
+    }
+
+    private string GetDisplayName(string username)
+    {
+        return _users.FindByUsername(username)?.DisplayName ?? username;
     }
 }

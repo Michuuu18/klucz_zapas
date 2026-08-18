@@ -68,6 +68,12 @@ public class UserStore
         return user.PasswordHash == Hash(password) ? user : null;
     }
 
+    public User? FindByUsername(string username)
+    {
+        return _users.FirstOrDefault(u =>
+            string.Equals(u.Username, username.Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
     public static string Hash(string value)
     {
         var bytes = Encoding.UTF8.GetBytes(value);

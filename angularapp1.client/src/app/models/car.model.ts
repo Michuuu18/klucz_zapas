@@ -23,7 +23,13 @@ export interface CarWritePayload {
 }
 export interface HistoryRecord {
   id: number;
+  carId: number;
   user: string;
+  userDisplayName: string;
   takenAt: string;
   returnedAt: string | null;
+  returnedBy: string | null;
+  returnedByDisplayName: string | null;
+  durationMinutes: number | null;
+  status: string;
 }
