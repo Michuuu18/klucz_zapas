@@ -65,6 +65,13 @@ public class CarStore
         car.TakenAt = DateTime.UtcNow;
         car.ReturnedBy = null;
         car.ReturnedAt = null;
+        _db.CarLogs.Add(new CarLog
+        {
+            CarId = car.Id,
+            Username = loginId,
+            Action = "TAKE",
+            Timestamp = DateTime.UtcNow,
+        });
         _db.SaveChanges();
         return (car, null);
     }
@@ -87,6 +94,13 @@ public class CarStore
         car.TakenAt = null;
         car.ReturnedBy = loginId;
         car.ReturnedAt = DateTime.UtcNow;
+        _db.CarLogs.Add(new CarLog
+        {
+            CarId = car.Id,
+            Username = loginId,
+            Action = "RETURN",
+            Timestamp = DateTime.UtcNow,
+        });
         _db.SaveChanges();
         return (car, null);
     }
@@ -282,5 +296,53 @@ public class CarStore
         }
 
         return (data, null);
+    }
+    public IReadOnlyList<CarHistoryRecord> GetHistory(int carId)
+    {
+        var cutoff = DateTime.UtcNow.AddDays(-14);
+        var logs = _db.CarLogs
+            .AsNoTracking()
+            .Where(l => l.CarId == carId && l.Timestamp >= cutoff)
+            .OrderBy(l => l.Timestamp)
+            .ToList();
+
+        var sessions = new List<CarHistoryRecord>();
+        CarHistoryRecord? open = null;
+
+        foreach (var log in logs)
+        {
+            if (log.Action == "TAKE")
+            {
+                open = new CarHistoryRecord
+                {
+                    Id = log.Id,
+                    User = log.Username,
+                    TakenAt = log.Timestamp,
+                    ReturnedAt = null,
+                };
+                sessions.Add(open);
+            }
+            else if (log.Action == "RETURN")
+            {
+                if (open is not null && open.ReturnedAt is null)
+                {
+                    open.ReturnedAt = log.Timestamp;
+                    open = null;
+                }
+                else
+                {
+                    sessions.Add(new CarHistoryRecord
+                    {
+                        Id = log.Id,
+                        User = log.Username,
+                        TakenAt = log.Timestamp,
+                        ReturnedAt = log.Timestamp,
+                    });
+                }
+            }
+        }
+
+        sessions.Reverse(); 
+        return sessions;
     }
 }

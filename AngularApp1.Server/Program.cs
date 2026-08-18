@@ -1,15 +1,16 @@
-using System.Security.Claims;
-using System.Text;
-using System.Text.Json;
 using AngularApp1.Server;
 using AngularApp1.Server.Authorization;
 using AngularApp1.Server.Data;
 using AngularApp1.Server.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,7 +72,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Brak ConnectionStrings:DefaultConnection w appsettings.json");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString)
+        .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services.AddScoped<CarStore>();
 builder.Services.AddSingleton<UserStore>();

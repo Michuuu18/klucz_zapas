@@ -28,6 +28,30 @@ public class UserStore
                 DisplayName = "Pracownik",
                 Role = UserRole.Pracownik,
             },
+            new()
+            {
+                Id = 3,
+                Username = "michal",
+                PasswordHash = Hash("michal123"),
+                DisplayName = "Michał",
+                Role = UserRole.Pracownik,
+            },
+            new()
+            {
+                Id = 4,
+                Username = "dominik",
+                PasswordHash = Hash("dominik123"),
+                DisplayName = "Dominik",
+                Role = UserRole.Pracownik,
+            },
+            new()
+            {
+                Id = 5,
+                Username = "agnieszka",
+                PasswordHash = Hash("agnieszka123"),
+                DisplayName = "Agnieszka",
+                Role = UserRole.Pracownik,
+            },
         ];
     }
 

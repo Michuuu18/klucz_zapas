@@ -131,4 +131,9 @@ public class CarsController : ControllerBase
         User.FindFirstValue(ClaimTypes.Name) ??
         User.Identity?.Name ??
         "unknown";
+
+    [HttpGet("{id:int}/history")]
+    [Authorize(Roles = "Admin")]
+    public ActionResult<IEnumerable<CarHistoryRecord>> GetHistory(int id) =>
+    Ok(_cars.GetHistory(id));
 }
