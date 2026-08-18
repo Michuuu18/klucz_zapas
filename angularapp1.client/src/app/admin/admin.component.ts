@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, signal, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -15,6 +15,19 @@ type FormMode = 'closed' | 'create' | 'edit';
   styleUrl: './admin.component.scss',
 })
 export class AdminComponent implements OnInit, OnDestroy {
+  @ViewChild('settingsDropdown') settingsDropdownRef!: ElementRef;
+
+  // Nasłuchiwanie kliknięć na całym dokumencie
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.settingsMenuOpen() && this.settingsDropdownRef) {
+      const clickedInside = this.settingsDropdownRef.nativeElement.contains(event.target as Node);
+
+      if (!clickedInside) {
+        this.settingsMenuOpen.set(false);
+      }
+    }
+  }
   private static readonly AUTO_REFRESH_MS = 3000;
   private refreshTimer?: ReturnType<typeof setInterval>;
 
@@ -278,19 +291,38 @@ export class AdminComponent implements OnInit, OnDestroy {
     link.click();
   }
 
-  openEdit(row: Car): void {
-    this.form = {
-      brand: row.brand ?? '',
-      model: row.model ?? '',
-      registration: row.registration ?? '',
-      keyNumber: row.keyNumber ?? '',
-      qrCode: row.qrCode ?? '',
-    };
-    this.editingId.set(row.id);
+  openEditMode(): void {
+    if (this.formMode() === 'edit') {
+      this.closeForm();
+      return;
+    }
+    this.form = this.emptyForm();
+    this.editingId.set(null);
     this.formError.set('');
     this.formMode.set('edit');
     this.showQrPanel.set(false);
     this.showHistoryPanel.set(false);
+  }
+
+  onEditCarSelect(carId: number | string | null): void {
+    const id = carId === null || carId === '' || carId === 'null' ? null : Number(carId);
+    const parsedId = Number.isNaN(id as number) ? null : id;
+    this.editingId.set(parsedId);
+
+    if (parsedId) {
+      const row = this.rows().find((r) => r.id === parsedId);
+      if (row) {
+        this.form = {
+          brand: row.brand ?? '',
+          model: row.model ?? '',
+          registration: row.registration ?? '',
+          keyNumber: row.keyNumber ?? '',
+          qrCode: row.qrCode ?? '',
+        };
+      }
+    } else {
+      this.form = this.emptyForm();
+    }
   }
 
   closeForm(): void {
@@ -430,7 +462,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   markLost(row: Car): void {
-    if (row.status === 'IN_USE' || this.lostActionId() != null) return;
+    if (this.lostActionId() != null) return;
 
     const loginId = this.auth.currentUser()?.username?.trim();
     if (!loginId) {
@@ -441,7 +473,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     const label = `${row.brand} ${row.model} (${row.registration || 'brak tablic'})`;
     if (
       !confirm(
-        `Oznaczyć kluczyk jako ZAGUBIONY?\n${label}\n\nAuto zostanie oznaczone jako niedostępne.`,
+        `Oznaczyć kluczyk jako ZAGUBIONY?\n${label}\n\nAuto zostanie oznaczone jako niedostępne.`
       )
     ) {
       return;
@@ -457,7 +489,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       error: (err: HttpErrorResponse) => {
         this.lostActionId.set(null);
         this.error.set(
-          err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako zagubiony.',
+          err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako zagubiony.'
         );
       },
     });
