@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Car, CarWritePayload } from '../models/car.model';
+import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 
 @Injectable({ providedIn: 'root' })
 export class CarService {
@@ -51,5 +51,8 @@ export class CarService {
 
   markFound(id: number): Observable<Car> {
     return this.http.post<Car>(`${this.apiUrl}/${id}/found`, {});
+  }
+  getHistory(carId: number): Observable<HistoryRecord[]> {
+    return this.http.get<HistoryRecord[]>(`${this.apiUrl}/${carId}/history`);
   }
 }

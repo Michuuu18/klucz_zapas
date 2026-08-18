@@ -21,3 +21,9 @@ export interface CarWritePayload {
   keyNumber: string;
   qrCode: string;
 }
+export interface HistoryRecord {
+  id: number;
+  user: string;
+  takenAt: string;
+  returnedAt: string | null;
+}
