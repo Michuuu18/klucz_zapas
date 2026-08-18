@@ -42,6 +42,18 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly qrCanGenerate = computed(
     () => this.qrCarId() !== null && this.qrKeyName().trim().length > 0,
   );
+  readonly freeCarsCount = computed(
+    () => this.rows().filter((row) => row.status === 'FREE').length,
+  );
+  readonly inUseCarsCount = computed(
+    () => this.rows().filter((row) => row.status === 'IN_USE').length,
+  );
+  readonly lostCarsCount = computed(
+    () => this.rows().filter((row) => row.status === 'LOST').length,
+  );
+  readonly selectedHistoryCar = computed(
+    () => this.rows().find((row) => row.id === this.selectedHistoryCarId()) ?? null,
+  );
 
   constructor(
     private readonly cars: CarService,
@@ -422,6 +434,25 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (status === 'IN_USE') return 'W użyciu';
     if (status === 'LOST') return 'Zagubiony';
     return 'Wolne';
+  }
+
+  formatDuration(totalMinutes: number | null): string {
+    if (totalMinutes == null || totalMinutes < 0) {
+      return '—';
+    }
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours === 0) {
+      return `${minutes} min`;
+    }
+
+    if (minutes === 0) {
+      return `${hours} godz.`;
+    }
+
+    return `${hours} godz. ${minutes} min`;
   }
 
   formTitle(): string {

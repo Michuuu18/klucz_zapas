@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Car> Cars => Set<Car>();
+    public DbSet<CarLog> CarLogs => Set<CarLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,17 @@ public class AppDbContext : DbContext
             entity.Property(x => x.LostBy).HasMaxLength(255);
             entity.HasIndex(x => x.QrCode).IsUnique();
             entity.HasIndex(x => x.Registration).IsUnique();
+        });
+
+        modelBuilder.Entity<CarLog>(entity =>
+        {
+            entity.ToTable("car_logs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.CarId).HasColumnName("carid");
+            entity.Property(x => x.Username).HasColumnName("username").HasMaxLength(255).IsRequired();
+            entity.Property(x => x.Action).HasColumnName("action").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Timestamp).HasColumnName("timestamp").IsRequired();
         });
     }
 }
