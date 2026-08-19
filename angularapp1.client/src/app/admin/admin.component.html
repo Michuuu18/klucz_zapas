@@ -60,28 +60,31 @@
   </header>
 
   <section class="stats-grid">
-    <article class="stat-card">
+    <article class="stat-card stat-card--total">
       <div class="stat-card__text">
         <span class="stat-card__label">Wszystkie auta</span>
         <span class="stat-card__hint">pełny rejestr pojazdów</span>
       </div>
       <strong class="stat-card__value">{{ rows().length }}</strong>
     </article>
-    <article class="stat-card">
+
+    <article class="stat-card stat-card--free">
       <div class="stat-card__text">
         <span class="stat-card__label">Dostępne</span>
         <span class="stat-card__hint">gotowe do pobrania</span>
       </div>
       <strong class="stat-card__value">{{ freeCarsCount() }}</strong>
     </article>
-    <article class="stat-card">
+
+    <article class="stat-card stat-card--inuse">
       <div class="stat-card__text">
         <span class="stat-card__label">W użyciu</span>
         <span class="stat-card__hint">aktualnie poza firmą</span>
       </div>
       <strong class="stat-card__value">{{ inUseCarsCount() }}</strong>
     </article>
-    <article class="stat-card">
+
+    <article class="stat-card stat-card--lost">
       <div class="stat-card__text">
         <span class="stat-card__label">Zagubione</span>
         <span class="stat-card__hint">wymagają uwagi</span>

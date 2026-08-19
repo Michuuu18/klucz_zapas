@@ -149,6 +149,7 @@ h2 {
   border-radius: 22px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(26, 51, 82, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-card__text {
@@ -181,6 +182,42 @@ h2 {
   color: #1a3352;
   flex-shrink: 0;
 }
+
+.stat-card--total {
+  background: linear-gradient(135deg, rgba(235, 248, 240, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 1px solid rgba(0, 122, 51, 0.1);
+}
+
+  .stat-card--total .stat-card__label {
+    color: #006028;
+  }
+
+  .stat-card--total .stat-card__value {
+    color: #005021;
+  }
+
+.stat-card--free {
+  background: linear-gradient(135deg, rgba(243, 246, 249, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 1px solid rgba(26, 51, 82, 0.05);
+}
+
+.stat-card--inuse {
+  background: linear-gradient(135deg, rgba(253, 245, 249, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.08);
+}
+
+  .stat-card--inuse .stat-card__label {
+    color: #4c1d95;
+  }
+
+.stat-card--lost {
+  background: linear-gradient(135deg, rgba(255, 247, 237, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 1px solid rgba(234, 88, 12, 0.08);
+}
+
+  .stat-card--lost .stat-card__label {
+    color: #9a3412;
+  }
 
 .alert {
   margin-bottom: 1rem;
