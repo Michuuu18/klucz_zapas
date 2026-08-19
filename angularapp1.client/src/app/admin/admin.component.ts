@@ -16,16 +16,22 @@ type FormMode = 'closed' | 'create' | 'edit';
 })
 export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('settingsDropdown') settingsDropdownRef!: ElementRef;
+  @ViewChild('qrDropdownRef') qrDropdownRef!: ElementRef;
+  @ViewChild('historyDropdownRef') historyDropdownRef!: ElementRef;
 
   // Nasłuchiwanie kliknięć na całym dokumencie
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (this.settingsMenuOpen() && this.settingsDropdownRef) {
-      const clickedInside = this.settingsDropdownRef.nativeElement.contains(event.target as Node);
+    const target = event.target as Node;
 
-      if (!clickedInside) {
-        this.settingsMenuOpen.set(false);
-      }
+    if (this.settingsMenuOpen() && this.settingsDropdownRef && !this.settingsDropdownRef.nativeElement.contains(target)) {
+      this.settingsMenuOpen.set(false);
+    }
+    if (this.qrDropdownOpen() && this.qrDropdownRef && !this.qrDropdownRef.nativeElement.contains(target)) {
+      this.qrDropdownOpen.set(false);
+    }
+    if (this.historyDropdownOpen() && this.historyDropdownRef && !this.historyDropdownRef.nativeElement.contains(target)) {
+      this.historyDropdownOpen.set(false);
     }
   }
   private static readonly AUTO_REFRESH_MS = 3000;
@@ -54,6 +60,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly selectedHistoryCarId = signal<number | null>(null);
   readonly historyRows = signal<HistoryRecord[]>([]);
   readonly historyLoading = signal(false);
+  readonly qrDropdownOpen = signal(false);
+  readonly historyDropdownOpen = signal(false);
 
   form: CarWritePayload = this.emptyForm();
 
@@ -581,5 +589,14 @@ export class AdminComponent implements OnInit, OnDestroy {
       keyNumber: '',
       qrCode: '',
     };
+  }
+
+  getCarLabel(id: number | null, withKey = false): string {
+    if (!id) return 'Wybierz auto...';
+    const car = this.rows().find(r => r.id === id);
+    if (!car) return 'Wybierz auto...';
+
+    const base = `${car.brand} ${car.model} — ${car.registration || 'brak tablic'}`;
+    return withKey ? `${base} (Klucz: ${car.keyNumber || '—'})` : base;
   }
 }

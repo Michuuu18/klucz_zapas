@@ -211,37 +211,54 @@ h2 {
   grid-template-columns: 1fr 1fr;
   gap: 18px 32px;
   margin-bottom: 20px;
-}
 
-.form-grid__full { grid-column: 1 / -1; }
+  &__full {
+    grid-column: 1 / -1;
+  }
 
-.form-grid label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #5a6f82;
-}
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #5a6f82;
+  }
 
-.form-grid input,
-.form-grid select {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid rgba(11, 42, 74, 0.18);
-  border-radius: 10px;
-  padding: 0.7rem 0.8rem;
-  font: inherit;
-  font-weight: 600;
-  color: #0b2a4a;
-  background: #fff;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
-}
+  input,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(11, 42, 74, 0.18);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-family: inherit;
+    font-weight: 600;
+    color: #0b2a4a;
+    background: #fff;
+    transition: border-color 0.2s ease;
+    cursor: pointer;
 
-.form-grid input:focus,
-.form-grid select:focus {
-  border-color: rgba(39, 82, 159, 0.45);
-  box-shadow: 0 0 0 4px rgba(39, 82, 159, 0.12);
+    option {
+      padding: 12px 16px;
+      margin: 4px 0;
+      color: #0b2a4a;
+      background-color: #ffffff;
+      font-weight: 500;
+      font-size: 14px;
+    }
+  }
+
+    input:hover,
+    select:hover {
+      border-color: #10b981;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #10b981;
+      outline: none;
+    }
 }
 
 .form-actions {
@@ -557,3 +574,79 @@ tbody tr:last-child td {
 @media (max-width: 520px) {
   .stats-grid { grid-template-columns: 1fr; }
 }
+/* ----- NIESTANDARDOWY SELECT OPARTE O MENU USTAWIEŃ ----- */
+.custom-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.custom-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #5a6f82;
+}
+
+.custom-select-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(11, 42, 74, 0.18);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0b2a4a;
+  background: #fff;
+  transition: border-color 0.2s ease;
+  cursor: pointer;
+  text-align: left;
+}
+
+.custom-select-btn__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 10px;
+}
+
+.custom-select-btn:hover,
+.custom-select-btn--active {
+  border-color: #10b981;
+}
+
+  .custom-select-btn--active svg {
+    transform: rotate(180deg);
+  }
+
+.custom-select-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: #5a6f82;
+}
+
+.settings-menu--select {
+  width: 100%;
+  max-height: 250px;
+  overflow-y: auto;
+  top: calc(100% + 4px); 
+  box-shadow: 0 12px 24px rgba(11, 42, 74, 0.12);
+}
+
+  .settings-menu--select::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .settings-menu--select::-webkit-scrollbar-thumb {
+    background: rgba(11, 42, 74, 0.15);
+    border-radius: 4px;
+  }
