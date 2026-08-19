@@ -37,7 +37,7 @@
         @if (settingsMenuOpen()) {
         <div class="settings-menu">
           <button type="button" class="settings-menu__item" (click)="openCreate(); toggleSettingsMenu()">
-            Dodaj auto
+            Dodaj klucz
           </button>
           <button type="button" class="settings-menu__item" (click)="openQrPanel(); toggleSettingsMenu()">
             Generuj kod QR
@@ -48,8 +48,8 @@
           <button type="button" class="settings-menu__item" (click)="toggleDarkMode(); toggleSettingsMenu()">
             Tryb Ciemny/Jasny
           </button>
-          <button type="button" class="settings-menu__item" (click)="toggleLanguage(); toggleSettingsMenu()">
-            Zmień język (PL/EN)
+          <button type="button" class="settings-menu__item" (click)="openEditMode(); toggleSettingsMenu()">
+            Edytuj tablice
           </button>
         </div>
         }
@@ -109,6 +109,7 @@
     }
 
     <form class="form-grid" (ngSubmit)="saveForm()">
+      @if (formMode() === 'create') {
       <label>
         Marka
         <input type="text" name="brand" [(ngModel)]="form.brand" required />
@@ -121,25 +122,59 @@
         Tablice rejestracyjne
         <input type="text" name="registration" [(ngModel)]="form.registration" required placeholder="np. BB 1234A" />
       </label>
-      <label>
-        Nazwa kluczyka
-        <input type="text" name="keyNumber" [(ngModel)]="form.keyNumber" required placeholder="np. K-001" />
-      </label>
+      <div class="key-kind">
+        <span>Rodzaj klucza</span>
+        <div class="key-kind__options">
+          <button
+            type="button"
+            class="key-kind__btn"
+            [class.key-kind__btn--active]="keyKind() === 'O'"
+            (click)="onKeyKindChange('O')"
+          >
+            Oryginalny
+          </button>
+          <button
+            type="button"
+            class="key-kind__btn"
+            [class.key-kind__btn--active]="keyKind() === 'Z'"
+            (click)="onKeyKindChange('Z')"
+          >
+            Zapasowy
+          </button>
+        </div>
+      </div>
+      } @else {
+      <div class="custom-select-wrap form-grid__full" #editDropdownRef>
+        <span class="custom-label">Wybierz auto</span>
+        <div class="custom-select-dropdown">
+          <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="editDropdownOpen()" (click)="editDropdownOpen.set(!editDropdownOpen())">
+            <span class="custom-select-btn__text">{{ getCarLabel(editingId(), true) }}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+
+          @if (editDropdownOpen()) {
+          <div class="settings-menu settings-menu--select">
+            <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wybierz auto...</button>
+            @for (row of rows(); track row.id) {
+            <button type="button" class="settings-menu__item" (click)="onEditCarSelect(row.id); editDropdownOpen.set(false)">
+              {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ row.keyNumber || '—' }})
+            </button>
+            }
+          </div>
+          }
+        </div>
+      </div>
       <label class="form-grid__full">
-        Kod QR
-        <input type="text" name="qrCode" [(ngModel)]="form.qrCode" required placeholder="np. QR001" />
+        Nowe tablice rejestracyjne
+        <input type="text" name="registration" [(ngModel)]="form.registration" required placeholder="np. BB 1234A" [disabled]="editingId() == null" />
       </label>
+      }
 
       <div class="form-actions">
-        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+        <button type="submit" class="btn btn--primary" [disabled]="saving() || (formMode() === 'edit' && editingId() == null)">
           @if (saving()) { Zapisywanie… } @else { Zapisz }
         </button>
         <button type="button" class="btn btn--ghost" (click)="closeForm()" [disabled]="saving()">Anuluj</button>
-        @if (formMode() === 'edit' && editingId() != null) {
-        <button type="button" class="btn btn--danger form-actions__delete" [disabled]="saving()" (click)="deleteFromForm()">
-          Usuń auto
-        </button>
-        }
       </div>
     </form>
   </section>

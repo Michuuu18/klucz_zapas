@@ -87,8 +87,7 @@ namespace AngularApp1.Server.Migrations
                     b.HasIndex("QrCode")
                         .IsUnique();
 
-                    b.HasIndex("Registration")
-                        .IsUnique();
+                    b.HasIndex("Registration");
 
                     b.ToTable("cars", (string)null);
                 });

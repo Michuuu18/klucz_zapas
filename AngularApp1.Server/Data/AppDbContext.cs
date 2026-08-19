@@ -29,7 +29,7 @@ public class AppDbContext : DbContext
             entity.Property(x => x.ReturnedBy).HasMaxLength(255);
             entity.Property(x => x.LostBy).HasMaxLength(255);
             entity.HasIndex(x => x.QrCode).IsUnique();
-            entity.HasIndex(x => x.Registration).IsUnique();
+            entity.HasIndex(x => x.Registration);
         });
 
         modelBuilder.Entity<CarLog>(entity =>
