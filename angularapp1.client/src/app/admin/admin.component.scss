@@ -24,17 +24,42 @@
   margin-bottom: 1.15rem;
 }
 
+.registry__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  min-width: 0;
+}
+
+.registry__logo {
+  width: 168px;
+  max-width: 38vw;
+  height: auto;
+  flex-shrink: 0;
+  mix-blend-mode: multiply;
+  filter: contrast(1.08) saturate(1.1);
+}
+
 .registry__head {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.55rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #1a3352;
+}
+
+.registry__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #5a6f82;
 }
 
 h2 {

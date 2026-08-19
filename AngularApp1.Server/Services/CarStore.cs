@@ -219,35 +219,55 @@ public class CarStore
             return (null, "Nie znaleziono auta.");
         }
 
-        var payload = NormalizePayload(request);
-        if (payload.error is not null)
+        var newPlate = request.Registration?.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(newPlate))
         {
-            return (null, payload.error);
+            return (null, "Podaj nowe tablice rejestracyjne.");
         }
 
-        if (PlateKindExists(payload.data!.Registration, payload.data.KeyNumber, id))
+        var keyNumber = string.IsNullOrWhiteSpace(request.KeyNumber) ? car.KeyNumber : request.KeyNumber.Trim();
+        var qrCode = string.IsNullOrWhiteSpace(request.QrCode) ? car.QrCode : request.QrCode.Trim();
+        var brand = string.IsNullOrWhiteSpace(request.Brand) ? car.Brand : request.Brand.Trim();
+        var model = string.IsNullOrWhiteSpace(request.Model) ? car.Model : request.Model.Trim();
+        if (string.IsNullOrWhiteSpace(model))
         {
-            var kind = GetKeyKind(payload.data.KeyNumber);
+            model = "—";
+        }
+
+        var oldPlate = car.Registration.Trim().ToUpperInvariant();
+        var group = _db.Cars
+            .Where(c => c.Registration.ToUpper() == oldPlate)
+            .ToList();
+        var groupIds = group.Select(c => c.Id).ToHashSet();
+
+        if (PlateKindExists(newPlate, car.KeyNumber, groupIds))
+        {
+            var kind = GetKeyKind(car.KeyNumber);
             return (null, kind == "Z"
-                ? "Ten pojazd ma już klucz zapasowy."
-                : "Ten pojazd ma już klucz oryginalny.");
+                ? "Ten pojazd ma już klucz zapasowy z takimi tablicami."
+                : "Ten pojazd ma już klucz oryginalny z takimi tablicami.");
         }
 
-        if (KeyNumberExists(payload.data.KeyNumber, id))
+        if (KeyNumberExists(keyNumber, id))
         {
             return (null, "Ta nazwa kluczyka jest już używana.");
         }
 
-        if (QrExists(payload.data.QrCode, id))
+        if (QrExists(qrCode, id))
         {
             return (null, "Ten kod QR jest już przypisany do innego kluczyka.");
         }
 
-        car.Brand = payload.data.Brand;
-        car.Model = payload.data.Model;
-        car.Registration = payload.data.Registration;
-        car.KeyNumber = payload.data.KeyNumber;
-        car.QrCode = payload.data.QrCode;
+        car.Brand = brand;
+        car.Model = model;
+        car.KeyNumber = keyNumber;
+        car.QrCode = qrCode;
+
+        foreach (var member in group)
+        {
+            member.Registration = newPlate;
+        }
+
         _db.SaveChanges();
         return (car, null);
     }
@@ -351,12 +371,15 @@ public class CarStore
     }
 
     private bool PlateKindExists(string plate, string keyNumber, int? excludeId = null)
+        => PlateKindExists(plate, keyNumber, excludeId is null ? [] : [excludeId.Value]);
+
+    private bool PlateKindExists(string plate, string keyNumber, IReadOnlyCollection<int> excludeIds)
     {
         var normalized = plate.ToUpperInvariant();
         var kind = GetKeyKind(keyNumber);
 
         return _db.Cars
-            .Where(c => c.Registration.ToUpper() == normalized && (!excludeId.HasValue || c.Id != excludeId.Value))
+            .Where(c => c.Registration.ToUpper() == normalized && !excludeIds.Contains(c.Id))
             .AsEnumerable()
             .Any(c => GetKeyKind(c.KeyNumber) == kind);
     }
@@ -387,20 +410,19 @@ public class CarStore
     {
         var data = new CarWriteRequest
         {
-            Brand = request.Brand.Trim(),
-            Model = request.Model.Trim(),
-            Registration = request.Registration.Trim().ToUpperInvariant(),
-            KeyNumber = request.KeyNumber.Trim(),
-            QrCode = request.QrCode.Trim(),
+            Brand = request.Brand?.Trim() ?? string.Empty,
+            Model = request.Model?.Trim() ?? string.Empty,
+            Registration = request.Registration?.Trim().ToUpperInvariant() ?? string.Empty,
+            KeyNumber = request.KeyNumber?.Trim() ?? string.Empty,
+            QrCode = request.QrCode?.Trim() ?? string.Empty,
         };
 
         if (string.IsNullOrWhiteSpace(data.Brand) ||
-            string.IsNullOrWhiteSpace(data.Model) ||
             string.IsNullOrWhiteSpace(data.Registration) ||
             string.IsNullOrWhiteSpace(data.KeyNumber) ||
             string.IsNullOrWhiteSpace(data.QrCode))
         {
-            return (null, "Uzupełnij wszystkie pola formularza.");
+            return (null, "Uzupełnij markę, tablice, nazwę kluczyka i kod QR.");
         }
 
         return (data, null);

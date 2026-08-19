@@ -370,33 +370,30 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.saving()) return;
 
     const generated = this.formMode() === 'create' ? this.nextKeySlot(this.keyKind()) : null;
+    const selected = this.formMode() === 'edit'
+      ? this.rows().find((row) => row.id === this.editingId())
+      : undefined;
+
     const payload: CarWritePayload = {
-      brand: this.form.brand.trim(),
-      model: this.form.model.trim(),
+      brand: this.form.brand.trim() || selected?.brand?.trim() || '—',
+      model: this.form.model.trim() || selected?.model?.trim() || '—',
       registration: this.form.registration.trim(),
-      keyNumber: generated?.keyNumber ?? this.form.keyNumber.trim(),
-      qrCode: generated?.qrCode ?? this.form.qrCode.trim(),
+      keyNumber: generated?.keyNumber || this.form.keyNumber.trim() || selected?.keyNumber?.trim() || '',
+      qrCode: generated?.qrCode || this.form.qrCode.trim() || selected?.qrCode?.trim() || '',
     };
 
-    if (
-      this.formMode() === 'edit' && this.editingId() == null
-    ) {
-      this.formError.set('Wybierz auto, którego tablice chcesz zmienić.');
-      return;
-    }
+    if (this.formMode() === 'edit') {
+      if (this.editingId() == null) {
+        this.formError.set('Wybierz auto, którego tablice chcesz zmienić.');
+        return;
+      }
 
-    if (
-      !payload.brand ||
-      !payload.model ||
-      !payload.registration ||
-      !payload.keyNumber ||
-      !payload.qrCode
-    ) {
-      this.formError.set(
-        this.formMode() === 'edit'
-          ? 'Podaj nowe tablice rejestracyjne.'
-          : 'Uzupełnij markę, model i tablice rejestracyjne.',
-      );
+      if (!payload.registration) {
+        this.formError.set('Podaj nowe tablice rejestracyjne.');
+        return;
+      }
+    } else if (!payload.brand || !payload.registration) {
+      this.formError.set('Uzupełnij markę i tablice rejestracyjne.');
       return;
     }
 

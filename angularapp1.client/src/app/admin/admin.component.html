@@ -1,16 +1,23 @@
 <div class="registry">
   <header class="registry__top">
-    <div class="registry__head">
-      <h1>Panel administratora</h1>
-      @if (lastSyncedAt()) {
-      <p class="registry__sync">
-        @if (autoRefreshing()) {
-        Aktualizacja…
-        } @else {
-        Zaktualizowano {{ lastSyncedAt() | date: 'dd.MM.yyyy HH:mm' }}
+    <div class="registry__brand">
+      <img
+        class="registry__logo"
+        src="assets/rekord-logo.png"
+        alt="REKORD – Systemy Informatyczne"
+      />
+      <div class="registry__head">
+        <h1 class="registry__title">Panel administratora</h1>
+        @if (lastSyncedAt()) {
+        <p class="registry__sync">
+          @if (autoRefreshing()) {
+          Aktualizacja…
+          } @else {
+          Zaktualizowano {{ lastSyncedAt() | date: 'dd.MM.yyyy HH:mm' }}
+          }
+        </p>
         }
-      </p>
-      }
+      </div>
     </div>
     <div class="registry__actions">
       <button
@@ -147,13 +154,13 @@
       <div class="custom-select-wrap form-grid__full" #editDropdownRef>
         <span class="custom-label">Wybierz auto</span>
         <div class="custom-select-dropdown">
-          <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="editDropdownOpen()" (click)="editDropdownOpen.set(!editDropdownOpen())">
+          <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="editDropdownOpen()" (click)="$event.stopPropagation(); editDropdownOpen.set(!editDropdownOpen())">
             <span class="custom-select-btn__text">{{ getCarLabel(editingId(), true) }}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </button>
 
           @if (editDropdownOpen()) {
-          <div class="settings-menu settings-menu--select">
+          <div class="settings-menu settings-menu--select" (click)="$event.stopPropagation()">
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wybierz auto...</button>
             @for (row of rows(); track row.id) {
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(row.id); editDropdownOpen.set(false)">
