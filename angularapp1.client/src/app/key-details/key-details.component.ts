@@ -25,8 +25,8 @@ export class KeyDetailsComponent implements OnInit {
   ) {}
 
   get pageTitle(): string {
-    if (this.mode === 'return') return 'Potwierdzenie oddania auta';
-    if (this.mode === 'take') return 'Potwierdzenie pobrania auta';
+    if (this.mode === 'return') return 'Potwierdzenie oddania klucza';
+    if (this.mode === 'take') return 'Potwierdzenie zebrania klucza';
     return 'Potwierdzenie akcji po skanowaniu';
   }
 

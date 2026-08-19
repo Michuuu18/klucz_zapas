@@ -37,8 +37,8 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
 
   get pageTitle(): string {
     return this.mode === 'return'
-      ? 'Zeskanuj kluczyk QR (Oddaj auto)'
-      : 'Zeskanuj kluczyk QR (Zabierz auto)';
+      ? 'Zeskanuj kluczyk QR (Oddaj klucz)'
+      : 'Zeskanuj kluczyk QR (Zbierz klucz)';
   }
 
   async ngAfterViewInit(): Promise<void> {

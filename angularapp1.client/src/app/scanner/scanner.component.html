@@ -1,8 +1,4 @@
-<div class="scanner">
-  <button class="scanner__back" type="button" routerLink="/panel">
-    WSTECZ
-  </button>
-
+<div class="scanner" [class.scanner--take]="mode !== 'return'" [class.scanner--return]="mode === 'return'">
   <header class="scanner__header">
     <div class="brand-logo brand-logo--scanner">
       <img
@@ -14,10 +10,17 @@
   </header>
 
   <div class="scanner__card">
-    <h2 class="scanner__card-title">Skanowanie kluczyka</h2>
-    <p class="scanner__card-hint">
-      Skieruj kamerę na kod QR przypisany do kluczyka.
-    </p>
+    <div class="scanner__card-top">
+      <div>
+        <h2 class="scanner__card-title">Skanowanie kluczyka</h2>
+        <p class="scanner__card-hint">
+          Skieruj kamerę na kod QR przypisany do kluczyka.
+        </p>
+      </div>
+      <button class="scanner__back" type="button" routerLink="/panel">
+        WSTECZ
+      </button>
+    </div>
 
     <div class="scanner__viewport">
       <div [id]="scannerElementId" class="scanner__reader"></div>
