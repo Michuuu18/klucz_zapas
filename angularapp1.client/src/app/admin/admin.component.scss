@@ -1,6 +1,9 @@
 :host {
   display: block;
-  min-height: 100dvh;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   background: #eef2f6;
   font-family: 'Manrope', 'Segoe UI', sans-serif;
   color: #1a3352;
