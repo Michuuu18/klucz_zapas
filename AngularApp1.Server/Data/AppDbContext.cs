@@ -36,9 +36,11 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("car_logs");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Username).HasMaxLength(255).IsRequired();
-            entity.Property(x => x.Action).HasMaxLength(50).IsRequired();
-            entity.Property(x => x.Timestamp).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.CarId).HasColumnName("carid");
+            entity.Property(x => x.Username).HasColumnName("username").HasMaxLength(255).IsRequired();
+            entity.Property(x => x.Action).HasColumnName("action").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Timestamp).HasColumnName("timestamp").IsRequired();
         });
     }
 }
