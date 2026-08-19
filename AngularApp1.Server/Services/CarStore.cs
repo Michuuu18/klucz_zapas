@@ -178,9 +178,17 @@ public class CarStore
             return (null, payload.error);
         }
 
-        if (PlateExists(payload.data!.Registration))
+        if (PlateKindExists(payload.data!.Registration, payload.data.KeyNumber))
         {
-            return (null, "Tablice rejestracyjne już istnieją w systemie.");
+            var kind = GetKeyKind(payload.data.KeyNumber);
+            return (null, kind == "Z"
+                ? "Ten pojazd ma już klucz zapasowy."
+                : "Ten pojazd ma już klucz oryginalny.");
+        }
+
+        if (KeyNumberExists(payload.data.KeyNumber))
+        {
+            return (null, "Ta nazwa kluczyka jest już używana.");
         }
 
         if (QrExists(payload.data.QrCode))
@@ -217,9 +225,17 @@ public class CarStore
             return (null, payload.error);
         }
 
-        if (PlateExists(payload.data!.Registration, id))
+        if (PlateKindExists(payload.data!.Registration, payload.data.KeyNumber, id))
         {
-            return (null, "Tablice rejestracyjne już istnieją w systemie.");
+            var kind = GetKeyKind(payload.data.KeyNumber);
+            return (null, kind == "Z"
+                ? "Ten pojazd ma już klucz zapasowy."
+                : "Ten pojazd ma już klucz oryginalny.");
+        }
+
+        if (KeyNumberExists(payload.data.KeyNumber, id))
+        {
+            return (null, "Ta nazwa kluczyka jest już używana.");
         }
 
         if (QrExists(payload.data.QrCode, id))
@@ -334,12 +350,29 @@ public class CarStore
         return _db.Cars.FirstOrDefault(c => c.QrCode.ToLower() == code);
     }
 
-    private bool PlateExists(string plate, int? excludeId = null)
+    private bool PlateKindExists(string plate, string keyNumber, int? excludeId = null)
     {
         var normalized = plate.ToUpperInvariant();
+        var kind = GetKeyKind(keyNumber);
+
+        return _db.Cars
+            .Where(c => c.Registration.ToUpper() == normalized && (!excludeId.HasValue || c.Id != excludeId.Value))
+            .AsEnumerable()
+            .Any(c => GetKeyKind(c.KeyNumber) == kind);
+    }
+
+    private bool KeyNumberExists(string keyNumber, int? excludeId = null)
+    {
+        var normalized = keyNumber.Trim().ToUpperInvariant();
         return _db.Cars.Any(c =>
-            c.Registration.ToUpper() == normalized &&
+            c.KeyNumber.ToUpper() == normalized &&
             (!excludeId.HasValue || c.Id != excludeId.Value));
+    }
+
+    private static string GetKeyKind(string keyNumber)
+    {
+        var value = keyNumber.Trim().ToUpperInvariant();
+        return value.StartsWith("K-Z-", StringComparison.Ordinal) ? "Z" : "O";
     }
 
     private bool QrExists(string qrCode, int? excludeId = null)

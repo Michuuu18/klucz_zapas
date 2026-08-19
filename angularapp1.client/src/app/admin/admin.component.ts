@@ -7,6 +7,7 @@ import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 import { CarService } from '../services/car.service';
 
 type FormMode = 'closed' | 'create' | 'edit';
+type KeyKind = 'O' | 'Z';
 
 @Component({
   selector: 'app-admin',
@@ -18,6 +19,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('settingsDropdown') settingsDropdownRef!: ElementRef;
   @ViewChild('qrDropdownRef') qrDropdownRef!: ElementRef;
   @ViewChild('historyDropdownRef') historyDropdownRef!: ElementRef;
+  @ViewChild('editDropdownRef') editDropdownRef!: ElementRef;
 
   // Nasłuchiwanie kliknięć na całym dokumencie
   @HostListener('document:click', ['$event'])
@@ -32,6 +34,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     if (this.historyDropdownOpen() && this.historyDropdownRef && !this.historyDropdownRef.nativeElement.contains(target)) {
       this.historyDropdownOpen.set(false);
+    }
+    if (this.editDropdownOpen() && this.editDropdownRef && !this.editDropdownRef.nativeElement.contains(target)) {
+      this.editDropdownOpen.set(false);
     }
   }
   private static readonly AUTO_REFRESH_MS = 3000;
@@ -62,6 +67,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly historyLoading = signal(false);
   readonly qrDropdownOpen = signal(false);
   readonly historyDropdownOpen = signal(false);
+  readonly editDropdownOpen = signal(false);
+  readonly keyKind = signal<KeyKind>('O');
 
   form: CarWritePayload = this.emptyForm();
 
@@ -87,10 +94,6 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   toggleDarkMode(): void {
     // Placeholder: can be wired to theme switch later.
-  }
-
-  toggleLanguage(): void {
-    // Placeholder: can be wired to i18n switch later.
   }
 
   constructor(
@@ -147,11 +150,16 @@ export class AdminComponent implements OnInit, OnDestroy {
       return;
     }
     this.form = this.emptyForm();
+    this.keyKind.set('O');
     this.editingId.set(null);
     this.formError.set('');
     this.formMode.set('create');
     this.showQrPanel.set(false);
     this.showHistoryPanel.set(false);
+  }
+
+  onKeyKindChange(kind: KeyKind): void {
+    this.keyKind.set(kind);
   }
 
   openQrPanel(): void {
@@ -353,19 +361,29 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.formMode.set('closed');
     this.editingId.set(null);
     this.formError.set('');
+    this.keyKind.set('O');
+    this.editDropdownOpen.set(false);
     this.form = this.emptyForm();
   }
 
   saveForm(): void {
     if (this.saving()) return;
 
+    const generated = this.formMode() === 'create' ? this.nextKeySlot(this.keyKind()) : null;
     const payload: CarWritePayload = {
       brand: this.form.brand.trim(),
       model: this.form.model.trim(),
       registration: this.form.registration.trim(),
-      keyNumber: this.form.keyNumber.trim(),
-      qrCode: this.form.qrCode.trim(),
+      keyNumber: generated?.keyNumber ?? this.form.keyNumber.trim(),
+      qrCode: generated?.qrCode ?? this.form.qrCode.trim(),
     };
+
+    if (
+      this.formMode() === 'edit' && this.editingId() == null
+    ) {
+      this.formError.set('Wybierz auto, którego tablice chcesz zmienić.');
+      return;
+    }
 
     if (
       !payload.brand ||
@@ -374,7 +392,11 @@ export class AdminComponent implements OnInit, OnDestroy {
       !payload.keyNumber ||
       !payload.qrCode
     ) {
-      this.formError.set('Uzupełnij wszystkie pola formularza.');
+      this.formError.set(
+        this.formMode() === 'edit'
+          ? 'Podaj nowe tablice rejestracyjne.'
+          : 'Uzupełnij markę, model i tablice rejestracyjne.',
+      );
       return;
     }
 
@@ -573,12 +595,46 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   formTitle(): string {
-    return this.formMode() === 'edit' ? 'Edytuj auto' : 'Dodaj nowe auto';
+    return this.formMode() === 'edit' ? 'Edytuj tablice' : 'Dodaj nowy klucz';
   }
 
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  private nextKeySlot(kind: KeyKind): { keyNumber: string; qrCode: string } {
+    const keyPattern = new RegExp(`^K-${kind}-(\\d+)$`, 'i');
+    const qrPattern = new RegExp(`^QR-${kind}-(\\d+)$`, 'i');
+    const used = new Set<number>();
+    const takenKeys = new Set(
+      this.rows().map((row) => row.keyNumber.trim().toUpperCase()),
+    );
+    const takenQrs = new Set(
+      this.rows().map((row) => row.qrCode.trim().toUpperCase()),
+    );
+
+    for (const row of this.rows()) {
+      const keyMatch = row.keyNumber?.trim().match(keyPattern);
+      if (keyMatch) used.add(Number(keyMatch[1]));
+      const qrMatch = row.qrCode?.trim().match(qrPattern);
+      if (qrMatch) used.add(Number(qrMatch[1]));
+    }
+
+    let slot = 1;
+    while (true) {
+      const padded = String(slot).padStart(2, '0');
+      const keyNumber = `K-${kind}-${padded}`;
+      const qrCode = `QR-${kind}-${padded}`;
+      if (
+        !used.has(slot) &&
+        !takenKeys.has(keyNumber.toUpperCase()) &&
+        !takenQrs.has(qrCode.toUpperCase())
+      ) {
+        return { keyNumber, qrCode };
+      }
+      slot += 1;
+    }
   }
 
   private emptyForm(): CarWritePayload {

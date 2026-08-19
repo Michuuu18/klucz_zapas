@@ -41,11 +41,11 @@ Przy pierwszym starcie backend sam utworzy tabele `cars` i doda auta testowe.
 
 ## Kody testowe
 
-- `QR001`
-- `QR002`
-- `QR003`
-- `QR004`
-- `QR005`
+- `QR-O-01`
+- `QR-O-02`
+- `QR-O-03`
+- `QR-O-04`
+- `QR-O-05`
 
 ## Gdy nie dziala
 
