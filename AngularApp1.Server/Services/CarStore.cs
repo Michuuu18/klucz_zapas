@@ -72,8 +72,7 @@ public class CarStore
         car.ReturnedBy = null;
         car.ReturnedAt = null;
 
-        // Najpierw zapisujemy „rdzeń” operacji (auta). Log historii jest opcjonalny,
-        // bo na niektórych środowiskach tabela `car_logs` może nie istnieć.
+       
         _db.SaveChanges();
 
         try
