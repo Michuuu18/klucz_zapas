@@ -1,8 +1,4 @@
-<div class="details">
-  <button class="details__back" type="button" (click)="goBack()">
-    WSTECZ
-  </button>
-
+<div class="details" [class.details--take]="mode === 'take'" [class.details--return]="mode === 'return'">
   <header class="details__header">
     <div class="brand-logo brand-logo--scanner">
       <img src="assets/rekord-logo.png" alt="REKORD – Systemy Informatyczne" />
@@ -12,12 +8,23 @@
 
   @if (loading) {
     <div class="details__card">
+      <div class="details__card-top">
+        <span></span>
+        <button class="details__back" type="button" (click)="goBack()">
+          WSTECZ
+        </button>
+      </div>
       <p class="details__card-hint">Ładowanie danych pojazdu…</p>
     </div>
   } @else if (record) {
     <div class="details__card">
-      <div class="details__badge" [class.details__badge--return]="mode === 'return'">
-        {{ mode === 'return' ? 'Oddawanie auta' : 'Pobieranie auta' }}
+      <div class="details__card-top">
+        <div class="details__badge" [class.details__badge--return]="mode === 'return'">
+          {{ mode === 'return' ? 'Oddawanie klucza' : 'Zbieranie klucza' }}
+        </div>
+        <button class="details__back" type="button" (click)="goBack()">
+          WSTECZ
+        </button>
       </div>
 
       <h2 class="details__card-title">Dane pojazdu</h2>
@@ -57,6 +64,12 @@
     </div>
   } @else {
     <div class="details__card details__card--error">
+      <div class="details__card-top">
+        <span></span>
+        <button class="details__back" type="button" (click)="goBack()">
+          WSTECZ
+        </button>
+      </div>
       <h2 class="details__card-title">{{ error || 'Nie znaleziono kluczyka' }}</h2>
       <p class="details__card-hint">
         Kod <strong>{{ code }}</strong>
@@ -66,9 +79,6 @@
       </p>
       <button class="details__confirm details__confirm--secondary" type="button" (click)="loadCar()">
         SPRÓBUJ PONOWNIE
-      </button>
-      <button class="details__confirm details__confirm--secondary" type="button" (click)="goBack()" style="margin-top: 0.75rem;">
-        WSTECZ DO SKANERA
       </button>
     </div>
   }
