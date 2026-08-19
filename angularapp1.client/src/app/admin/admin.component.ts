@@ -233,7 +233,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.qrError.set('');
 
     const renderQr = async () => {
-      const scanUrl = `${window.location.origin}/key/${encodeURIComponent(newCode)}?mode=take`;
+    // Tryb (oddanie/zabranie) ustalamy dynamicznie po zeskanowaniu na podstawie statusu auta.
+    const scanUrl = `${window.location.origin}/key/${encodeURIComponent(newCode)}`;
       const dataUrl = await QRCode.toDataURL(scanUrl, { width: 280, margin: 1 });
       this.qrDataUrl.set(dataUrl);
     };
@@ -298,6 +299,21 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     this.form = this.emptyForm();
     this.editingId.set(null);
+    this.formError.set('');
+    this.formMode.set('edit');
+    this.showQrPanel.set(false);
+    this.showHistoryPanel.set(false);
+  }
+
+  openEdit(row: Car): void {
+    this.form = {
+      brand: row.brand ?? '',
+      model: row.model ?? '',
+      registration: row.registration ?? '',
+      keyNumber: row.keyNumber ?? '',
+      qrCode: row.qrCode ?? '',
+    };
+    this.editingId.set(row.id);
     this.formError.set('');
     this.formMode.set('edit');
     this.showQrPanel.set(false);

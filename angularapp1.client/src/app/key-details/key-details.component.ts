@@ -11,7 +11,7 @@ import { CarService } from '../services/car.service';
 })
 export class KeyDetailsComponent implements OnInit {
   code = '';
-  mode = 'take';
+  mode: 'take' | 'return' | 'auto' = 'auto';
   record: Car | null = null;
   loading = true;
   error = '';
@@ -25,14 +25,13 @@ export class KeyDetailsComponent implements OnInit {
   ) {}
 
   get pageTitle(): string {
-    return this.mode === 'return'
-      ? 'Potwierdzenie oddania auta'
-      : 'Potwierdzenie pobrania auta';
+    if (this.mode === 'return') return 'Potwierdzenie oddania auta';
+    if (this.mode === 'take') return 'Potwierdzenie pobrania auta';
+    return 'Potwierdzenie akcji po skanowaniu';
   }
 
   ngOnInit(): void {
     this.code = this.route.snapshot.paramMap.get('code') ?? '';
-    this.mode = this.route.snapshot.queryParamMap.get('mode') ?? 'take';
     this.loadCar();
   }
 
@@ -45,7 +44,13 @@ export class KeyDetailsComponent implements OnInit {
     this.cars.getByQrCode(this.code).subscribe({
       next: (car) => {
         this.record = car;
+        // Zawsze decyduj na podstawie statusu auta, a nie na podstawie query string z QR.
+        // Dzięki temu ten sam kod działa poprawnie nawet jeśli wcześniej był wygenerowany jako `mode=take`.
+        this.mode = this.getModeForStatus(car.status);
         this.loading = false;
+        if (car.status === 'LOST') {
+          this.error = 'Kluczyk jest oznaczony jako zagubiony.';
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -70,6 +75,13 @@ export class KeyDetailsComponent implements OnInit {
     });
   }
 
+  private getModeForStatus(status: string): 'take' | 'return' {
+    if (status === 'IN_USE') return 'return';
+    // FREE i LOST traktujemy jak „zabierz” na poziomie UI/napisu,
+    // ale LOST i tak zablokujemy przyciskiem „POTWIERDŹ”.
+    return 'take';
+  }
+
   goBack(): void {
     this.router.navigate(['/scanner'], { queryParams: { mode: this.mode } });
   }
@@ -82,6 +94,13 @@ export class KeyDetailsComponent implements OnInit {
     this.confirming = true;
     this.error = '';
     this.cdr.detectChanges();
+
+    if (this.record.status === 'LOST') {
+      this.confirming = false;
+      this.error = 'Nie można wykonać tej akcji: kluczyk jest zagubiony.';
+      this.cdr.detectChanges();
+      return;
+    }
 
     const request =
       this.mode === 'return'

@@ -5,19 +5,26 @@
       @if (lastSyncedAt()) {
       <p class="registry__sync">
         @if (autoRefreshing()) {
-        Synchronizacja…
+        Aktualizacja…
         } @else {
-        Zsynchronizowano {{ lastSyncedAt() | date: 'HH:mm:ss' }}
+        Zaktualizowano {{ lastSyncedAt() | date: 'dd.MM.yyyy HH:mm' }}
         }
       </p>
       }
     </div>
     <div class="registry__actions">
-      <button type="button" class="btn btn--ghost" (click)="loadRegistry()" [disabled]="loading()">Odśwież</button>
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm"
+        (click)="loadRegistry()"
+        [disabled]="loading()"
+      >
+        Odśwież
+      </button>
 
-      <div class="settings-dropdown">
+      <div class="settings-dropdown" #settingsDropdown>
         <button type="button"
-                class="btn btn--ghost settings-btn"
+                class="btn btn--secondary btn--sm settings-btn"
                 [class.settings-btn--open]="settingsMenuOpen()"
                 (click)="toggleSettingsMenu()"
                 aria-label="Ustawienia">
@@ -48,30 +55,38 @@
         }
       </div>
 
-      <button type="button" class="btn btn--ghost" (click)="logout()">Wyloguj</button>
+      <button type="button" class="btn btn--danger btn--sm" (click)="logout()">Wyloguj</button>
     </div>
   </header>
 
   <section class="stats-grid">
     <article class="stat-card">
-      <span class="stat-card__label">Wszystkie auta</span>
+      <div class="stat-card__text">
+        <span class="stat-card__label">Wszystkie auta</span>
+        <span class="stat-card__hint">pełny rejestr pojazdów</span>
+      </div>
       <strong class="stat-card__value">{{ rows().length }}</strong>
-      <span class="stat-card__hint">pełny rejestr pojazdów</span>
     </article>
-    <article class="stat-card stat-card--free">
-      <span class="stat-card__label">Dostępne</span>
+    <article class="stat-card">
+      <div class="stat-card__text">
+        <span class="stat-card__label">Dostępne</span>
+        <span class="stat-card__hint">gotowe do pobrania</span>
+      </div>
       <strong class="stat-card__value">{{ freeCarsCount() }}</strong>
-      <span class="stat-card__hint">gotowe do pobrania</span>
     </article>
-    <article class="stat-card stat-card--busy">
-      <span class="stat-card__label">W użyciu</span>
+    <article class="stat-card">
+      <div class="stat-card__text">
+        <span class="stat-card__label">W użyciu</span>
+        <span class="stat-card__hint">aktualnie poza firmą</span>
+      </div>
       <strong class="stat-card__value">{{ inUseCarsCount() }}</strong>
-      <span class="stat-card__hint">aktualnie poza firmą</span>
     </article>
-    <article class="stat-card stat-card--lost">
-      <span class="stat-card__label">Zagubione</span>
+    <article class="stat-card">
+      <div class="stat-card__text">
+        <span class="stat-card__label">Zagubione</span>
+        <span class="stat-card__hint">wymagają uwagi</span>
+      </div>
       <strong class="stat-card__value">{{ lostCarsCount() }}</strong>
-      <span class="stat-card__hint">wymagają uwagi</span>
     </article>
   </section>
 
@@ -372,7 +387,7 @@
                 }
               </div>
               <div class="row-actions__secondary">
-                @if (row.status === 'FREE') {
+                @if (row.status === 'FREE' || row.status === 'IN_USE') {
                 <button type="button"
                         class="btn btn--lost btn--sm"
                         [disabled]="lostActionId() === row.id"

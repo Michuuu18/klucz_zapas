@@ -47,7 +47,7 @@
       <button
         class="details__confirm"
         type="button"
-        [disabled]="confirming"
+        [disabled]="confirming || record.status === 'LOST' || mode === 'auto'"
         (click)="confirm()"
       >
         {{ confirming
