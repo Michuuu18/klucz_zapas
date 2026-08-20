@@ -373,7 +373,7 @@
           <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(null); historyDropdownOpen.set(false)">Wybierz auto...</button>
           @for (row of rows(); track row.id) {
           <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(row.id); historyDropdownOpen.set(false)">
-            {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ row.keyNumber || '—' }})
+            {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
           </button>
           }
         </div>
@@ -386,8 +386,8 @@
     <div class="history-summary">
       <div><span class="muted">Auto:</span> <strong>{{ car.brand }} {{ car.model }}</strong></div>
       <div><span class="muted">Tablice:</span> <strong>{{ car.registration || '—' }}</strong></div>
-      <div><span class="muted">Kluczyk:</span> <strong>{{ car.keyNumber || '—' }}</strong></div>
-      <div><span class="muted">QR:</span> <code>{{ car.qrCode || '—' }}</code></div>
+      <div><span class="muted">Klucz:</span> <strong>{{ keyKindLabel(car) }}</strong></div>
+      <div><span class="muted">Kod QR:</span> <code>{{ car.qrCode || '—' }}</code></div>
       <div><span class="muted">Status teraz:</span> <strong>{{ statusLabel(car.status) }}</strong></div>
       <div><span class="muted">Posiada teraz:</span> <strong>{{ car.heldBy || '—' }}</strong></div>
     </div>
@@ -472,7 +472,7 @@
         <tr>
           <th>Tablice</th>
           <th>Auto</th>
-          <th>Kluczyk / QR</th>
+          <th>Klucz / QR</th>
           <th>Status</th>
           <th>Posiada</th>
           <th>Zabrane o</th>
@@ -523,10 +523,10 @@
         <tr [class.row--in-use]="row.status === 'IN_USE'">
           <td><strong class="plate">{{ row.registration || '—' }}</strong></td>
           <td><strong>{{ row.brand }} {{ row.model }}</strong></td>
-          <td>
+          <td class="key-meta-cell">
             <div class="key-meta">
-              <span>{{ row.keyNumber || '—' }}</span>
-              <code>{{ row.qrCode || '—' }}</code>
+              <strong class="key-meta__type">{{ keyKindLabel(row) }}</strong>
+              <span class="key-meta__qr">{{ row.qrCode || '—' }}</span>
             </div>
           </td>
           <td class="status-cell">
