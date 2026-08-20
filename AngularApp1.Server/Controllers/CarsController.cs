@@ -54,6 +54,19 @@ public class CarsController : ControllerBase
         return car is null ? NotFound(new { message = "Nie znaleziono auta." }) : Ok(car);
     }
 
+    [HttpPost("{id:int}/note")]
+    [Authorize(Roles = "Admin")]
+    public ActionResult<Car> UpdateNote(int id, [FromBody] CarNoteRequest? request)
+    {
+        var (car, error) = _cars.UpdateNote(id, request?.Note);
+        if (error is not null)
+        {
+            return BadRequest(new { message = error });
+        }
+
+        return car is null ? NotFound(new { message = "Nie znaleziono auta." }) : Ok(car);
+    }
+
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)

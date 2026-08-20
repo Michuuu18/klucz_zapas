@@ -52,6 +52,11 @@ export class CarService {
   markFound(id: number): Observable<Car> {
     return this.http.post<Car>(`${this.apiUrl}/${id}/found`, {});
   }
+
+  updateNote(id: number, note: string): Observable<Car> {
+    return this.http.post<Car>(`${this.apiUrl}/${id}/note`, { note });
+  }
+
   getHistory(carId: number): Observable<HistoryRecord[]> {
     return this.http.get<HistoryRecord[]>(`${this.apiUrl}/${carId}/history`);
   }

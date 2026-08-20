@@ -12,6 +12,7 @@ export interface Car {
   returnedAt?: string | null;
   lostAt?: string | null;
   lostBy?: string | null;
+  note?: string | null;
 }
 
 export interface CarWritePayload {
@@ -32,4 +33,5 @@ export interface HistoryRecord {
   returnedByDisplayName: string | null;
   durationMinutes: number | null;
   status: string;
+  note?: string | null;
 }

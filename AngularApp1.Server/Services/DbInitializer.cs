@@ -14,6 +14,8 @@ public static class DbInitializer
     {
         db.Database.Migrate();
         AllowSpareKeysForSamePlate(db);
+        EnsureNoteColumn(db);
+        EnsureLogNoteColumn(db);
         RenameLegacyKeyNames(db);
 
         if (db.Cars.Any())
@@ -38,6 +40,22 @@ public static class DbInitializer
         db.Database.ExecuteSqlRaw("""
             DROP INDEX IF EXISTS "IX_cars_Registration";
             DROP INDEX IF EXISTS ix_cars_registration;
+            """);
+    }
+
+    private static void EnsureNoteColumn(AppDbContext db)
+    {
+        db.Database.ExecuteSqlRaw("""
+            ALTER TABLE cars ADD COLUMN IF NOT EXISTS "Note" character varying(2000);
+            ALTER TABLE cars ALTER COLUMN "Note" TYPE character varying(2000);
+            """);
+    }
+
+    private static void EnsureLogNoteColumn(AppDbContext db)
+    {
+        db.Database.ExecuteSqlRaw("""
+            ALTER TABLE IF EXISTS car_logs ADD COLUMN IF NOT EXISTS note character varying(2000);
+            ALTER TABLE IF EXISTS car_logs ALTER COLUMN note TYPE character varying(2000);
             """);
     }
 

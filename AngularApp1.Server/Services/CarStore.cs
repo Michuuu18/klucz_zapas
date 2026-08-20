@@ -111,6 +111,8 @@ public class CarStore
         car.TakenAt = null;
         car.ReturnedBy = loginId;
         car.ReturnedAt = DateTime.UtcNow;
+        var returnNote = string.IsNullOrWhiteSpace(car.Note) ? null : car.Note.Trim();
+        car.Note = null;
 
         _db.SaveChanges();
 
@@ -122,6 +124,7 @@ public class CarStore
                 Username = loginId,
                 Action = "RETURN",
                 Timestamp = DateTime.UtcNow,
+                Note = returnNote,
             });
             _db.SaveChanges();
         }
@@ -150,6 +153,8 @@ public class CarStore
         car.TakenAt = null;
         car.ReturnedBy = loginId;
         car.ReturnedAt = DateTime.UtcNow;
+        var returnNote = string.IsNullOrWhiteSpace(car.Note) ? null : car.Note.Trim();
+        car.Note = null;
         _db.SaveChanges();
 
         try
@@ -160,6 +165,7 @@ public class CarStore
                 Username = loginId,
                 Action = "RETURN",
                 Timestamp = DateTime.UtcNow,
+                Note = returnNote,
             });
             _db.SaveChanges();
         }
@@ -266,6 +272,43 @@ public class CarStore
         foreach (var member in group)
         {
             member.Registration = newPlate;
+        }
+
+        _db.SaveChanges();
+        return (car, null);
+    }
+
+    public (Car? car, string? error) UpdateNote(int id, string? note)
+    {
+        var car = _db.Cars.FirstOrDefault(c => c.Id == id);
+        if (car is null)
+        {
+            return (null, "Nie znaleziono auta.");
+        }
+
+        var value = (note ?? string.Empty).Trim();
+        if (value.Length > 2000)
+        {
+            return (null, "Notatka jest za długa (max 2000 znaków).");
+        }
+
+        car.Note = string.IsNullOrEmpty(value) ? null : value;
+
+        try
+        {
+            var takeLog = _db.CarLogs
+                .Where(l => l.CarId == id && l.Action == "TAKE")
+                .OrderByDescending(l => l.Timestamp)
+                .FirstOrDefault();
+
+            if (takeLog is not null)
+            {
+                takeLog.Note = car.Note;
+            }
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            _logger.LogWarning("Pomijam zapis notatki w historii (brak tabeli car_logs). carId={CarId}", id);
         }
 
         _db.SaveChanges();
@@ -465,6 +508,7 @@ public class CarStore
                     ReturnedByDisplayName = null,
                     DurationMinutes = null,
                     Status = "W użyciu",
+                    Note = log.Note,
                 };
                 sessions.Add(open);
             }
@@ -477,6 +521,10 @@ public class CarStore
                     open.ReturnedByDisplayName = GetDisplayName(log.Username);
                     open.DurationMinutes = (int)Math.Round((log.Timestamp - open.TakenAt).TotalMinutes);
                     open.Status = "Zwrócony";
+                    if (!string.IsNullOrWhiteSpace(log.Note))
+                    {
+                        open.Note = log.Note;
+                    }
                     open = null;
                 }
                 else
@@ -493,6 +541,7 @@ public class CarStore
                         ReturnedByDisplayName = GetDisplayName(log.Username),
                         DurationMinutes = 0,
                         Status = "Zwrócony",
+                        Note = log.Note,
                     });
                 }
             }

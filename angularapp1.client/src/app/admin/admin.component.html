@@ -187,6 +187,48 @@
   </section>
   }
 
+  @if (noteCarId() != null || historyNoteText() != null) {
+  <section class="form-card">
+    <div class="form-card__head">
+      <h2>Notatka</h2>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="closeNotePanel()">Zamknij</button>
+    </div>
+
+    @if (noteCarId() != null) {
+    <p class="muted note-panel__car">{{ getCarLabel(noteCarId()) }}</p>
+    } @else if (selectedHistoryCar(); as car) {
+    <p class="muted note-panel__car">{{ car.brand }} {{ car.model }} — {{ car.registration || 'brak tablic' }}</p>
+    }
+
+    @if (noteError()) {
+    <div class="alert">{{ noteError() }}</div>
+    }
+
+    @if (noteCarId() != null) {
+    <textarea
+      class="note-panel__text"
+      name="noteDraft"
+      rows="10"
+      maxlength="2000"
+      [(ngModel)]="noteDraft"
+      [ngModelOptions]="{standalone: true}"
+      placeholder="Wpisz notatkę"
+      [disabled]="noteSaving()"
+    ></textarea>
+    <p class="muted note-count">{{ noteDraft.length }}/2000</p>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn--primary" (click)="saveNote()" [disabled]="noteSaving()">
+        @if (noteSaving()) { Zapisywanie… } @else { Zapisz }
+      </button>
+      <button type="button" class="btn btn--ghost" (click)="closeNotePanel()" [disabled]="noteSaving()">Anuluj</button>
+    </div>
+    } @else {
+    <div class="note-panel__text note-panel__text--readonly">{{ historyNoteText() }}</div>
+    }
+  </section>
+  }
+
   @if (showQrPanel()) {
   <section class="form-card form-card--qr">
     <div class="form-card__head">
@@ -294,14 +336,15 @@
             <th>Kto oddał</th>
             <th>Zwrócono o</th>
             <th>Czas używania</th>
+            <th>Notatka</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
           @if (historyLoading()) {
-          <tr><td colspan="6" class="muted" style="text-align: center; padding: 2rem;">Wczytywanie historii...</td></tr>
+          <tr><td colspan="7" class="muted" style="text-align: center; padding: 2rem;">Wczytywanie historii...</td></tr>
           } @else if (historyRows().length === 0) {
-          <tr><td colspan="6" class="muted" style="text-align: center; padding: 2rem;">Brak historii dla tego kluczyka w wybranym okresie.</td></tr>
+          <tr><td colspan="7" class="muted" style="text-align: center; padding: 2rem;">Brak historii dla tego kluczyka w wybranym okresie.</td></tr>
           } @else {
           @for (record of historyRows(); track record.id) {
           <tr>
@@ -327,6 +370,15 @@
             </td>
             <td>
               {{ formatDuration(record.durationMinutes) }}
+            </td>
+            <td>
+              @if (record.note) {
+              <button type="button" class="btn btn--note btn--sm" (click)="openHistoryNote(record)">
+                Notatka
+              </button>
+              } @else {
+              <span class="muted">—</span>
+              }
             </td>
             <td>
               @if (record.status === 'W użyciu') {
@@ -437,6 +489,11 @@
                 }
               </div>
               <div class="row-actions__secondary">
+                @if (row.status === 'IN_USE') {
+                <button type="button" class="btn btn--note btn--sm" (click)="openNote(row)">
+                  Notatka
+                </button>
+                }
                 @if (row.status === 'FREE' || row.status === 'IN_USE') {
                 <button type="button"
                         class="btn btn--lost btn--sm"
@@ -455,3 +512,70 @@
   </div>
   }
 </div>
+
+@if (confirmRow(); as car) {
+<div class="confirm-overlay" (click)="closeStatusConfirm()">
+  <section
+    class="confirm-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="statusConfirmTitle"
+    (click)="$event.stopPropagation()">
+    <div class="confirm-dialog__icon" aria-hidden="true">
+      @if (confirmKind() === 'found') {
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+        <path d="M20 7.5 10.2 17 4 11.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      } @else {
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+        <path d="M12 8v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="12" cy="16.2" r="1.15" fill="currentColor"/>
+        <path d="M12 3.6A8.4 8.4 0 1 1 3.6 12 8.4 8.4 0 0 1 12 3.6Z" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      }
+    </div>
+    <h2 id="statusConfirmTitle">
+      @if (confirmKind() === 'found') {
+      Oznaczyć jako znaleziony?
+      } @else {
+      Oznaczyć jako zagubiony?
+      }
+    </h2>
+    <p class="confirm-copy">
+      @if (confirmKind() === 'found') {
+      Ten kluczyk wróci do stanu wolny i będzie dostępny do wydania.
+      } @else {
+      Ten kluczyk zostanie zablokowany i nie będzie dostępny do wydania.
+      }
+    </p>
+    <div class="confirm-car">
+      <strong>{{ car.brand }} {{ car.model }}</strong>
+      <span>{{ car.registration || 'brak tablic' }} · {{ car.keyNumber || 'brak numeru' }}</span>
+    </div>
+    <p class="muted confirm-hint">
+      @if (confirmKind() === 'found') {
+      Auto pojawi się ponownie na liście jako wolne.
+      } @else {
+      Stan możesz później zmienić przyciskiem „Znaleziony”.
+      }
+    </p>
+    <div class="form-actions">
+      <button type="button" class="btn btn--primary" (click)="confirmStatusChange()" [disabled]="lostActionId() === car.id">
+        @if (lostActionId() === car.id) { Zapisywanie… } @else { Potwierdź }
+      </button>
+      <button type="button" class="btn btn--ghost" (click)="closeStatusConfirm()" [disabled]="lostActionId() === car.id">Anuluj</button>
+    </div>
+  </section>
+</div>
+}
+
+@if (toastMessage()) {
+<div class="app-toast" role="status">
+  <span class="app-toast__icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+      <path d="M20 7.5 10.2 17 4 11.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+  <span>{{ toastMessage() }}</span>
+</div>
+}

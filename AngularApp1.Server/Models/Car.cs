@@ -15,6 +15,7 @@ public class Car
     public DateTime? ReturnedAt { get; set; }
     public DateTime? LostAt { get; set; }
     public string? LostBy { get; set; }
+    public string? Note { get; set; }
 }
 
 public class CarActionRequest
@@ -39,4 +40,9 @@ public class CarReturnByIdRequest
 public class CarLostRequest
 {
     public string MarkedBy { get; set; } = string.Empty;
+}
+
+public class CarNoteRequest
+{
+    public string? Note { get; set; }
 }
