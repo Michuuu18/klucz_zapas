@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ThemeService } from '../theme';
 
 @Component({
   selector: 'app-home',
@@ -12,6 +13,7 @@ export class HomeComponent {
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
+    private readonly themeService: ThemeService,
   ) {}
 
   get displayName(): string {
@@ -20,6 +22,14 @@ export class HomeComponent {
 
   get isAdmin(): boolean {
     return this.auth.currentUser()?.role === 'Admin';
+  }
+
+  isDarkMode(): boolean {
+    return this.themeService.isDarkTheme;
+  }
+
+  toggleDarkMode(): void {
+    this.themeService.toggleTheme();
   }
 
   goToAdminPanel(): void {

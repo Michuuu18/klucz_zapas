@@ -466,7 +466,7 @@
   @if (loading()) {
   <p class="muted">Ładowanie rejestru…</p>
   } @else {
-  <div class="table-wrap" [class.table-wrap--menu]="brandFilterOpen() || statusFilterOpen()">
+  <div class="table-wrap registry__table" [class.table-wrap--menu]="brandFilterOpen()">
     <table>
       <thead>
         <tr>
@@ -509,41 +509,6 @@
                     [class.settings-menu__item--active]="brandFilter() === brand"
                     (click)="setBrandFilter(brand)">
                     {{ brand }}
-                  </button>
-                  }
-                </div>
-                }
-              </div>
-              <div class="brand-filter" #statusFilterRef>
-                <button
-                  type="button"
-                  class="brand-filter__btn"
-                  [class.brand-filter__btn--open]="statusFilterOpen()"
-                  [class.brand-filter__btn--filtered]="!!statusFilter()"
-                  (click)="$event.stopPropagation(); toggleStatusFilter()">
-                  <svg class="brand-filter__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="7.5" />
-                    <path d="M12 8.5v4l2.4 1.4" />
-                  </svg>
-                  <span class="brand-filter__label">{{ statusFilterLabel() }}</span>
-                  <svg class="brand-filter__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-                </button>
-                @if (statusFilterOpen()) {
-                <div class="settings-menu settings-menu--select brand-filter__menu" (click)="$event.stopPropagation()">
-                  <button
-                    type="button"
-                    class="settings-menu__item"
-                    [class.settings-menu__item--active]="!statusFilter()"
-                    (click)="setStatusFilter(null)">
-                    Wszystkie statusy
-                  </button>
-                  @for (option of statusOptions; track option.value) {
-                  <button
-                    type="button"
-                    class="settings-menu__item"
-                    [class.settings-menu__item--active]="statusFilter() === option.value"
-                    (click)="setStatusFilter(option.value)">
-                    {{ option.label }}
                   </button>
                   }
                 </div>

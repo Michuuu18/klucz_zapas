@@ -137,9 +137,15 @@ h2 {
 }
 
 .btn--lost {
-  background: #bc6c25;
+  background: #f0771a;
   color: #fff;
   border: none;
+  box-shadow: 0 6px 16px rgba(240, 119, 26, 0.28);
+}
+
+.btn--lost:hover:not(:disabled) {
+  background: #dc6410;
+  box-shadow: 0 8px 18px rgba(240, 119, 26, 0.34);
 }
 
 .btn--found {
@@ -389,14 +395,30 @@ h2 {
 }
 
 .table-wrap {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: min(70vh, 52rem);
   background: #fff;
   border-radius: 20px;
   box-shadow: 0 10px 28px rgba(26, 51, 82, 0.08);
+  -webkit-overflow-scrolling: touch;
 }
 
-.table-wrap--menu {
-  overflow: visible;
+.registry__table {
+  min-height: 12rem;
+}
+
+.registry__table::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.registry__table::-webkit-scrollbar-thumb {
+  background: rgba(26, 51, 82, 0.22);
+  border-radius: 999px;
+}
+
+.registry__table::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .actions-head-cell {
@@ -423,7 +445,7 @@ h2 {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  max-width: 190px;
+  max-width: 220px;
   padding: 0.42rem 0.7rem 0.42rem 0.75rem;
   border: 1px solid rgba(26, 51, 82, 0.16);
   border-radius: 999px;
@@ -512,7 +534,7 @@ th {
   white-space: nowrap;
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
 }
 
 td {
@@ -1112,6 +1134,51 @@ tbody tr:last-child td {
 }
 
 
+.theme-toggle-btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px !important;
+
+}
+
+  .theme-toggle-btn .theme-icon {
+    position: absolute;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+  }
+
+  /* --- STAN DOMYŚLNY (JASNY) --- */
+  /* Księżyc chowa się na dole i jest obrócony */
+  .theme-toggle-btn .icon-moon {
+    opacity: 0;
+    transform: translateY(20px) rotate(-90deg);
+  }
+
+  /* Słońce jest na środku */
+  .theme-toggle-btn .icon-sun {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+
+  /* --- STAN CIEMNY (po dodaniu klasy .is-dark przez Angulara) --- */
+  /* Księżyc wjeżdża na środek */
+  .theme-toggle-btn.is-dark .icon-moon {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+
+  /* Słońce ucieka do góry i się kręci */
+  .theme-toggle-btn.is-dark .icon-sun {
+    opacity: 0;
+    transform: translateY(-20px) rotate(90deg);
+  }
+
+>>>>>>> 1604ede08feb56ba5dd68cc97152cf5243b7b795
+
 :host-context(body.dark-theme) {
   color: var(--text-main);
 
@@ -1314,6 +1381,10 @@ tbody tr:last-child td {
     color: #fff;
   }
 
+  .registry__table::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
   th {
     background: #121c2a;
     color: #8fa3b5;
@@ -1446,6 +1517,7 @@ tbody tr:last-child td {
   }
 }
 
+
 .theme-toggle-btn {
   position: relative;
   overflow: hidden;
@@ -1488,4 +1560,5 @@ tbody tr:last-child td {
     opacity: 0;
     transform: translateY(-20px) rotate(90deg);
   }
+
 

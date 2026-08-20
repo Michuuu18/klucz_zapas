@@ -85,7 +85,49 @@
 
 .home__user-actions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.home__theme-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border-radius: 999px;
+  background: #e4eef8;
+  color: #1a3352;
+  border: 1px solid #c5d5e8;
+  box-shadow: 0 4px 12px rgba(26, 51, 82, 0.05);
+  flex-shrink: 0;
+
+  .theme-icon {
+    position: absolute;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .icon-moon {
+    opacity: 0;
+    transform: translateY(6px) rotate(-20deg);
+  }
+
+  .icon-sun {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+
+  &.is-dark .icon-moon {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+
+  &.is-dark .icon-sun {
+    opacity: 0;
+    transform: translateY(-6px) rotate(40deg);
+  }
 }
 
 .home__user-btn {
@@ -227,6 +269,13 @@
     background: var(--bg-input);
     color: var(--text-main);
     border-color: var(--frame);
+  }
+
+  .home__theme-btn {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+    box-shadow: none;
   }
 
   .home__user-btn--logout {
