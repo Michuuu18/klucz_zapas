@@ -173,3 +173,37 @@
     cursor: not-allowed;
   }
 }
+
+:host-context(body.dark-theme) {
+  .login {
+    color: var(--text-main);
+  }
+
+  .login__panel {
+    background: var(--bg-card);
+    border: 1px solid var(--frame);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .login__logo {
+    mix-blend-mode: normal;
+    filter: brightness(0) invert(0.94);
+  }
+
+  .login__subtitle,
+  .login__label,
+  .login__remember {
+    color: var(--text-muted);
+  }
+
+  .login__input {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+  }
+
+  .login__btn {
+    background: #1f7a3a;
+    color: #fff;
+  }
+}

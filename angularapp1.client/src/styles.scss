@@ -99,26 +99,35 @@ img {
   }
 }
 :root {
-  /* Tła */
-  --bg-main: #f3f4f6; /* Jasnoszare tło całej strony */
-  --bg-card: #ffffff; /* Czysta biel dla paneli i statystyk */
-  --bg-input: #ffffff; /* Tło dla dropdownu z autem */
-  /* Tekst */
-  --text-main: #1e293b; /* Ciemnogranatowy/grafitowy (np. "Panel administratora") */
-  --text-muted: #64748b; /* Szary tekst podtytułów (np. "Zaktualizowano...") */
-  /* Ramki i detale */
-  --border-color: #e2e8f0; /* Delikatne obramowanie dropdownu */
-  --btn-secondary-bg: #f1f5f9; /* Tło dla przycisku "Odśwież" / "Anuluj" */
+  --bg-main: #eef2f6;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --text-main: #1a3352;
+  --text-muted: #5a6f82;
+  --border-color: #e2e8f0;
+  --btn-secondary-bg: #e4eef8;
+  --accent: #1f7a3a;
+  --frame: #e2e8f0;
 }
+
 body.dark-theme {
-  /* Tła */
-  --bg-main: #3a3a3c; /* Bardzo ciemny, chłodny granat na tło strony */
-  --bg-card: #1e293b; /* Nieco jaśniejsze tło dla samych kart/paneli */
-  --bg-input: #0f172a;
-  /* Tekst */
-  --text-main: #f8fafc; /* Niemal czysta biel dla głównych napisów */
-  --text-muted: #94a3b8; /* Jasnoszary dla podtytułów */
-  /* Ramki i detale */
-  --border-color: #334155; /* Ciemniejsza ramka, żeby nie raziła w oczy */
-  --btn-secondary-bg: #334155;
+  --bg-main: #0e1620;
+  --bg-card: #172333;
+  --bg-input: #121c2a;
+  --text-main: #e8eef4;
+  --text-muted: #8fa3b5;
+  --border-color: #2a3c50;
+  --btn-secondary-bg: #1b2b3d;
+  --accent: #2ea043;
+  --frame: #2a3c50;
+  color: #e8eef4;
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(46, 160, 67, 0.16) 0%, transparent 42%),
+    radial-gradient(ellipse at 88% 92%, rgba(61, 142, 201, 0.12) 0%, transparent 44%),
+    #0e1620;
+}
+
+body.dark-theme .brand-logo img {
+  mix-blend-mode: normal;
+  filter: brightness(0) invert(0.94);
 }

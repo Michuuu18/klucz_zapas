@@ -24,12 +24,16 @@ public static class DbInitializer
         }
 
         db.Cars.AddRange(
-            new Car { Brand = "Toyota", Model = "Corolla", Registration = "BB 1234A", KeyNumber = "K-O-01", QrCode = "QR-O-01", Status = "FREE" },
-            new Car { Brand = "Volkswagen", Model = "Passat", Registration = "BB 5678B", KeyNumber = "K-O-02", QrCode = "QR-O-02", Status = "FREE" },
-            new Car { Brand = "Skoda", Model = "Octavia", Registration = "SB 9012C", KeyNumber = "K-O-03", QrCode = "QR-O-03", Status = "FREE" },
-            new Car { Brand = "Ford", Model = "Transit", Registration = "BB 3456D", KeyNumber = "K-O-04", QrCode = "QR-O-04", Status = "FREE" },
-            new Car { Brand = "BMW", Model = "320d", Registration = "KR 7890E", KeyNumber = "K-O-05", QrCode = "QR-O-05", Status = "FREE" },
-            new Car { Brand = "BMW", Model = "335i", Registration = "SZ 9707", KeyNumber = "K-O-06", QrCode = "QR-O-06", Status = "FREE" }
+            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10231", KeyNumber = "K-O-01", QrCode = "QR-O-01", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10232", KeyNumber = "K-O-02", QrCode = "QR-O-02", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10233", KeyNumber = "K-O-03", QrCode = "QR-O-03", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Yaris", Registration = "SB 20441", KeyNumber = "K-O-04", QrCode = "QR-O-04", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Yaris", Registration = "SB 20442", KeyNumber = "K-O-05", QrCode = "QR-O-05", Status = "FREE" },
+            new Car { Brand = "BMW", Model = "320d", Registration = "SB 31001", KeyNumber = "K-O-06", QrCode = "QR-O-06", Status = "FREE" },
+            new Car { Brand = "BMW", Model = "320d", Registration = "SB 31002", KeyNumber = "K-O-07", QrCode = "QR-O-07", Status = "FREE" },
+            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45110", KeyNumber = "K-O-08", QrCode = "QR-O-08", Status = "FREE" },
+            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45111", KeyNumber = "K-O-09", QrCode = "QR-O-09", Status = "FREE" },
+            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45112", KeyNumber = "K-O-10", QrCode = "QR-O-10", Status = "FREE" }
         );
 
         db.SaveChanges();

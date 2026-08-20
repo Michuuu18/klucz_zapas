@@ -445,7 +445,7 @@
   @if (loading()) {
   <p class="muted">Ładowanie rejestru…</p>
   } @else {
-  <div class="table-wrap">
+  <div class="table-wrap" [class.table-wrap--menu]="brandFilterOpen() || statusFilterOpen()">
     <table>
       <thead>
         <tr>
@@ -457,11 +457,83 @@
           <th>Zabrane o</th>
           <th>Zwrócone o</th>
           <th>Zwrócił</th>
-          <th>Akcje</th>
+          <th class="actions-head-cell">
+            <div class="table-filters">
+              <div class="brand-filter" #brandFilterRef>
+                <button
+                  type="button"
+                  class="brand-filter__btn"
+                  [class.brand-filter__btn--open]="brandFilterOpen()"
+                  [class.brand-filter__btn--filtered]="!!brandFilter()"
+                  (click)="$event.stopPropagation(); toggleBrandFilter()">
+                  <svg class="brand-filter__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 5h16l-6.2 7.4V19l-3.6 2v-8.6L4 5Z" />
+                  </svg>
+                  <span class="brand-filter__label">{{ brandFilter() || 'Wszystkie marki' }}</span>
+                  <svg class="brand-filter__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                @if (brandFilterOpen()) {
+                <div class="settings-menu settings-menu--select brand-filter__menu" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="settings-menu__item"
+                    [class.settings-menu__item--active]="!brandFilter()"
+                    (click)="setBrandFilter(null)">
+                    Wszystkie marki
+                  </button>
+                  @for (brand of brands(); track brand) {
+                  <button
+                    type="button"
+                    class="settings-menu__item"
+                    [class.settings-menu__item--active]="brandFilter() === brand"
+                    (click)="setBrandFilter(brand)">
+                    {{ brand }}
+                  </button>
+                  }
+                </div>
+                }
+              </div>
+              <div class="brand-filter" #statusFilterRef>
+                <button
+                  type="button"
+                  class="brand-filter__btn"
+                  [class.brand-filter__btn--open]="statusFilterOpen()"
+                  [class.brand-filter__btn--filtered]="!!statusFilter()"
+                  (click)="$event.stopPropagation(); toggleStatusFilter()">
+                  <svg class="brand-filter__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="7.5" />
+                    <path d="M12 8.5v4l2.4 1.4" />
+                  </svg>
+                  <span class="brand-filter__label">{{ statusFilterLabel() }}</span>
+                  <svg class="brand-filter__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                @if (statusFilterOpen()) {
+                <div class="settings-menu settings-menu--select brand-filter__menu" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="settings-menu__item"
+                    [class.settings-menu__item--active]="!statusFilter()"
+                    (click)="setStatusFilter(null)">
+                    Wszystkie statusy
+                  </button>
+                  @for (option of statusOptions; track option.value) {
+                  <button
+                    type="button"
+                    class="settings-menu__item"
+                    [class.settings-menu__item--active]="statusFilter() === option.value"
+                    (click)="setStatusFilter(option.value)">
+                    {{ option.label }}
+                  </button>
+                  }
+                </div>
+                }
+              </div>
+            </div>
+          </th>
         </tr>
       </thead>
       <tbody>
-        @for (row of rows(); track row.id) {
+        @for (row of tableRows(); track row.id) {
         <tr [class.row--in-use]="row.status === 'IN_USE'">
           <td><strong class="plate">{{ row.registration || '—' }}</strong></td>
           <td><strong>{{ row.brand }} {{ row.model }}</strong></td>
@@ -509,47 +581,46 @@
           </td>
           <td class="actions-cell">
             <div class="row-actions">
-              <div class="row-actions__primary">
-                @if (row.status === 'FREE') {
-                <button type="button"
-                        class="btn btn--take btn--sm"
-                        [disabled]="takingId() === row.id"
-                        (click)="takeCar(row)">
-                  @if (takingId() === row.id) { … } @else { Zabierz }
-                </button>
-                } @else if (row.status === 'IN_USE') {
-                <button type="button"
-                        class="btn btn--return btn--sm"
-                        [disabled]="returningId() === row.id"
-                        (click)="returnCar(row)">
-                  @if (returningId() === row.id) { … } @else { Zwróć }
-                </button>
-                } @else {
-                <button type="button"
-                        class="btn btn--found btn--sm"
-                        [disabled]="lostActionId() === row.id"
-                        (click)="markFound(row)">
-                  @if (lostActionId() === row.id) { … } @else { Znaleziony }
-                </button>
-                }
-              </div>
-              <div class="row-actions__secondary">
-                @if (row.status === 'IN_USE') {
-                <button type="button" class="btn btn--note btn--sm" (click)="openNote(row)">
-                  Notatka
-                </button>
-                }
-                @if (row.status === 'FREE' || row.status === 'IN_USE') {
-                <button type="button"
-                        class="btn btn--lost btn--sm"
-                        [disabled]="lostActionId() === row.id"
-                        (click)="markLost(row)">
-                  @if (lostActionId() === row.id) { … } @else { Zagubiony }
-                </button>
-                }
-              </div>
+              @if (row.status === 'FREE') {
+              <button type="button"
+                      class="btn btn--take btn--sm"
+                      [disabled]="takingId() === row.id"
+                      (click)="takeCar(row)">
+                @if (takingId() === row.id) { … } @else { Zabierz }
+              </button>
+              } @else if (row.status === 'IN_USE') {
+              <button type="button"
+                      class="btn btn--return btn--sm"
+                      [disabled]="returningId() === row.id"
+                      (click)="returnCar(row)">
+                @if (returningId() === row.id) { … } @else { Zwróć }
+              </button>
+              <button type="button" class="btn btn--note btn--sm" (click)="openNote(row)">
+                Notatka
+              </button>
+              } @else {
+              <button type="button"
+                      class="btn btn--found btn--sm"
+                      [disabled]="lostActionId() === row.id"
+                      (click)="markFound(row)">
+                @if (lostActionId() === row.id) { … } @else { Znaleziony }
+              </button>
+              }
+              @if (row.status === 'FREE' || row.status === 'IN_USE') {
+              <button type="button"
+                      class="btn btn--lost btn--sm"
+                      [disabled]="lostActionId() === row.id"
+                      (click)="markLost(row)">
+                @if (lostActionId() === row.id) { … } @else { Zagubiony }
+              </button>
+              }
             </div>
           </td>
+        </tr>
+        }
+        @if (tableRows().length === 0) {
+        <tr>
+          <td colspan="9" class="muted">{{ emptyTableMessage() }}</td>
         </tr>
         }
       </tbody>
