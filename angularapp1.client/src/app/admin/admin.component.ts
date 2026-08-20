@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 import { CarService } from '../services/car.service';
-
+import { ThemeService } from '../theme';
 type FormMode = 'closed' | 'create' | 'edit';
 type KeyKind = 'O' | 'Z';
 
@@ -15,6 +15,8 @@ type KeyKind = 'O' | 'Z';
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss',
 })
+
+
 export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('settingsDropdown') settingsDropdownRef!: ElementRef;
   @ViewChild('qrDropdownRef') qrDropdownRef!: ElementRef;
@@ -93,13 +95,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   toggleDarkMode(): void {
-    // Placeholder: can be wired to theme switch later.
+    this.themeService.toggleTheme();
   }
 
   constructor(
     private readonly cars: CarService,
     private readonly auth: AuthService,
     private readonly router: Router,
+    private themeService: ThemeService
   ) {}
 
   get displayName(): string {
@@ -652,4 +655,5 @@ export class AdminComponent implements OnInit, OnDestroy {
     const base = `${car.brand} ${car.model} — ${car.registration || 'brak tablic'}`;
     return withKey ? `${base} (Klucz: ${car.keyNumber || '—'})` : base;
   }
+
 }

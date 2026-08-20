@@ -4,9 +4,9 @@
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  background: #eef2f6;
+  background: var(--bg-main);
   font-family: 'Manrope', 'Segoe UI', sans-serif;
-  color: #1a3352;
+  color: var(--text-main);
 }
 
 .registry {

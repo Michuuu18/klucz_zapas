@@ -98,3 +98,27 @@ img {
     min-height: 0 !important;
   }
 }
+:root {
+  /* Tła */
+  --bg-main: #f3f4f6; /* Jasnoszare tło całej strony */
+  --bg-card: #ffffff; /* Czysta biel dla paneli i statystyk */
+  --bg-input: #ffffff; /* Tło dla dropdownu z autem */
+  /* Tekst */
+  --text-main: #1e293b; /* Ciemnogranatowy/grafitowy (np. "Panel administratora") */
+  --text-muted: #64748b; /* Szary tekst podtytułów (np. "Zaktualizowano...") */
+  /* Ramki i detale */
+  --border-color: #e2e8f0; /* Delikatne obramowanie dropdownu */
+  --btn-secondary-bg: #f1f5f9; /* Tło dla przycisku "Odśwież" / "Anuluj" */
+}
+body.dark-theme {
+  /* Tła */
+  --bg-main: #3a3a3c; /* Bardzo ciemny, chłodny granat na tło strony */
+  --bg-card: #1e293b; /* Nieco jaśniejsze tło dla samych kart/paneli */
+  --bg-input: #0f172a;
+  /* Tekst */
+  --text-main: #f8fafc; /* Niemal czysta biel dla głównych napisów */
+  --text-muted: #94a3b8; /* Jasnoszary dla podtytułów */
+  /* Ramki i detale */
+  --border-color: #334155; /* Ciemniejsza ramka, żeby nie raziła w oczy */
+  --btn-secondary-bg: #334155;
+}

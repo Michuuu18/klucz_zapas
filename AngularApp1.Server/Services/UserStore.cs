@@ -13,21 +13,45 @@ public class UserStore
         _users =
         [
             new()
-            {
-                Id = 1,
-                Username = "admin",
-                PasswordHash = Hash("admin123"),
-                DisplayName = "Administrator",
-                Role = UserRole.Admin,
-            },
-            new()
-            {
-                Id = 2,
-                Username = "pracownik",
-                PasswordHash = Hash("pracownik123"),
-                DisplayName = "Pracownik",
-                Role = UserRole.Pracownik,
-            },
+          {
+              Id = 1,
+              Username = "admin",
+              PasswordHash = Hash("admin123"),
+              DisplayName = "Administrator",
+              Role = UserRole.Admin,
+          },
+          new()
+          {
+              Id = 2,
+              Username = "pracownik",
+              PasswordHash = Hash("pracownik123"),
+              DisplayName = "Pracownik",
+              Role = UserRole.Pracownik,
+          },
+          new()
+          {
+              Id = 3,
+              Username = "dominik",
+              PasswordHash = Hash("dominik123"),
+              DisplayName = "Dominik",
+              Role = UserRole.Pracownik,
+          },
+          new()
+          {
+              Id = 4,
+              Username = "michal",
+              PasswordHash = Hash("michal123"),
+              DisplayName = "Michał",
+              Role = UserRole.Pracownik,
+          },
+          new()
+          {
+              Id = 5,
+              Username = "agnieszka",
+              PasswordHash = Hash("agnieszka123"),
+              DisplayName = "Agnieszka",
+              Role = UserRole.Pracownik,
+          }
         ];
     }
 
