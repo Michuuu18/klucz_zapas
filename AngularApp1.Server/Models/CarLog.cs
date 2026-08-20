@@ -5,4 +5,5 @@
     public string Username { get; set; } = string.Empty;
     public string Action { get; set; } = string.Empty; 
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public string? Note { get; set; }
 }

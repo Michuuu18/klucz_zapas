@@ -8,6 +8,7 @@ import { CarService } from '../services/car.service';
 
 type FormMode = 'closed' | 'create' | 'edit';
 type KeyKind = 'O' | 'Z';
+type StatusConfirmKind = 'lost' | 'found';
 
 @Component({
   selector: 'app-admin',
@@ -37,6 +38,13 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     if (this.editDropdownOpen() && this.editDropdownRef && !this.editDropdownRef.nativeElement.contains(target)) {
       this.editDropdownOpen.set(false);
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.confirmRow() && this.lostActionId() == null) {
+      this.closeStatusConfirm();
     }
   }
   private static readonly AUTO_REFRESH_MS = 3000;
@@ -69,6 +77,15 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly historyDropdownOpen = signal(false);
   readonly editDropdownOpen = signal(false);
   readonly keyKind = signal<KeyKind>('O');
+  readonly noteCarId = signal<number | null>(null);
+  readonly noteSaving = signal(false);
+  readonly noteError = signal('');
+  readonly historyNoteText = signal<string | null>(null);
+  readonly confirmRow = signal<Car | null>(null);
+  readonly confirmKind = signal<StatusConfirmKind | null>(null);
+  readonly toastMessage = signal('');
+  noteDraft = '';
+  private toastTimer?: ReturnType<typeof setTimeout>;
 
   form: CarWritePayload = this.emptyForm();
 
@@ -115,9 +132,15 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
     }
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
   }
 
   loadRegistry(silent = false): void {
+    if (silent && (this.noteCarId() != null || this.confirmRow() != null)) {
+      return;
+    }
     if (!silent) {
       this.loading.set(true);
       this.error.set('');
@@ -156,6 +179,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.formMode.set('create');
     this.showQrPanel.set(false);
     this.showHistoryPanel.set(false);
+    this.closeNotePanel();
+    this.closeStatusConfirm();
   }
 
   onKeyKindChange(kind: KeyKind): void {
@@ -172,6 +197,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.qrDataUrl.set(null);
       this.qrError.set('');
       this.showHistoryPanel.set(false);
+      this.closeNotePanel();
+      this.closeStatusConfirm();
     }
   }
 
@@ -195,6 +222,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (opening) {
       this.formMode.set('closed');
       this.showQrPanel.set(false);
+      this.closeNotePanel();
+      this.closeStatusConfirm();
       this.selectedHistoryCarId.set(null);
       this.historyRows.set([]);
     }
@@ -202,6 +231,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   closeHistoryPanel(): void {
     this.showHistoryPanel.set(false);
+    this.historyNoteText.set(null);
   }
 
   onHistoryCarChange(carId: number | string | null): void {
@@ -319,6 +349,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.formMode.set('edit');
     this.showQrPanel.set(false);
     this.showHistoryPanel.set(false);
+    this.closeNotePanel();
+    this.closeStatusConfirm();
   }
 
   openEdit(row: Car): void {
@@ -334,6 +366,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.formMode.set('edit');
     this.showQrPanel.set(false);
     this.showHistoryPanel.set(false);
+    this.closeNotePanel();
+    this.closeStatusConfirm();
   }
 
   onEditCarSelect(carId: number | string | null): void {
@@ -435,7 +469,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.cars.takeCar(qrCode).subscribe({
       next: () => {
         this.takingId.set(null);
-        this.loadRegistry();
+        this.loadRegistry(true);
       },
       error: (err: HttpErrorResponse) => {
         this.takingId.set(null);
@@ -461,6 +495,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.cars.returnCarById(row.id, loginId).subscribe({
       next: () => {
         this.returningId.set(null);
+        if (this.noteCarId() === row.id) {
+          this.closeNotePanel();
+        }
         this.loadRegistry();
       },
       error: (err: HttpErrorResponse) => {
@@ -513,57 +550,88 @@ export class AdminComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const label = `${row.brand} ${row.model} (${row.registration || 'brak tablic'})`;
-    if (
-      !confirm(
-        `Oznaczyć kluczyk jako ZAGUBIONY?\n${label}\n\nAuto zostanie oznaczone jako niedostępne.`
-      )
-    ) {
-      return;
-    }
+    this.openStatusConfirm(row, 'lost');
+  }
+
+  markFound(row: Car): void {
+    if (row.status !== 'LOST' || this.lostActionId() != null) return;
+    this.openStatusConfirm(row, 'found');
+  }
+
+  openStatusConfirm(row: Car, kind: StatusConfirmKind): void {
+    this.formMode.set('closed');
+    this.showQrPanel.set(false);
+    this.showHistoryPanel.set(false);
+    this.closeNotePanel();
+    this.confirmKind.set(kind);
+    this.confirmRow.set(row);
+  }
+
+  closeStatusConfirm(): void {
+    if (this.lostActionId() != null) return;
+    this.confirmRow.set(null);
+    this.confirmKind.set(null);
+  }
+
+  confirmStatusChange(): void {
+    const row = this.confirmRow();
+    const kind = this.confirmKind();
+    if (!row || !kind || this.lostActionId() != null) return;
 
     this.lostActionId.set(row.id);
     this.error.set('');
-    this.cars.markLost(row.id, loginId).subscribe({
+
+    if (kind === 'lost') {
+      const loginId = this.auth.currentUser()?.username?.trim();
+      if (!loginId) {
+        this.lostActionId.set(null);
+        this.error.set('Brak zalogowanego użytkownika.');
+        return;
+      }
+
+      this.cars.markLost(row.id, loginId).subscribe({
+        next: () => {
+          this.lostActionId.set(null);
+          this.closeStatusConfirm();
+          this.showToast('Kluczyk został oznaczony jako zagubiony.');
+          this.loadRegistry();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.lostActionId.set(null);
+          this.error.set(
+            err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako zagubiony.'
+          );
+        },
+      });
+      return;
+    }
+
+    this.cars.markFound(row.id).subscribe({
       next: () => {
         this.lostActionId.set(null);
+        this.closeStatusConfirm();
+        this.showToast('Kluczyk został oznaczony jako znaleziony.');
         this.loadRegistry();
       },
       error: (err: HttpErrorResponse) => {
         this.lostActionId.set(null);
         this.error.set(
-          err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako zagubiony.'
+          err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako znaleziony.',
         );
       },
     });
   }
 
-  markFound(row: Car): void {
-    if (row.status !== 'LOST' || this.lostActionId() != null) return;
-
-    const label = `${row.brand} ${row.model} (${row.registration || 'brak tablic'})`;
-    if (
-      !confirm(
-        `Oznaczyć kluczyk jako ODNALEZIONY?\n${label}\n\nAuto wróci do stanu "Wolne".`,
-      )
-    ) {
-      return;
+  showToast(message: string): void {
+    this.toastMessage.set(message);
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
     }
-
-    this.lostActionId.set(row.id);
-    this.error.set('');
-    this.cars.markFound(row.id).subscribe({
-      next: () => {
-        this.lostActionId.set(null);
-        this.loadRegistry();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.lostActionId.set(null);
-        this.error.set(
-          err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako odnaleziony.',
-        );
-      },
-    });
+    this.toastTimer = setTimeout(() => {
+      if (this.toastMessage() === message) {
+        this.toastMessage.set('');
+      }
+    }, 3500);
   }
 
   statusLabel(status: string): string {
@@ -632,6 +700,60 @@ export class AdminComponent implements OnInit, OnDestroy {
       }
       slot += 1;
     }
+  }
+
+  openNote(row: Car): void {
+    this.formMode.set('closed');
+    this.showQrPanel.set(false);
+    this.showHistoryPanel.set(false);
+    this.closeStatusConfirm();
+    this.historyNoteText.set(null);
+    this.noteCarId.set(row.id);
+    this.noteDraft = row.note ?? '';
+    this.noteError.set('');
+    this.noteSaving.set(false);
+  }
+
+  openHistoryNote(record: HistoryRecord): void {
+    this.formMode.set('closed');
+    this.showQrPanel.set(false);
+    this.noteCarId.set(null);
+    this.noteDraft = '';
+    this.historyNoteText.set(record.note ?? '');
+  }
+
+  closeNotePanel(): void {
+    this.noteCarId.set(null);
+    this.historyNoteText.set(null);
+    this.noteDraft = '';
+    this.noteError.set('');
+    this.noteSaving.set(false);
+  }
+
+  saveNote(): void {
+    const id = this.noteCarId();
+    if (id == null || this.noteSaving()) return;
+
+    this.noteSaving.set(true);
+    this.noteError.set('');
+
+    this.cars.updateNote(id, this.noteDraft.trim()).subscribe({
+      next: () => {
+        this.noteSaving.set(false);
+        this.closeNotePanel();
+        this.loadRegistry(true);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.noteSaving.set(false);
+        this.noteError.set(
+          err?.error?.message ??
+            (err.status === 404
+              ? 'Zrestartuj serwer API i spróbuj ponownie.'
+              : err?.message) ??
+            'Nie udało się zapisać notatki.',
+        );
+      },
+    });
   }
 
   private emptyForm(): CarWritePayload {

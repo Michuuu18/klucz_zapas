@@ -28,6 +28,7 @@ public class AppDbContext : DbContext
             entity.Property(x => x.HeldBy).HasMaxLength(255);
             entity.Property(x => x.ReturnedBy).HasMaxLength(255);
             entity.Property(x => x.LostBy).HasMaxLength(255);
+            entity.Property(x => x.Note).HasMaxLength(2000);
             entity.HasIndex(x => x.QrCode).IsUnique();
             entity.HasIndex(x => x.Registration);
         });
@@ -41,6 +42,7 @@ public class AppDbContext : DbContext
             entity.Property(x => x.Username).HasColumnName("username").HasMaxLength(255).IsRequired();
             entity.Property(x => x.Action).HasColumnName("action").HasMaxLength(50).IsRequired();
             entity.Property(x => x.Timestamp).HasColumnName("timestamp").IsRequired();
+            entity.Property(x => x.Note).HasColumnName("note").HasMaxLength(2000);
         });
     }
 }

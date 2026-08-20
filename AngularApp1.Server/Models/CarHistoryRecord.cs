@@ -12,4 +12,5 @@ public class CarHistoryRecord
     public string? ReturnedByDisplayName { get; set; }
     public int? DurationMinutes { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string? Note { get; set; }
 }
