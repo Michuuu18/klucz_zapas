@@ -257,3 +257,22 @@
     box-shadow: 0 0 0 4px rgba(20, 92, 42, 0.12);
   }
 }
+
+:host-context(body.dark-theme) {
+  .scanner {
+    color: var(--text-main);
+  }
+
+  .scanner__back,
+  .scanner__camera-btn,
+  .scanner__manual-btn {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--frame);
+  }
+
+  .scanner__title,
+  .scanner__hint {
+    color: var(--text-main);
+  }
+}

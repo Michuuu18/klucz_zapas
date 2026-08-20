@@ -203,3 +203,47 @@
   }
 }
 
+:host-context(body.dark-theme) {
+  .home {
+    color: var(--text-main);
+  }
+
+  .home__panel {
+    background: var(--bg-card);
+    border: 1px solid var(--frame);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .home__user-name,
+  .home__title {
+    color: var(--text-main);
+  }
+
+  .home__user-bar {
+    border-bottom-color: var(--frame);
+  }
+
+  .home__user-btn {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+  }
+
+  .home__user-btn--logout {
+    border-color: rgba(180, 70, 70, 0.45);
+    color: #f0b4b4;
+    background: rgba(180, 70, 70, 0.12);
+  }
+
+  .home__btn--take {
+    background: #1f7a3a;
+    color: #fff;
+  }
+
+  .home__btn--return {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+  }
+}
+

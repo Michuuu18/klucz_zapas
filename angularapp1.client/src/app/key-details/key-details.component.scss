@@ -206,3 +206,42 @@
     color: #145c2a;
   }
 }
+
+:host-context(body.dark-theme) {
+  .details {
+    color: var(--text-main);
+  }
+
+  .details__title,
+  .details__card-title,
+  .details__list dd {
+    color: var(--text-main);
+  }
+
+  .details__card {
+    background: var(--bg-card);
+    border: 1px solid var(--frame);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .details__back {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+  }
+
+  .details__confirm {
+    background: #1f7a3a;
+    color: #fff;
+  }
+
+  .details__hint {
+    background: var(--bg-input);
+    color: var(--text-main);
+  }
+
+  .details--return .details__badge {
+    background: var(--bg-input);
+    color: var(--text-main);
+  }
+}
