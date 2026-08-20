@@ -213,8 +213,7 @@
   }
 
   .details__title,
-  .details__card-title,
-  .details__list dd {
+  .details__card-title {
     color: var(--text-main);
   }
 
@@ -230,18 +229,59 @@
     border-color: var(--frame);
   }
 
-  .details__confirm {
-    background: #1f7a3a;
-    color: #fff;
+  .details__card-hint {
+    color: var(--text-muted);
+
+    strong {
+      color: #8fd4a4;
+    }
+  }
+
+  .details__list {
+    background: var(--bg-input);
+  }
+
+  .details__row {
+    border-bottom-color: var(--frame);
+
+    dt {
+      color: var(--text-muted);
+    }
+
+    dd {
+      color: var(--text-main);
+    }
+  }
+
+  .details__registration,
+  .details__key-number {
+    color: var(--text-main) !important;
+  }
+
+  .details__error {
+    color: #f0b4b4;
   }
 
   .details__hint {
+    background: rgba(31, 122, 58, 0.18);
+    color: #8fd4a4;
+  }
+
+  .details__confirm {
+    background: #1f7a3a;
+    color: #fff;
+    border-color: transparent;
+  }
+
+  .details__confirm--secondary {
     background: var(--bg-input);
     color: var(--text-main);
+    border-color: var(--frame);
+    box-shadow: none;
   }
 
   .details--return .details__badge {
-    background: var(--bg-input);
-    color: var(--text-main);
+    background: rgba(31, 122, 58, 0.22);
+    color: #8fd4a4;
   }
 }

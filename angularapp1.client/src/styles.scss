@@ -131,3 +131,119 @@ body.dark-theme .brand-logo img {
   mix-blend-mode: normal;
   filter: brightness(0) invert(0.94);
 }
+
+body.dark-theme {
+  .scanner,
+  .details {
+    color: var(--text-main);
+  }
+
+  .scanner__title,
+  .scanner__card-title,
+  .details__title,
+  .details__card-title {
+    color: var(--text-main) !important;
+  }
+
+  .scanner__card-hint,
+  .scanner__manual-label,
+  .details__card-hint {
+    color: var(--text-muted) !important;
+  }
+
+  .details__card-hint strong {
+    color: #8fd4a4 !important;
+  }
+
+  .scanner__card,
+  .details__card {
+    background: #172333 !important;
+    border: 1px solid var(--frame) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  .scanner__back,
+  .details__back {
+    background: #121c2a !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--frame) !important;
+    box-shadow: none !important;
+  }
+
+  .scanner__manual {
+    border-top-color: var(--frame) !important;
+  }
+
+  .scanner__manual-input {
+    background: #121c2a !important;
+    color: var(--text-main) !important;
+    border-color: var(--frame) !important;
+  }
+
+  .scanner__manual-input::placeholder {
+    color: var(--text-muted) !important;
+  }
+
+  .scanner__camera-btn,
+  .scanner__manual-btn,
+  .details__confirm {
+    background: #1f7a3a !important;
+    color: #fff !important;
+    border: none !important;
+  }
+
+  .details__confirm--secondary {
+    background: #121c2a !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--frame) !important;
+  }
+
+  .scanner__overlay {
+    background: rgba(14, 22, 32, 0.92) !important;
+    color: var(--text-muted) !important;
+  }
+
+  .scanner__overlay p {
+    color: var(--text-main) !important;
+  }
+
+  .scanner__overlay--error p,
+  .details__error {
+    color: #f0b4b4 !important;
+  }
+
+  .details__list {
+    background: #121c2a !important;
+  }
+
+  .details__row {
+    border-bottom-color: var(--frame) !important;
+  }
+
+  .details__row dt {
+    color: var(--text-muted) !important;
+  }
+
+  .details__row dd,
+  .details__registration,
+  .details__key-number {
+    color: var(--text-main) !important;
+  }
+
+  .details__hint {
+    background: rgba(31, 122, 58, 0.18) !important;
+    color: #8fd4a4 !important;
+  }
+
+  .details--return .details__badge {
+    background: rgba(31, 122, 58, 0.22) !important;
+    color: #8fd4a4 !important;
+  }
+
+  .scanner--return .scanner__camera-btn,
+  .scanner--return .scanner__manual-btn {
+    background: rgba(31, 122, 58, 0.22) !important;
+    color: #8fd4a4 !important;
+    border: 1px solid rgba(46, 160, 67, 0.35) !important;
+  }
+}
