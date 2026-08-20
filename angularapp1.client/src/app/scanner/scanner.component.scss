@@ -263,16 +263,85 @@
     color: var(--text-main);
   }
 
-  .scanner__back,
-  .scanner__camera-btn,
-  .scanner__manual-btn {
-    background: var(--bg-input);
+  .scanner__title,
+  .scanner__card-title {
     color: var(--text-main);
-    border: 1px solid var(--frame);
   }
 
-  .scanner__title,
-  .scanner__hint {
+  .scanner__card-hint,
+  .scanner__manual-label {
+    color: var(--text-muted);
+  }
+
+  .scanner__card {
+    background: var(--bg-card);
+    border: 1px solid var(--frame);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .scanner__back {
+    background: var(--bg-input);
     color: var(--text-main);
+    border-color: var(--frame);
+    box-shadow: none;
+  }
+
+  .scanner__manual {
+    border-top-color: var(--frame);
+  }
+
+  .scanner__manual-input {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      border-color: #2ea043;
+      box-shadow: 0 0 0 4px rgba(46, 160, 67, 0.18);
+    }
+  }
+
+  .scanner__overlay {
+    background: rgba(14, 22, 32, 0.92);
+    color: var(--text-muted);
+
+    p {
+      color: var(--text-main);
+    }
+
+    small {
+      color: var(--text-muted);
+    }
+  }
+
+  .scanner__overlay--error p {
+    color: #f0b4b4;
+  }
+
+  .scanner__camera-btn,
+  .scanner__manual-btn {
+    background: #1f7a3a;
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 16px rgba(31, 122, 58, 0.28);
+  }
+
+  .scanner--return {
+    .scanner__camera-btn,
+    .scanner__manual-btn {
+      background: rgba(31, 122, 58, 0.22);
+      color: #8fd4a4;
+      border: 1px solid rgba(46, 160, 67, 0.35);
+      box-shadow: none;
+    }
+
+    .scanner__manual-input:focus {
+      border-color: #2ea043;
+      box-shadow: 0 0 0 4px rgba(46, 160, 67, 0.18);
+    }
   }
 }

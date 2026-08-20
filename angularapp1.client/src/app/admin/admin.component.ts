@@ -9,7 +9,6 @@ import { ThemeService } from '../theme';
 type FormMode = 'closed' | 'create' | 'edit';
 type KeyKind = 'O' | 'Z';
 type StatusConfirmKind = 'lost' | 'found' | 'take' | 'return' | 'delete';
-type CarStatus = 'FREE' | 'IN_USE' | 'LOST';
 type QrVehicle = {
   key: string;
   brand: string;
@@ -34,7 +33,6 @@ export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('historyDropdownRef') historyDropdownRef!: ElementRef;
   @ViewChild('editDropdownRef') editDropdownRef!: ElementRef;
   @ViewChild('brandFilterRef') brandFilterRef!: ElementRef;
-  @ViewChild('statusFilterRef') statusFilterRef!: ElementRef;
 
   // Nasłuchiwanie kliknięć na całym dokumencie
   @HostListener('document:click', ['$event'])
@@ -58,9 +56,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     if (this.brandFilterOpen() && this.brandFilterRef && !this.brandFilterRef.nativeElement.contains(target)) {
       this.brandFilterOpen.set(false);
-    }
-    if (this.statusFilterOpen() && this.statusFilterRef && !this.statusFilterRef.nativeElement.contains(target)) {
-      this.statusFilterOpen.set(false);
     }
   }
 
@@ -113,13 +108,6 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly toastMessage = signal('');
   readonly brandFilter = signal<string | null>(null);
   readonly brandFilterOpen = signal(false);
-  readonly statusFilter = signal<CarStatus | null>(null);
-  readonly statusFilterOpen = signal(false);
-  readonly statusOptions: { value: CarStatus; label: string }[] = [
-    { value: 'FREE', label: 'Wolny' },
-    { value: 'IN_USE', label: 'Zajęty' },
-    { value: 'LOST', label: 'Zagubiony' },
-  ];
   noteDraft = '';
   private toastTimer?: ReturnType<typeof setTimeout>;
 
@@ -176,38 +164,43 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     return [...names].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
   });
-  readonly statusFilterLabel = computed(() => {
-    const status = this.statusFilter();
-    return this.statusOptions.find((option) => option.value === status)?.label ?? 'Wszystkie statusy';
-  });
-  readonly emptyTableMessage = computed(() => {
-    const brand = this.brandFilter();
-    const status = this.statusFilter();
-    if (brand && status) return 'Brak aut dla wybranej marki i statusu.';
-    if (brand) return 'Brak aut dla wybranej marki.';
-    if (status) return 'Brak aut o wybranym statusie.';
-    return 'Brak aut w rejestrze.';
-  });
+  readonly emptyTableMessage = computed(() =>
+    this.brandFilter() ? 'Brak aut dla wybranej marki.' : 'Brak aut w rejestrze.',
+  );
   readonly tableRows = computed(() => {
     const brand = this.brandFilter();
-    const status = this.statusFilter();
-    let list = [...this.rows()];
-
-    if (brand) {
-      list = list.filter((row) => (row.brand || '').trim().toLowerCase() === brand.toLowerCase());
-    }
-    if (status) {
-      list = list.filter((row) => row.status === status);
-    }
+    const list = brand
+      ? this.rows().filter((row) => (row.brand || '').trim().toLowerCase() === brand.toLowerCase())
+      : [...this.rows()];
 
     return list.sort((left, right) => {
-      const byStatus = this.statusRank(left.status) - this.statusRank(right.status);
-      if (byStatus !== 0) return byStatus;
+      const leftRank = this.tableRowRank(left);
+      const rightRank = this.tableRowRank(right);
+      if (leftRank !== rightRank) return leftRank - rightRank;
+
+      if (left.status === 'IN_USE' && right.status === 'IN_USE') {
+        const leftTaken = left.takenAt ? Date.parse(left.takenAt) : 0;
+        const rightTaken = right.takenAt ? Date.parse(right.takenAt) : 0;
+        return rightTaken - leftTaken;
+      }
+
+      if (left.status === 'LOST' && right.status === 'LOST') {
+        const leftLost = left.lostAt ? Date.parse(left.lostAt) : 0;
+        const rightLost = right.lostAt ? Date.parse(right.lostAt) : 0;
+        return rightLost - leftLost;
+      }
+
       const byBrand = (left.brand || '').localeCompare(right.brand || '', 'pl', { sensitivity: 'base' });
       if (byBrand !== 0) return byBrand;
       return (left.model || '').localeCompare(right.model || '', 'pl', { sensitivity: 'base' });
     });
   });
+
+  private tableRowRank(row: Car): number {
+    if (row.status === 'IN_USE') return 0;
+    if (row.status === 'LOST') return 1;
+    return 2;
+  }
 
   toggleSettingsMenu(): void {
     this.settingsMenuOpen.set(!this.settingsMenuOpen());
@@ -222,26 +215,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.brandFilterOpen.set(false);
   }
 
-  setStatusFilter(status: CarStatus | null): void {
-    this.statusFilter.set(status);
-    this.statusFilterOpen.set(false);
-  }
-
   toggleBrandFilter(): void {
     this.brandFilterOpen.set(!this.brandFilterOpen());
-    this.statusFilterOpen.set(false);
-  }
-
-  toggleStatusFilter(): void {
-    this.statusFilterOpen.set(!this.statusFilterOpen());
-    this.brandFilterOpen.set(false);
-  }
-
-  private statusRank(status: string): number {
-    if (status === 'FREE') return 0;
-    if (status === 'IN_USE') return 1;
-    if (status === 'LOST') return 2;
-    return 3;
   }
 
   constructor(
