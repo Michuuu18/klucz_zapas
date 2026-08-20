@@ -165,6 +165,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     private themeService: ThemeService
   ) {}
+  isDarkMode(): boolean {
+    return this.themeService.isDarkTheme;
+  }
 
   get displayName(): string {
     return this.auth.currentUser()?.displayName ?? 'Administrator';
