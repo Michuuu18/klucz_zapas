@@ -48,9 +48,6 @@ export class KeyDetailsComponent implements OnInit {
         // Dzięki temu ten sam kod działa poprawnie nawet jeśli wcześniej był wygenerowany jako `mode=take`.
         this.mode = this.getModeForStatus(car.status);
         this.loading = false;
-        if (car.status === 'LOST') {
-          this.error = 'Kluczyk jest oznaczony jako zagubiony.';
-        }
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -76,9 +73,7 @@ export class KeyDetailsComponent implements OnInit {
   }
 
   private getModeForStatus(status: string): 'take' | 'return' {
-    if (status === 'IN_USE') return 'return';
-    // FREE i LOST traktujemy jak „zabierz” na poziomie UI/napisu,
-    // ale LOST i tak zablokujemy przyciskiem „POTWIERDŹ”.
+    if (status === 'IN_USE' || status === 'LOST') return 'return';
     return 'take';
   }
 
@@ -94,13 +89,6 @@ export class KeyDetailsComponent implements OnInit {
     this.confirming = true;
     this.error = '';
     this.cdr.detectChanges();
-
-    if (this.record.status === 'LOST') {
-      this.confirming = false;
-      this.error = 'Nie można wykonać tej akcji: kluczyk jest zagubiony.';
-      this.cdr.detectChanges();
-      return;
-    }
 
     const request =
       this.mode === 'return'

@@ -8,7 +8,15 @@ import { CarService } from '../services/car.service';
 import { ThemeService } from '../theme';
 type FormMode = 'closed' | 'create' | 'edit';
 type KeyKind = 'O' | 'Z';
-type StatusConfirmKind = 'lost' | 'found';
+type StatusConfirmKind = 'lost' | 'found' | 'take' | 'return' | 'delete';
+type QrVehicle = {
+  key: string;
+  brand: string;
+  model: string;
+  registration: string;
+  original: Car | null;
+  spare: Car | null;
+};
 
 @Component({
   selector: 'app-admin',
@@ -21,6 +29,7 @@ type StatusConfirmKind = 'lost' | 'found';
 export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('settingsDropdown') settingsDropdownRef!: ElementRef;
   @ViewChild('qrDropdownRef') qrDropdownRef!: ElementRef;
+  @ViewChild('qrKeyDropdownRef') qrKeyDropdownRef!: ElementRef;
   @ViewChild('historyDropdownRef') historyDropdownRef!: ElementRef;
   @ViewChild('editDropdownRef') editDropdownRef!: ElementRef;
 
@@ -35,6 +44,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.qrDropdownOpen() && this.qrDropdownRef && !this.qrDropdownRef.nativeElement.contains(target)) {
       this.qrDropdownOpen.set(false);
     }
+    if (this.qrKeyDropdownOpen() && this.qrKeyDropdownRef && !this.qrKeyDropdownRef.nativeElement.contains(target)) {
+      this.qrKeyDropdownOpen.set(false);
+    }
     if (this.historyDropdownOpen() && this.historyDropdownRef && !this.historyDropdownRef.nativeElement.contains(target)) {
       this.historyDropdownOpen.set(false);
     }
@@ -45,7 +57,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.confirmRow() && this.lostActionId() == null) {
+    if (this.confirmRow() && !this.isConfirmBusy()) {
       this.closeStatusConfirm();
     }
   }
@@ -60,6 +72,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly returningId = signal<number | null>(null);
   readonly takingId = signal<number | null>(null);
   readonly lostActionId = signal<number | null>(null);
+  readonly deletingId = signal<number | null>(null);
   readonly error = signal('');
   readonly formError = signal('');
   readonly formMode = signal<FormMode>('closed');
@@ -76,6 +89,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly historyRows = signal<HistoryRecord[]>([]);
   readonly historyLoading = signal(false);
   readonly qrDropdownOpen = signal(false);
+  readonly qrKeyDropdownOpen = signal(false);
+  readonly qrVehicleKey = signal<string | null>(null);
+  readonly qrKeyKind = signal<KeyKind>('O');
   readonly historyDropdownOpen = signal(false);
   readonly editDropdownOpen = signal(false);
   readonly keyKind = signal<KeyKind>('O');
@@ -93,6 +109,34 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   readonly qrCanGenerate = computed(
     () => this.qrCarId() !== null && this.qrKeyName().trim().length > 0,
+  );
+  readonly qrVehicles = computed(() => {
+    const groups = new Map<string, QrVehicle>();
+    for (const row of this.rows()) {
+      const registration = row.registration?.trim() ?? '';
+      const key = registration.toUpperCase() || `__id_${row.id}`;
+      let group = groups.get(key);
+      if (!group) {
+        group = {
+          key,
+          brand: row.brand,
+          model: row.model,
+          registration,
+          original: null,
+          spare: null,
+        };
+        groups.set(key, group);
+      }
+      if (this.carKeyKind(row) === 'Z') {
+        group.spare = row;
+      } else {
+        group.original = row;
+      }
+    }
+    return [...groups.values()];
+  });
+  readonly qrSelectedVehicle = computed(
+    () => this.qrVehicles().find((item) => item.key === this.qrVehicleKey()) ?? null,
   );
   readonly freeCarsCount = computed(
     () => this.rows().filter((row) => row.status === 'FREE').length,
@@ -199,20 +243,74 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.qrKeyName.set('');
       this.qrDataUrl.set(null);
       this.qrError.set('');
+      this.qrVehicleKey.set(null);
+      this.qrKeyKind.set('O');
+      this.qrDropdownOpen.set(false);
+      this.qrKeyDropdownOpen.set(false);
       this.showHistoryPanel.set(false);
       this.closeNotePanel();
       this.closeStatusConfirm();
     }
   }
 
-  onQrCarChange(carId: number | string | null): void {
-    const id =
-      carId === null || carId === '' || carId === 'null' ? null : Number(carId);
-    this.qrCarId.set(Number.isNaN(id as number) ? null : id);
-    const car = this.rows().find((r) => r.id === this.qrCarId());
-    this.qrKeyName.set(car?.qrCode ?? '');
+  onQrVehicleSelect(key: string | null): void {
+    this.qrVehicleKey.set(key);
     this.qrDataUrl.set(null);
     this.qrError.set('');
+    const vehicle = this.qrVehicles().find((item) => item.key === key) ?? null;
+    if (!vehicle) {
+      this.qrCarId.set(null);
+      this.qrKeyName.set('');
+      return;
+    }
+
+    const preferred = this.vehicleHasKind(vehicle, this.qrKeyKind())
+      ? this.qrKeyKind()
+      : vehicle.original
+        ? 'O'
+        : 'Z';
+    this.qrKeyKind.set(preferred);
+    this.applyQrSelection();
+  }
+
+  onQrKeyKindSelect(kind: KeyKind): void {
+    this.qrKeyKind.set(kind);
+    this.qrDataUrl.set(null);
+    this.applyQrSelection();
+  }
+
+  qrVehicleLabel(): string {
+    const vehicle = this.qrSelectedVehicle();
+    if (!vehicle) return 'Wybierz auto...';
+    return `${vehicle.brand} ${vehicle.model} — ${vehicle.registration || 'brak tablic'}`;
+  }
+
+  qrKeySelectLabel(): string {
+    if (!this.qrVehicleKey()) return 'Wybierz klucz...';
+    return this.qrKeyKind() === 'Z' ? 'Klucz zapasowy' : 'Klucz oryginalny';
+  }
+
+  qrHasKeyKind(kind: KeyKind): boolean {
+    const vehicle = this.qrSelectedVehicle();
+    return vehicle ? this.vehicleHasKind(vehicle, kind) : false;
+  }
+
+  private applyQrSelection(): void {
+    const vehicle = this.qrSelectedVehicle();
+    const car = this.qrKeyKind() === 'Z' ? vehicle?.spare ?? null : vehicle?.original ?? null;
+    this.qrCarId.set(car?.id ?? null);
+    this.qrKeyName.set(car?.qrCode ?? '');
+    if (this.qrVehicleKey() && !car) {
+      this.qrError.set(
+        this.qrKeyKind() === 'Z'
+          ? 'To auto nie ma klucza zapasowego.'
+          : 'To auto nie ma klucza oryginalnego.',
+      );
+    }
+  }
+
+  private vehicleHasKind(vehicle: QrVehicle, kind: KeyKind): boolean {
+    return kind === 'Z' ? vehicle.spare != null : vehicle.original != null;
   }
 
   closeQrPanel(): void {
@@ -333,7 +431,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (!dataUrl) return;
 
     const car = this.rows().find((r) => r.id === this.qrCarId());
-    const filename = `qr-${car?.registration ?? 'auto'}.png`;
+    const filename = `qr-${car?.registration ?? 'auto'}-${this.qrKeyKind() === 'Z' ? 'zapasowy' : 'oryginalny'}.png`;
 
     const link = document.createElement('a');
     link.href = dataUrl;
@@ -458,7 +556,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   takeCar(row: Car): void {
-    if (row.status !== 'FREE' || this.takingId() != null) return;
+    if (row.status !== 'FREE' || this.isConfirmBusy()) return;
 
     const qrCode = row.qrCode?.trim();
     if (!qrCode) {
@@ -466,25 +564,11 @@ export class AdminComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.takingId.set(row.id);
-    this.error.set('');
-
-    this.cars.takeCar(qrCode).subscribe({
-      next: () => {
-        this.takingId.set(null);
-        this.loadRegistry(true);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.takingId.set(null);
-        this.error.set(
-          err?.error?.message ?? err?.message ?? 'Nie udało się zabrać auta.',
-        );
-      },
-    });
+    this.openStatusConfirm(row, 'take');
   }
 
   returnCar(row: Car): void {
-    if (row.status !== 'IN_USE' || this.returningId() != null) return;
+    if (row.status !== 'IN_USE' || this.isConfirmBusy()) return;
 
     const loginId = this.auth.currentUser()?.username?.trim();
     if (!loginId) {
@@ -492,45 +576,12 @@ export class AdminComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.returningId.set(row.id);
-    this.error.set('');
-
-    this.cars.returnCarById(row.id, loginId).subscribe({
-      next: () => {
-        this.returningId.set(null);
-        if (this.noteCarId() === row.id) {
-          this.closeNotePanel();
-        }
-        this.loadRegistry();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.returningId.set(null);
-        this.error.set(
-          err?.error?.message ?? err?.message ?? 'Nie udało się zwrócić auta.',
-        );
-      },
-    });
-  }
-
-  deleteCar(id: number, label: string): void {
-    if (!confirm(`Czy na pewno usunąć auto: ${label}?`)) return;
-
-    this.cars.deleteCar(id).subscribe({
-      next: () => {
-        this.error.set('');
-        this.loadRegistry();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.error.set(
-          err?.error?.message ?? err?.message ?? 'Nie udało się usunąć auta.',
-        );
-      },
-    });
+    this.openStatusConfirm(row, 'return');
   }
 
   deleteFromForm(): void {
     const id = this.editingId();
-    if (id == null) return;
+    if (id == null || this.isConfirmBusy()) return;
     const row = this.rows().find((r) => r.id === id);
     if (!row) return;
 
@@ -539,13 +590,12 @@ export class AdminComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const label = `${row.brand} ${row.model} (${row.registration || 'brak tablic'})`;
-    this.closeForm();
-    this.deleteCar(id, label);
+    this.formError.set('');
+    this.openStatusConfirm(row, 'delete');
   }
 
   markLost(row: Car): void {
-    if (this.lostActionId() != null) return;
+    if (this.isConfirmBusy()) return;
 
     const loginId = this.auth.currentUser()?.username?.trim();
     if (!loginId) {
@@ -557,72 +607,200 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   markFound(row: Car): void {
-    if (row.status !== 'LOST' || this.lostActionId() != null) return;
+    if (row.status !== 'LOST' || this.isConfirmBusy()) return;
     this.openStatusConfirm(row, 'found');
   }
 
   openStatusConfirm(row: Car, kind: StatusConfirmKind): void {
-    this.formMode.set('closed');
-    this.showQrPanel.set(false);
-    this.showHistoryPanel.set(false);
-    this.closeNotePanel();
+    if (kind !== 'delete') {
+      this.formMode.set('closed');
+      this.showQrPanel.set(false);
+      this.showHistoryPanel.set(false);
+      this.closeNotePanel();
+    }
     this.confirmKind.set(kind);
     this.confirmRow.set(row);
   }
 
   closeStatusConfirm(): void {
-    if (this.lostActionId() != null) return;
+    if (this.isConfirmBusy()) return;
     this.confirmRow.set(null);
     this.confirmKind.set(null);
+  }
+
+  isConfirmSaving(id: number): boolean {
+    return (
+      this.lostActionId() === id ||
+      this.takingId() === id ||
+      this.returningId() === id ||
+      this.deletingId() === id
+    );
+  }
+
+  confirmTitle(): string {
+    switch (this.confirmKind()) {
+      case 'take':
+        return 'Zabrać kluczyk?';
+      case 'return':
+        return 'Zwrócić kluczyk?';
+      case 'found':
+        return 'Oznaczyć jako znaleziony?';
+      case 'delete':
+        return 'Usunąć auto?';
+      default:
+        return 'Oznaczyć jako zagubiony?';
+    }
+  }
+
+  confirmCopy(): string {
+    switch (this.confirmKind()) {
+      case 'take':
+        return 'Kluczyk zostanie oznaczony jako w użyciu.';
+      case 'return':
+        return 'Kluczyk wróci do stanu wolny i będzie dostępny do wydania.';
+      case 'found':
+        return 'Ten kluczyk wróci do stanu wolny i będzie dostępny do wydania.';
+      case 'delete':
+        return 'Auto i jego kluczyk zostaną trwale usunięte z rejestru.';
+      default:
+        return 'Ten kluczyk zostanie zablokowany i nie będzie dostępny do wydania.';
+    }
+  }
+
+  confirmHint(): string {
+    switch (this.confirmKind()) {
+      case 'take':
+        return 'W historii pojawi się pobranie na Twoje konto administratora.';
+      case 'return':
+        return 'Notatka przy tym kluczyku zostanie zapisana w historii i wyczyszczona.';
+      case 'found':
+        return 'Auto pojawi się ponownie na liście jako wolne.';
+      case 'delete':
+        return 'Tej operacji nie można cofnąć.';
+      default:
+        return 'Stan możesz później zmienić przyciskiem „Znaleziony”.';
+    }
   }
 
   confirmStatusChange(): void {
     const row = this.confirmRow();
     const kind = this.confirmKind();
-    if (!row || !kind || this.lostActionId() != null) return;
+    if (!row || !kind || this.isConfirmBusy()) return;
 
-    this.lostActionId.set(row.id);
     this.error.set('');
 
-    if (kind === 'lost') {
+    if (kind === 'take') {
+      const qrCode = row.qrCode?.trim();
+      if (!qrCode) {
+        this.error.set('To auto nie ma przypisanego kodu QR — edytuj auto i uzupełnij kod.');
+        return;
+      }
+
+      this.takingId.set(row.id);
+      this.cars.takeCar(qrCode).subscribe({
+        next: () => this.finishStatusAction('Kluczyk został zabrany.'),
+        error: (err: HttpErrorResponse) =>
+          this.failStatusAction(
+            err?.error?.message ?? err?.message ?? 'Nie udało się zabrać auta.',
+          ),
+      });
+      return;
+    }
+
+    if (kind === 'return') {
       const loginId = this.auth.currentUser()?.username?.trim();
       if (!loginId) {
-        this.lostActionId.set(null);
         this.error.set('Brak zalogowanego użytkownika.');
         return;
       }
 
-      this.cars.markLost(row.id, loginId).subscribe({
+      this.returningId.set(row.id);
+      this.cars.returnCarById(row.id, loginId).subscribe({
         next: () => {
-          this.lostActionId.set(null);
-          this.closeStatusConfirm();
-          this.showToast('Kluczyk został oznaczony jako zagubiony.');
-          this.loadRegistry();
+          if (this.noteCarId() === row.id) {
+            this.closeNotePanel();
+          }
+          this.finishStatusAction('Kluczyk został zwrócony.');
+        },
+        error: (err: HttpErrorResponse) =>
+          this.failStatusAction(
+            err?.error?.message ?? err?.message ?? 'Nie udało się zwrócić auta.',
+          ),
+      });
+      return;
+    }
+
+    if (kind === 'lost') {
+      const loginId = this.auth.currentUser()?.username?.trim();
+      if (!loginId) {
+        this.error.set('Brak zalogowanego użytkownika.');
+        return;
+      }
+
+      this.lostActionId.set(row.id);
+      this.cars.markLost(row.id, loginId).subscribe({
+        next: () => this.finishStatusAction('Kluczyk został oznaczony jako zagubiony.'),
+        error: (err: HttpErrorResponse) =>
+          this.failStatusAction(
+            err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako zagubiony.',
+          ),
+      });
+      return;
+    }
+
+    if (kind === 'delete') {
+      this.deletingId.set(row.id);
+      this.formError.set('');
+      this.cars.deleteCar(row.id).subscribe({
+        next: () => {
+          this.closeForm();
+          this.finishStatusAction('Auto zostało usunięte.');
         },
         error: (err: HttpErrorResponse) => {
-          this.lostActionId.set(null);
-          this.error.set(
-            err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako zagubiony.'
-          );
+          const message =
+            err?.error?.message ?? err?.message ?? 'Nie udało się usunąć auta.';
+          this.formError.set(message);
+          this.failStatusAction(message);
         },
       });
       return;
     }
 
+    this.lostActionId.set(row.id);
     this.cars.markFound(row.id).subscribe({
-      next: () => {
-        this.lostActionId.set(null);
-        this.closeStatusConfirm();
-        this.showToast('Kluczyk został oznaczony jako znaleziony.');
-        this.loadRegistry();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.lostActionId.set(null);
-        this.error.set(
+      next: () => this.finishStatusAction('Kluczyk został oznaczony jako znaleziony.'),
+      error: (err: HttpErrorResponse) =>
+        this.failStatusAction(
           err?.error?.message ?? err?.message ?? 'Nie udało się oznaczyć kluczyka jako znaleziony.',
-        );
-      },
+        ),
     });
+  }
+
+  private isConfirmBusy(): boolean {
+    return (
+      this.lostActionId() != null ||
+      this.takingId() != null ||
+      this.returningId() != null ||
+      this.deletingId() != null
+    );
+  }
+
+  private finishStatusAction(toast: string): void {
+    this.lostActionId.set(null);
+    this.takingId.set(null);
+    this.returningId.set(null);
+    this.deletingId.set(null);
+    this.closeStatusConfirm();
+    this.showToast(toast);
+    this.loadRegistry(true);
+  }
+
+  private failStatusAction(message: string): void {
+    this.lostActionId.set(null);
+    this.takingId.set(null);
+    this.returningId.set(null);
+    this.deletingId.set(null);
+    this.error.set(message);
   }
 
   showToast(message: string): void {
@@ -775,7 +953,19 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (!car) return 'Wybierz auto...';
 
     const base = `${car.brand} ${car.model} — ${car.registration || 'brak tablic'}`;
-    return withKey ? `${base} (Klucz: ${car.keyNumber || '—'})` : base;
+    return withKey ? `${base} (Klucz: ${this.keyKindLabel(car)})` : base;
+  }
+
+  carKeyKind(car: Car): KeyKind {
+    return this.keyKindLabel(car) === 'Zapasowy' ? 'Z' : 'O';
+  }
+
+  keyKindLabel(car: Car): string {
+    const key = car.keyNumber?.trim().toUpperCase() ?? '';
+    const qr = car.qrCode?.trim().toUpperCase() ?? '';
+    if (/(^|-)Z-/.test(key) || /(^|-)Z-/.test(qr)) return 'Zapasowy';
+    if (/(^|-)O-/.test(key) || /(^|-)O-/.test(qr)) return 'Oryginalny';
+    return 'Oryginalny';
   }
 
 }

@@ -164,7 +164,7 @@
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wybierz auto...</button>
             @for (row of rows(); track row.id) {
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(row.id); editDropdownOpen.set(false)">
-              {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ row.keyNumber || '—' }})
+              {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
             </button>
             }
           </div>
@@ -182,6 +182,15 @@
           @if (saving()) { Zapisywanie… } @else { Zapisz }
         </button>
         <button type="button" class="btn btn--ghost" (click)="closeForm()" [disabled]="saving()">Anuluj</button>
+        @if (formMode() === 'edit') {
+        <button
+          type="button"
+          class="btn btn--danger"
+          (click)="deleteFromForm()"
+          [disabled]="saving() || editingId() == null || deletingId() != null">
+          Usuń auto
+        </button>
+        }
       </div>
     </form>
   </section>
@@ -240,24 +249,60 @@
     <div class="alert">{{ qrError() }}</div>
     }
 
-    <div class="custom-select-wrap" #qrDropdownRef>
-      <span class="custom-label">Auto</span>
-      <div class="custom-select-dropdown">
-        <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="qrDropdownOpen()" (click)="qrDropdownOpen.set(!qrDropdownOpen())">
-          <span class="custom-select-btn__text">{{ getCarLabel(qrCarId()) }}</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-        </button>
-
-        @if (qrDropdownOpen()) {
-        <div class="settings-menu settings-menu--select">
-          <button type="button" class="settings-menu__item" (click)="onQrCarChange(null); qrDropdownOpen.set(false)">Wybierz auto...</button>
-          @for (row of rows(); track row.id) {
-          <button type="button" class="settings-menu__item" (click)="onQrCarChange(row.id); qrDropdownOpen.set(false)">
-            {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }}
+    <div class="qr-fields">
+      <div class="custom-select-wrap" #qrDropdownRef>
+        <span class="custom-label">Auto</span>
+        <div class="custom-select-dropdown">
+          <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="qrDropdownOpen()" (click)="qrDropdownOpen.set(!qrDropdownOpen())">
+            <span class="custom-select-btn__text">{{ qrVehicleLabel() }}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </button>
+
+          @if (qrDropdownOpen()) {
+          <div class="settings-menu settings-menu--select">
+            <button type="button" class="settings-menu__item" (click)="onQrVehicleSelect(null); qrDropdownOpen.set(false)">Wybierz auto...</button>
+            @for (vehicle of qrVehicles(); track vehicle.key) {
+            <button type="button" class="settings-menu__item" (click)="onQrVehicleSelect(vehicle.key); qrDropdownOpen.set(false)">
+              {{ vehicle.brand }} {{ vehicle.model }} — {{ vehicle.registration || 'brak tablic' }}
+            </button>
+            }
+          </div>
           }
         </div>
-        }
+      </div>
+
+      <div class="custom-select-wrap" #qrKeyDropdownRef>
+        <span class="custom-label">Wybór klucza</span>
+        <div class="custom-select-dropdown">
+          <button
+            type="button"
+            class="custom-select-btn"
+            [class.custom-select-btn--active]="qrKeyDropdownOpen()"
+            [disabled]="!qrVehicleKey()"
+            (click)="qrKeyDropdownOpen.set(!qrKeyDropdownOpen())">
+            <span class="custom-select-btn__text" [class.qr-key-select__value]="!!qrVehicleKey()">{{ qrKeySelectLabel() }}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+
+          @if (qrKeyDropdownOpen()) {
+          <div class="settings-menu settings-menu--select">
+            <button
+              type="button"
+              class="settings-menu__item qr-key-select__option"
+              [disabled]="!qrHasKeyKind('O')"
+              (click)="onQrKeyKindSelect('O'); qrKeyDropdownOpen.set(false)">
+              Klucz oryginalny
+            </button>
+            <button
+              type="button"
+              class="settings-menu__item qr-key-select__option"
+              [disabled]="!qrHasKeyKind('Z')"
+              (click)="onQrKeyKindSelect('Z'); qrKeyDropdownOpen.set(false)">
+              Klucz zapasowy
+            </button>
+          </div>
+          }
+        </div>
       </div>
     </div>
 
@@ -522,48 +567,48 @@
     aria-labelledby="statusConfirmTitle"
     (click)="$event.stopPropagation()">
     <div class="confirm-dialog__icon" aria-hidden="true">
-      @if (confirmKind() === 'found') {
-      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
-        <path d="M20 7.5 10.2 17 4 11.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      } @else {
+      @if (confirmKind() === 'lost') {
       <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
         <path d="M12 8v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
         <circle cx="12" cy="16.2" r="1.15" fill="currentColor"/>
         <path d="M12 3.6A8.4 8.4 0 1 1 3.6 12 8.4 8.4 0 0 1 12 3.6Z" stroke="currentColor" stroke-width="2"/>
       </svg>
+      } @else if (confirmKind() === 'take') {
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+        <path d="M14 5h5v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M19 5 10 14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M12 7H8.5A3.5 3.5 0 0 0 5 10.5v5A3.5 3.5 0 0 0 8.5 19h5A3.5 3.5 0 0 0 17 15.5V12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      } @else if (confirmKind() === 'return') {
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+        <path d="M9 10H5V6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 10c2.2-3.3 6.8-4.6 10.6-2.4A7.2 7.2 0 0 1 19 14.5 7.2 7.2 0 0 1 7.8 19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      } @else if (confirmKind() === 'delete') {
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+        <path d="M5 7h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M10 7V5h4v2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 7v12.5A1.5 1.5 0 0 0 9.5 21h5a1.5 1.5 0 0 0 1.5-1.5V7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10.5 11v6M13.5 11v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+      } @else {
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+        <path d="M20 7.5 10.2 17 4 11.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
       }
     </div>
-    <h2 id="statusConfirmTitle">
-      @if (confirmKind() === 'found') {
-      Oznaczyć jako znaleziony?
-      } @else {
-      Oznaczyć jako zagubiony?
-      }
-    </h2>
-    <p class="confirm-copy">
-      @if (confirmKind() === 'found') {
-      Ten kluczyk wróci do stanu wolny i będzie dostępny do wydania.
-      } @else {
-      Ten kluczyk zostanie zablokowany i nie będzie dostępny do wydania.
-      }
-    </p>
+    <h2 id="statusConfirmTitle">{{ confirmTitle() }}</h2>
+    <p class="confirm-copy">{{ confirmCopy() }}</p>
     <div class="confirm-car">
       <strong>{{ car.brand }} {{ car.model }}</strong>
-      <span>{{ car.registration || 'brak tablic' }} · {{ car.keyNumber || 'brak numeru' }}</span>
+      <span>{{ car.registration || 'brak tablic' }} · {{ keyKindLabel(car) }}</span>
     </div>
-    <p class="muted confirm-hint">
-      @if (confirmKind() === 'found') {
-      Auto pojawi się ponownie na liście jako wolne.
-      } @else {
-      Stan możesz później zmienić przyciskiem „Znaleziony”.
-      }
-    </p>
+    <p class="muted confirm-hint">{{ confirmHint() }}</p>
     <div class="form-actions">
-      <button type="button" class="btn btn--primary" (click)="confirmStatusChange()" [disabled]="lostActionId() === car.id">
-        @if (lostActionId() === car.id) { Zapisywanie… } @else { Potwierdź }
+      <button type="button" class="btn btn--primary" (click)="confirmStatusChange()" [disabled]="isConfirmSaving(car.id)">
+        @if (isConfirmSaving(car.id)) { Zapisywanie… } @else { Potwierdź }
       </button>
-      <button type="button" class="btn btn--ghost" (click)="closeStatusConfirm()" [disabled]="lostActionId() === car.id">Anuluj</button>
+      <button type="button" class="btn btn--ghost" (click)="closeStatusConfirm()" [disabled]="isConfirmSaving(car.id)">Anuluj</button>
     </div>
   </section>
 </div>

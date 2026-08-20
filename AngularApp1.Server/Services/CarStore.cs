@@ -109,6 +109,8 @@ public class CarStore
         car.Status = "FREE";
         car.HeldBy = null;
         car.TakenAt = null;
+        car.LostAt = null;
+        car.LostBy = null;
         car.ReturnedBy = loginId;
         car.ReturnedAt = DateTime.UtcNow;
         var returnNote = string.IsNullOrWhiteSpace(car.Note) ? null : car.Note.Trim();

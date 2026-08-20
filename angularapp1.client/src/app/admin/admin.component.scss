@@ -625,6 +625,27 @@ tbody tr:last-child td {
   font-size: 0.78rem;
 }
 
+.qr-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+  margin-bottom: 1.1rem;
+  align-items: end;
+}
+
+.qr-key-select__value,
+.qr-key-select__option {
+  color: #1f7a3a;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.qr-key-select__option:disabled {
+  color: #8a9aab;
+  cursor: not-allowed;
+}
+
 .qr-preview {
   display: flex;
   flex-direction: column;
@@ -661,6 +682,7 @@ tbody tr:last-child td {
   .registry__actions .settings-btn { flex: 0 0 42px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .form-grid { grid-template-columns: 1fr; }
+  .qr-fields { grid-template-columns: 1fr; }
 }
 .settings-dropdown {
   position: relative;
@@ -773,6 +795,15 @@ tbody tr:last-child td {
     background: rgba(21, 101, 168, 0.06); 
   }
 
+  .settings-menu__item:disabled {
+    color: #8a9aab;
+    cursor: not-allowed;
+  }
+
+  .settings-menu__item:disabled:hover {
+    background: transparent;
+  }
+
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -824,6 +855,12 @@ tbody tr:last-child td {
   transition: border-color 0.2s ease;
   cursor: pointer;
   text-align: left;
+}
+
+.custom-select-btn:disabled {
+  cursor: not-allowed;
+  background: #f7f9fb;
+  color: #8a9aab;
 }
 
 .custom-select-btn__text {
