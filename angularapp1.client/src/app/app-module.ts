@@ -12,7 +12,7 @@ import { KeyDetailsComponent } from './key-details/key-details.component';
 import { LoginComponent } from './login/login.component';
 import { ScannerComponent } from './scanner/scanner.component';
 import { authInterceptor } from './interceptors/auth.interceptor';
-import { ThemeService } from './theme';
+
 @NgModule({
   declarations: [
     App,
@@ -31,7 +31,6 @@ import { ThemeService } from './theme';
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(withInterceptors([authInterceptor])),
-    ThemeService
   ],
   bootstrap: [App],
 })

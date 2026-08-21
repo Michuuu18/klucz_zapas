@@ -79,9 +79,19 @@ export class KeyDetailsComponent implements OnInit {
     const queryMode = this.route.snapshot.queryParamMap.get('mode');
     const me = this.auth.currentUser()?.username?.trim().toLowerCase() ?? '';
     const holder = car.heldBy?.trim().toLowerCase() ?? '';
+    const isMine = !!holder && !!me && holder === me;
 
-    if (queryMode === 'take' && car.status === 'IN_USE') {
-      if (holder && me && holder === me) {
+    // Auto w użyciu u kogoś innego:
+    // - tryb zbierania albo wejście z QR bez mode → potwierdzenie przejęcia
+    // - tryb oddawania → normalny zwrot
+    if (car.status === 'IN_USE') {
+      if (isMine) {
+        this.needsForceTake = false;
+        this.mode = 'return';
+        return;
+      }
+
+      if (queryMode === 'return') {
         this.needsForceTake = false;
         this.mode = 'return';
         return;
@@ -93,6 +103,11 @@ export class KeyDetailsComponent implements OnInit {
     }
 
     this.needsForceTake = false;
+    if (queryMode === 'take' || queryMode === 'return') {
+      this.mode = queryMode;
+      return;
+    }
+
     this.mode = this.getModeForStatus(car.status);
   }
 
@@ -102,7 +117,9 @@ export class KeyDetailsComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/scanner'], { queryParams: { mode: this.mode } });
+    const backMode =
+      this.needsForceTake || this.mode === 'take' ? 'take' : this.mode === 'return' ? 'return' : 'take';
+    this.router.navigate(['/scanner'], { queryParams: { mode: backMode } });
   }
 
   keyKindLabel(car: Car): string {

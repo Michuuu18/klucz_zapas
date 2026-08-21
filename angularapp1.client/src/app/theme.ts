@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
 
+const THEME_KEY = 'klucz-zapas.theme';
+const LEGACY_THEME_KEY = 'theme';
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ThemeService {
   public isDarkTheme = false;
@@ -10,30 +13,31 @@ export class ThemeService {
     this.initTheme();
   }
 
-  // Preferencja z localStorage, inaczej ustawienie systemowe.
-  private initTheme() {
-    const savedTheme = localStorage.getItem('theme');
+  // Domyślnie light; zapisany wybór użytkownika ma pierwszeństwo.
+  private initTheme(): void {
+    const saved =
+      localStorage.getItem(THEME_KEY) ?? localStorage.getItem(LEGACY_THEME_KEY);
 
-    if (savedTheme) {
-      this.isDarkTheme = savedTheme === 'dark';
-    } else {
-      this.isDarkTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-
+    this.isDarkTheme = saved === 'dark';
     this.applyTheme();
   }
 
-  public toggleTheme() {
+  public toggleTheme(): void {
     this.isDarkTheme = !this.isDarkTheme;
-    localStorage.setItem('theme', this.isDarkTheme ? 'dark' : 'light');
+    localStorage.setItem(THEME_KEY, this.isDarkTheme ? 'dark' : 'light');
+    localStorage.removeItem(LEGACY_THEME_KEY);
     this.applyTheme();
   }
 
-  private applyTheme() {
-    if (this.isDarkTheme) {
-      document.body.classList.add('dark-theme');
-    } else {
-      document.body.classList.remove('dark-theme');
+  private applyTheme(): void {
+    const body = document.body;
+    if (!body) {
+      return;
     }
+
+    body.classList.toggle('dark-theme', this.isDarkTheme);
+    document.documentElement.style.colorScheme = this.isDarkTheme
+      ? 'dark'
+      : 'light';
   }
 }
