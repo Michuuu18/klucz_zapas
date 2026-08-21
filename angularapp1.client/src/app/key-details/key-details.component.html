@@ -19,8 +19,8 @@
   } @else if (record) {
     <div class="details__card">
       <div class="details__card-top">
-        <div class="details__badge" [class.details__badge--return]="mode === 'return'">
-          {{ mode === 'return' ? 'Oddawanie klucza' : 'Zbieranie klucza' }}
+        <div class="details__badge" [class.details__badge--return]="mode === 'return'" [class.details__badge--force]="needsForceTake">
+          {{ needsForceTake ? 'Nieoddane auto' : (mode === 'return' ? 'Oddawanie klucza' : 'Zbieranie klucza') }}
         </div>
         <button class="details__back" type="button" (click)="goBack()">
           WSTECZ
@@ -53,20 +53,48 @@
         </p>
       }
 
-      @if (error) {
-        <p class="details__error">{{ error }}</p>
-      }
+      @if (needsForceTake) {
+        <div class="details__force">
+          <p class="details__hint details__hint--warn">
+            Auto nie zostało oddane w aplikacji.<br />
+            Czy na pewno chcesz je odznaczyć i zabrać?
+          </p>
+          @if (error) {
+            <p class="details__error">{{ error }}</p>
+          }
+          <button
+            class="details__confirm details__confirm--force"
+            type="button"
+            [disabled]="confirming"
+            (click)="confirm()"
+          >
+            {{ confirming ? 'Przetwarzanie…' : 'Tak, odznacz i zabierz' }}
+          </button>
+          <button
+            class="details__confirm details__confirm--secondary"
+            type="button"
+            [disabled]="confirming"
+            (click)="goBack()"
+          >
+            Anuluj
+          </button>
+        </div>
+      } @else {
+        @if (error) {
+          <p class="details__error">{{ error }}</p>
+        }
 
-      <button
-        class="details__confirm"
-        type="button"
-        [disabled]="confirming || mode === 'auto'"
-        (click)="confirm()"
-      >
-        {{ confirming
-          ? 'Przetwarzanie…'
-          : (mode === 'return' ? 'POTWIERDŹ ODDANIE' : 'POTWIERDŹ POBRANIE') }}
-      </button>
+        <button
+          class="details__confirm"
+          type="button"
+          [disabled]="confirming || mode === 'auto'"
+          (click)="confirm()"
+        >
+          {{ confirming
+            ? 'Przetwarzanie…'
+            : (mode === 'return' ? 'POTWIERDŹ ODDANIE' : 'POTWIERDŹ POBRANIE') }}
+        </button>
+      }
     </div>
   } @else {
     <div class="details__card details__card--error">

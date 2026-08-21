@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Car } from '../models/car.model';
+import { AuthService } from '../services/auth.service';
 import { CarService } from '../services/car.service';
 
 @Component({
@@ -16,15 +17,18 @@ export class KeyDetailsComponent implements OnInit {
   loading = true;
   error = '';
   confirming = false;
+  needsForceTake = false;
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly cars: CarService,
+    private readonly auth: AuthService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   get pageTitle(): string {
+    if (this.needsForceTake) return 'Potwierdzenie zabrania';
     if (this.mode === 'return') return 'Potwierdzenie oddania klucza';
     if (this.mode === 'take') return 'Potwierdzenie zebrania klucza';
     return 'Potwierdzenie akcji po skanowaniu';
@@ -39,13 +43,13 @@ export class KeyDetailsComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.record = null;
+    this.needsForceTake = false;
     this.cdr.detectChanges();
 
     this.cars.getByQrCode(this.code).subscribe({
       next: (car) => {
         this.record = car;
-        // Tryb akcji wynika ze statusu auta, nie z query stringa QR.
-        this.mode = this.getModeForStatus(car.status);
+        this.applyModeForCar(car);
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -69,6 +73,27 @@ export class KeyDetailsComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  private applyModeForCar(car: Car): void {
+    const queryMode = this.route.snapshot.queryParamMap.get('mode');
+    const me = this.auth.currentUser()?.username?.trim().toLowerCase() ?? '';
+    const holder = car.heldBy?.trim().toLowerCase() ?? '';
+
+    if (queryMode === 'take' && car.status === 'IN_USE') {
+      if (holder && me && holder === me) {
+        this.needsForceTake = false;
+        this.mode = 'return';
+        return;
+      }
+
+      this.needsForceTake = true;
+      this.mode = 'take';
+      return;
+    }
+
+    this.needsForceTake = false;
+    this.mode = this.getModeForStatus(car.status);
   }
 
   private getModeForStatus(status: string): 'take' | 'return' {
@@ -98,7 +123,7 @@ export class KeyDetailsComponent implements OnInit {
     const request =
       this.mode === 'return'
         ? this.cars.returnCar(this.record.qrCode)
-        : this.cars.takeCar(this.record.qrCode);
+        : this.cars.takeCar(this.record.qrCode, this.needsForceTake);
 
     request.subscribe({
       next: () => {
