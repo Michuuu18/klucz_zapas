@@ -8,7 +8,8 @@ namespace AngularApp1.Server.Services;
 public static class DbInitializer
 {
     private static readonly Regex NewKeyRegex = new(@"^K-([OZ])-(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex NewQrRegex = new(@"^QR-([OZ])-(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex LegacyQrRegex = new(@"^QR-([OZ])-(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex PlateQrRegex = new(@"^\d{2,3}\d{2}$", RegexOptions.Compiled);
 
     public static void Initialize(AppDbContext db)
     {
@@ -17,6 +18,7 @@ public static class DbInitializer
         EnsureNoteColumn(db);
         EnsureLogNoteColumn(db);
         RenameLegacyKeyNames(db);
+        MigrateLegacyQrCodes(db);
 
         if (db.Cars.Any())
         {
@@ -24,16 +26,16 @@ public static class DbInitializer
         }
 
         db.Cars.AddRange(
-            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10231", KeyNumber = "K-O-01", QrCode = "QR-O-01", Status = "FREE" },
-            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10232", KeyNumber = "K-O-02", QrCode = "QR-O-02", Status = "FREE" },
-            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10233", KeyNumber = "K-O-03", QrCode = "QR-O-03", Status = "FREE" },
-            new Car { Brand = "Toyota", Model = "Yaris", Registration = "SB 20441", KeyNumber = "K-O-04", QrCode = "QR-O-04", Status = "FREE" },
-            new Car { Brand = "Toyota", Model = "Yaris", Registration = "SB 20442", KeyNumber = "K-O-05", QrCode = "QR-O-05", Status = "FREE" },
-            new Car { Brand = "BMW", Model = "320d", Registration = "SB 31001", KeyNumber = "K-O-06", QrCode = "QR-O-06", Status = "FREE" },
-            new Car { Brand = "BMW", Model = "320d", Registration = "SB 31002", KeyNumber = "K-O-07", QrCode = "QR-O-07", Status = "FREE" },
-            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45110", KeyNumber = "K-O-08", QrCode = "QR-O-08", Status = "FREE" },
-            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45111", KeyNumber = "K-O-09", QrCode = "QR-O-09", Status = "FREE" },
-            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45112", KeyNumber = "K-O-10", QrCode = "QR-O-10", Status = "FREE" }
+            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10231", KeyNumber = "K-O-01", QrCode = "0131", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10232", KeyNumber = "K-O-02", QrCode = "0232", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Corolla", Registration = "SB 10233", KeyNumber = "K-O-03", QrCode = "0333", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Yaris", Registration = "SB 20441", KeyNumber = "K-O-04", QrCode = "0441", Status = "FREE" },
+            new Car { Brand = "Toyota", Model = "Yaris", Registration = "SB 20442", KeyNumber = "K-O-05", QrCode = "0542", Status = "FREE" },
+            new Car { Brand = "BMW", Model = "320d", Registration = "SB 31001", KeyNumber = "K-O-06", QrCode = "0601", Status = "FREE" },
+            new Car { Brand = "BMW", Model = "320d", Registration = "SB 31002", KeyNumber = "K-O-07", QrCode = "0702", Status = "FREE" },
+            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45110", KeyNumber = "K-O-08", QrCode = "0810", Status = "FREE" },
+            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45111", KeyNumber = "K-O-09", QrCode = "0911", Status = "FREE" },
+            new Car { Brand = "Ford", Model = "Focus", Registration = "SB 45112", KeyNumber = "K-O-10", QrCode = "1012", Status = "FREE" }
         );
 
         db.SaveChanges();
@@ -66,7 +68,7 @@ public static class DbInitializer
     private static void RenameLegacyKeyNames(AppDbContext db)
     {
         var cars = db.Cars.OrderBy(c => c.Id).ToList();
-        if (cars.Count == 0 || cars.All(c => IsNewKey(c.KeyNumber) && IsNewQr(c.QrCode)))
+        if (cars.Count == 0 || cars.All(c => IsNewKey(c.KeyNumber)))
         {
             return;
         }
@@ -74,13 +76,14 @@ public static class DbInitializer
         var planned = new List<(Car Car, string Key, string Qr)>();
         var originalSlot = 1;
         var spareSlot = 1;
+        var globalSlot = 1;
 
         foreach (var car in cars)
         {
             var kind = ResolveKind(car.KeyNumber, car.QrCode);
             var slot = kind == "Z" ? spareSlot++ : originalSlot++;
             var padded = slot.ToString("D2");
-            planned.Add((car, $"K-{kind}-{padded}", $"QR-{kind}-{padded}"));
+            planned.Add((car, $"K-{kind}-{padded}", BuildQrCode(globalSlot++, car.Registration)));
         }
 
         foreach (var (car, _, _) in planned)
@@ -100,9 +103,61 @@ public static class DbInitializer
         db.SaveChanges();
     }
 
+    private static void MigrateLegacyQrCodes(AppDbContext db)
+    {
+        var cars = db.Cars.OrderBy(c => c.Id).ToList();
+        var changed = false;
+
+        foreach (var car in cars)
+        {
+            if (IsPlateQr(car.QrCode))
+            {
+                continue;
+            }
+
+            var slot = ExtractSlotFromLegacyQr(car.QrCode) ?? ExtractSlotFromKey(car.KeyNumber);
+            if (slot <= 0)
+            {
+                continue;
+            }
+
+            var nextQr = BuildQrCode(slot, car.Registration);
+            if (!string.Equals(car.QrCode, nextQr, StringComparison.Ordinal))
+            {
+                car.QrCode = nextQr;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            db.SaveChanges();
+        }
+    }
+
     private static bool IsNewKey(string value) => NewKeyRegex.IsMatch(value.Trim());
 
-    private static bool IsNewQr(string value) => NewQrRegex.IsMatch(value.Trim());
+    private static bool IsPlateQr(string value) => PlateQrRegex.IsMatch(value.Trim());
+
+    private static int? ExtractSlotFromKey(string keyNumber)
+    {
+        var match = NewKeyRegex.Match(keyNumber.Trim());
+        return match.Success ? int.Parse(match.Groups[2].Value) : null;
+    }
+
+    private static int? ExtractSlotFromLegacyQr(string qrCode)
+    {
+        var match = LegacyQrRegex.Match(qrCode.Trim());
+        return match.Success ? int.Parse(match.Groups[2].Value) : null;
+    }
+
+    private static string BuildQrCode(int slot, string registration)
+    {
+        var xxx = slot >= 100 ? slot.ToString() : slot.ToString("D2");
+        var digits = Regex.Replace(registration ?? string.Empty, @"\D", string.Empty);
+        var yy = digits.Length >= 2 ? digits[^2..] : digits.PadLeft(2, '0');
+        return $"{xxx}{yy}";
+    }
 
     private static string ResolveKind(string key, string qr)
     {
@@ -112,7 +167,7 @@ public static class DbInitializer
             return keyMatch.Groups[1].Value.ToUpperInvariant();
         }
 
-        var qrMatch = NewQrRegex.Match(qr.Trim());
+        var qrMatch = LegacyQrRegex.Match(qr.Trim());
         if (qrMatch.Success)
         {
             return qrMatch.Groups[1].Value.ToUpperInvariant();
