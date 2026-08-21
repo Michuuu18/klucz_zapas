@@ -233,7 +233,7 @@
     color: var(--text-muted);
 
     strong {
-      color: #8fd4a4;
+      color: #f7a47a;
     }
   }
 
@@ -259,29 +259,29 @@
   }
 
   .details__error {
-    color: #f0b4b4;
+    color: #ef9a95;
   }
 
   .details__hint {
-    background: rgba(31, 122, 58, 0.18);
-    color: #8fd4a4;
+    background: rgba(61, 167, 118, 0.16);
+    color: #7ed0a8;
   }
 
   .details__confirm {
-    background: #1f7a3a;
+    background: #3da776;
     color: #fff;
     border-color: transparent;
   }
 
   .details__confirm--secondary {
-    background: var(--bg-input);
+    background: #444751;
     color: var(--text-main);
     border-color: var(--frame);
     box-shadow: none;
   }
 
   .details--return .details__badge {
-    background: rgba(31, 122, 58, 0.22);
-    color: #8fd4a4;
+    background: rgba(61, 167, 118, 0.18);
+    color: #7ed0a8;
   }
 }
