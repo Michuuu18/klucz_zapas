@@ -31,7 +31,12 @@ public class CarsController : ControllerBase
     public ActionResult<Car> GetByQr(string code)
     {
         var car = _cars.FindByQrCode(code);
-        return car is null ? NotFound(new { message = "Nie znaleziono kluczyka." }) : Ok(car);
+        if (car is null)
+        {
+            return NotFound(new { message = "Nie znaleziono kluczyka." });
+        }
+
+        return Ok(MaskHolderForEmployee(car));
     }
 
     [HttpPost]
@@ -92,8 +97,13 @@ public class CarsController : ControllerBase
         }
 
         var loginId = GetLoginId();
-        var (car, error) = _cars.Take(request.QrCode, loginId);
-        return error is null ? Ok(car) : BadRequest(new { message = error });
+        var (car, error) = _cars.Take(request.QrCode, loginId, request.Force);
+        if (error is not null)
+        {
+            return BadRequest(new { message = error });
+        }
+
+        return Ok(MaskHolderForEmployee(car!));
     }
 
     [HttpPost("return")]
@@ -106,7 +116,12 @@ public class CarsController : ControllerBase
 
         var loginId = GetLoginId();
         var (car, error) = _cars.Return(request.QrCode, loginId);
-        return error is null ? Ok(car) : BadRequest(new { message = error });
+        if (error is not null)
+        {
+            return BadRequest(new { message = error });
+        }
+
+        return Ok(MaskHolderForEmployee(car!));
     }
 
     [HttpPost("{id:int}/return")]
@@ -145,6 +160,26 @@ public class CarsController : ControllerBase
         User.FindFirstValue(ClaimTypes.Name) ??
         User.Identity?.Name ??
         "unknown";
+
+    // Pracownik nie widzi, kto ma auto — zostawiamy heldBy tylko gdy to on sam.
+    private Car MaskHolderForEmployee(Car car)
+    {
+        if (User.IsInRole("Admin"))
+        {
+            return car;
+        }
+
+        var me = GetLoginId();
+        var holder = car.HeldBy?.Trim() ?? string.Empty;
+        if (!string.Equals(holder, me, StringComparison.OrdinalIgnoreCase))
+        {
+            car.HeldBy = null;
+        }
+
+        car.LostBy = null;
+        car.ReturnedBy = null;
+        return car;
+    }
 
     [HttpGet("{id:int}/history")]
     [Authorize(Roles = "Admin")]
