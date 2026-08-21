@@ -8,13 +8,18 @@
 .details {
   width: 100%;
   height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: max(0.9rem, env(safe-area-inset-top)) 1rem max(0.9rem, env(safe-area-inset-bottom));
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem max(1.25rem, env(safe-area-inset-bottom));
   font-family: 'Manrope', 'Segoe UI', sans-serif;
   color: #1a3352;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .details__back {
@@ -34,7 +39,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
   width: 100%;
   max-width: 420px;
   flex-shrink: 0;
@@ -58,6 +63,7 @@
   border-radius: 22px;
   padding: 1.15rem 1.15rem 1.2rem;
   box-shadow: 0 10px 28px rgba(26, 51, 82, 0.08);
+  margin-bottom: 0.5rem;
 
   &--error {
     text-align: center;
@@ -242,6 +248,54 @@
   .details__badge {
     background: #e6f4ea;
     color: #145c2a;
+  }
+}
+
+@media (max-height: 780px) {
+  .details__header {
+    margin-bottom: 0.55rem;
+    gap: 0.2rem;
+  }
+
+  .details__title {
+    font-size: 0.92rem;
+  }
+
+  .details__card {
+    padding: 0.9rem 0.95rem 1rem;
+  }
+
+  .details__card-title {
+    font-size: 1.02rem;
+  }
+
+  .details__row {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .details__force {
+    margin-top: 0.75rem;
+    gap: 0.55rem;
+  }
+
+  .details__hint {
+    margin-bottom: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.84rem;
+  }
+
+  .details__confirm {
+    margin-top: 0.85rem;
+    padding: 0.8rem 1.25rem;
+  }
+
+  .details__confirm--force,
+  .details__confirm--secondary {
+    padding: 0.8rem 1.25rem;
+  }
+
+  .brand-logo--scanner {
+    max-width: 130px;
   }
 }
 

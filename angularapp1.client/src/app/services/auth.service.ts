@@ -64,6 +64,7 @@ export class AuthService {
     this.currentUser.set(user);
     const serialized = JSON.stringify(user);
 
+    // Sesja w sessionStorage przeżywa odświeżenie karty.
     sessionStorage.setItem(SESSION_USER_KEY, serialized);
     if (rememberMe) {
       localStorage.setItem(PERSIST_USER_KEY, serialized);
