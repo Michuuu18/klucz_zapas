@@ -111,25 +111,28 @@ img {
 }
 
 body.dark-theme {
-  /* VOKLO-inspired dark palette (łatwy powrót: stare wartości niżej w komentarzu)
-     OLD: main #0e1620 | card #172333 | input #121c2a | text #e8eef4 | muted #8fa3b5 | frame #2a3c50 | accent #2ea043 */
-  --bg-main: #0a0d12;
-  --bg-card: #161a22;
-  --bg-input: #0d1018;
-  --text-main: #e9ecf1;
-  --text-muted: #8a8d99;
-  --border-color: #2e323c;
-  --btn-secondary-bg: #444751;
+  /* Dark palette aligned with status cards: mint / rose / amber */
+  --bg-main: #080b10;
+  --bg-card: #141820;
+  --bg-input: #0c1016;
+  --text-main: #e8ecf2;
+  --text-muted: #8b909c;
+  --border-color: #262b36;
+  --btn-secondary-bg: #1c222c;
   --accent: #3da776;
+  --accent-soft: #7ed0a8;
   --accent-warn: #f56e38;
+  --accent-warn-soft: #f7a47a;
   --accent-danger: #de5c54;
-  --accent-note: #d2ae55;
-  --frame: #2e323c;
-  color: #e9ecf1;
+  --accent-danger-soft: #ef9a95;
+  --accent-note: #c9b06a;
+  --frame: #262b36;
+  color: #e8ecf2;
   background:
-    radial-gradient(ellipse at 14% 8%, rgba(245, 110, 56, 0.12) 0%, transparent 42%),
-    radial-gradient(ellipse at 88% 92%, rgba(61, 167, 118, 0.1) 0%, transparent 44%),
-    #0a0d12;
+    radial-gradient(ellipse at 12% 6%, rgba(61, 167, 118, 0.14) 0%, transparent 40%),
+    radial-gradient(ellipse at 88% 12%, rgba(222, 92, 84, 0.1) 0%, transparent 38%),
+    radial-gradient(ellipse at 78% 92%, rgba(245, 110, 56, 0.1) 0%, transparent 42%),
+    #080b10;
 }
 
 body.dark-theme .brand-logo img {
@@ -237,18 +240,18 @@ body.dark-theme {
 
   .details__hint {
     background: rgba(61, 167, 118, 0.16) !important;
-    color: #7ed0a8 !important;
+    color: var(--accent-soft) !important;
   }
 
   .details--return .details__badge {
     background: rgba(61, 167, 118, 0.18) !important;
-    color: #7ed0a8 !important;
+    color: var(--accent-soft) !important;
   }
 
   .scanner--return .scanner__camera-btn,
   .scanner--return .scanner__manual-btn {
     background: rgba(61, 167, 118, 0.16) !important;
-    color: #7ed0a8 !important;
+    color: var(--accent-soft) !important;
     border: 1px solid rgba(61, 167, 118, 0.35) !important;
   }
 }
