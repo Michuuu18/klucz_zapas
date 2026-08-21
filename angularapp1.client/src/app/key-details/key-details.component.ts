@@ -81,6 +81,12 @@ export class KeyDetailsComponent implements OnInit {
     this.router.navigate(['/scanner'], { queryParams: { mode: this.mode } });
   }
 
+  keyKindLabel(car: Car): string {
+    const key = car.keyNumber?.trim().toUpperCase() ?? '';
+    if (key.includes('-Z-') || key.startsWith('K-Z')) return 'Klucz zapasowy';
+    return 'Klucz oryginalny';
+  }
+
   confirm(): void {
     if (!this.record || this.confirming) {
       return;

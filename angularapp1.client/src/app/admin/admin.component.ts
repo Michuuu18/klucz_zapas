@@ -6,8 +6,9 @@ import { AuthService } from '../services/auth.service';
 import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 import { CarService } from '../services/car.service';
 import { ThemeService } from '../theme';
+import { forkJoin } from 'rxjs';
 type FormMode = 'closed' | 'create' | 'edit';
-type KeyKind = 'O' | 'Z';
+type KeyKind = 'O' | 'Z' | 'B';
 type StatusConfirmKind = 'lost' | 'found' | 'take' | 'return' | 'delete';
 type QrVehicle = {
   key: string;
@@ -292,7 +293,61 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.closeNotePanel();
     this.closeStatusConfirm();
   }
+  saveAndAddAnother(): void {
+    if (this.saving()) return;
 
+    if (!this.form.brand.trim() || !this.form.registration.trim()) {
+      this.formError.set('Uzupełnij markę i tablice rejestracyjne.');
+      return;
+    }
+
+    this.saving.set(true);
+    this.formError.set('');
+
+    const requests$ = [];
+
+    if (this.keyKind() === 'B') {
+      
+      const genO = this.nextKeySlot('O', this.form.registration.trim());
+
+      
+      const genZ = this.nextKeySlot('Z', this.form.registration.trim());
+
+      const payloadO: CarWritePayload = { ...this.form, keyNumber: genO.keyNumber, qrCode: genO.qrCode };
+      const payloadZ: CarWritePayload = { ...this.form, keyNumber: genZ.keyNumber, qrCode: genZ.qrCode };
+
+      requests$.push(this.cars.createCar(payloadO));
+      requests$.push(this.cars.createCar(payloadZ));
+    }
+    else {
+      const gen = this.nextKeySlot(this.keyKind(), this.form.registration.trim());
+      const payload: CarWritePayload = { ...this.form, keyNumber: gen.keyNumber, qrCode: gen.qrCode };
+
+      requests$.push(this.cars.createCar(payload));
+    }
+
+    forkJoin(requests$).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.showToast(this.keyKind() === 'B' ? 'Dodano OBA klucze.' : 'Dodano klucz.');
+        this.resetForm();
+        this.loadRegistry(true);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.formError.set(err?.error?.message ?? err?.message ?? 'Nie udało się zapisać aut.');
+      },
+    });
+  }
+  resetForm(): void {
+    this.form = {
+      ...this.form,
+      registration: '',
+      keyNumber: '',
+      qrCode: ''
+    };
+    this.formError.set('');
+  }
   onKeyKindChange(kind: KeyKind): void {
     this.keyKind.set(kind);
   }
@@ -567,7 +622,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   saveForm(): void {
     if (this.saving()) return;
 
-    const generated = this.formMode() === 'create' ? this.nextKeySlot(this.keyKind()) : null;
+    const generated = this.formMode() === 'create'
+      ? this.nextKeySlot(this.keyKind(), this.form.registration.trim())
+      : null;
     const selected = this.formMode() === 'edit'
       ? this.rows().find((row) => row.id === this.editingId())
       : undefined;
@@ -579,6 +636,14 @@ export class AdminComponent implements OnInit, OnDestroy {
       keyNumber: generated?.keyNumber || this.form.keyNumber.trim() || selected?.keyNumber?.trim() || '',
       qrCode: generated?.qrCode || this.form.qrCode.trim() || selected?.qrCode?.trim() || '',
     };
+
+    if (this.formMode() === 'edit' && selected) {
+      payload.qrCode = this.qrCodeForCar(
+        selected.keyNumber,
+        payload.registration,
+        selected.qrCode,
+      );
+    }
 
     if (this.formMode() === 'edit') {
       if (this.editingId() == null) {
@@ -912,38 +977,70 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  private nextKeySlot(kind: KeyKind): { keyNumber: string; qrCode: string } {
-    const keyPattern = new RegExp(`^K-${kind}-(\\d+)$`, 'i');
-    const qrPattern = new RegExp(`^QR-${kind}-(\\d+)$`, 'i');
-    const used = new Set<number>();
+  private nextKeySlot(kind: KeyKind, registration: string): { keyNumber: string; qrCode: string } {
     const takenKeys = new Set(
       this.rows().map((row) => row.keyNumber.trim().toUpperCase()),
     );
     const takenQrs = new Set(
       this.rows().map((row) => row.qrCode.trim().toUpperCase()),
     );
+    const usedGlobalSlots = new Set<number>();
 
     for (const row of this.rows()) {
-      const keyMatch = row.keyNumber?.trim().match(keyPattern);
-      if (keyMatch) used.add(Number(keyMatch[1]));
-      const qrMatch = row.qrCode?.trim().match(qrPattern);
-      if (qrMatch) used.add(Number(qrMatch[1]));
+      const qrSlot = this.parseQrSlot(row.qrCode);
+      if (qrSlot) usedGlobalSlots.add(qrSlot);
     }
 
-    let slot = 1;
+    let kindSlot = 1;
     while (true) {
-      const padded = String(slot).padStart(2, '0');
+      const padded = String(kindSlot).padStart(2, '0');
       const keyNumber = `K-${kind}-${padded}`;
-      const qrCode = `QR-${kind}-${padded}`;
-      if (
-        !used.has(slot) &&
-        !takenKeys.has(keyNumber.toUpperCase()) &&
-        !takenQrs.has(qrCode.toUpperCase())
-      ) {
-        return { keyNumber, qrCode };
+      if (!takenKeys.has(keyNumber.toUpperCase())) {
+        break;
       }
-      slot += 1;
+      kindSlot += 1;
     }
+
+    let globalSlot = 1;
+    while (usedGlobalSlots.has(globalSlot)) {
+      globalSlot += 1;
+    }
+
+    const keyNumber = `K-${kind}-${String(kindSlot).padStart(2, '0')}`;
+    let qrCode = this.buildQrCode(globalSlot, registration);
+    while (takenQrs.has(qrCode.toUpperCase())) {
+      globalSlot += 1;
+      qrCode = this.buildQrCode(globalSlot, registration);
+    }
+
+    return { keyNumber, qrCode };
+  }
+
+  private qrCodeForCar(keyNumber: string, registration: string, existingQr?: string | null): string {
+    const slot =
+      this.parseQrSlot(existingQr ?? '') ??
+      this.parseKeySlot(keyNumber) ??
+      1;
+    return this.buildQrCode(slot, registration);
+  }
+
+  private buildQrCode(slot: number, registration: string): string {
+    const xxx = slot >= 100 ? String(slot) : String(slot).padStart(2, '0');
+    const digits = (registration || '').replace(/\D/g, '');
+    const yy = digits.length >= 2 ? digits.slice(-2) : digits.padStart(2, '0');
+    return `${xxx}${yy}`;
+  }
+
+  private parseKeySlot(keyNumber: string): number | null {
+    const match = keyNumber?.trim().match(/^K-[OZ]-(\d+)$/i);
+    return match ? Number(match[1]) : null;
+  }
+
+  private parseQrSlot(qrCode: string): number | null {
+    const legacy = qrCode?.trim().match(/^QR-[OZ]-(\d+)$/i);
+    if (legacy) return Number(legacy[1]);
+    const modern = qrCode?.trim().match(/^(\d{2,3})(\d{2})$/);
+    return modern ? Number(modern[1]) : null;
   }
 
   openNote(row: Car): void {
@@ -1025,10 +1122,8 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   keyKindLabel(car: Car): string {
     const key = car.keyNumber?.trim().toUpperCase() ?? '';
-    const qr = car.qrCode?.trim().toUpperCase() ?? '';
-    if (/(^|-)Z-/.test(key) || /(^|-)Z-/.test(qr)) return 'Zapasowy';
-    if (/(^|-)O-/.test(key) || /(^|-)O-/.test(qr)) return 'Oryginalny';
-    return 'Oryginalny';
+    if (key.includes('-Z-') || key.startsWith('K-Z')) return 'Klucz zapasowy';
+    return 'Klucz oryginalny';
   }
 
 }

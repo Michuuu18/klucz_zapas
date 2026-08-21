@@ -46,7 +46,6 @@
                 (click)="toggleDarkMode()"
                 aria-label="Przełącz motyw">
 
-          <!-- Ikona Słońca (widoczna w trybie jasnym) -->
           <svg class="theme-icon icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
             <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -59,7 +58,6 @@
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
           </svg>
 
-          <!-- Ikona Księżyca (widoczna w trybie ciemnym) -->
           <svg class="theme-icon icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
@@ -153,21 +151,23 @@
       <div class="key-kind">
         <span>Rodzaj klucza</span>
         <div class="key-kind__options">
-          <button
-            type="button"
-            class="key-kind__btn"
-            [class.key-kind__btn--active]="keyKind() === 'O'"
-            (click)="onKeyKindChange('O')"
-          >
+          <button type="button"
+                  class="key-kind__btn"
+                  [class.key-kind__btn--active]="keyKind() === 'O'"
+                  (click)="onKeyKindChange('O')">
             Oryginalny
           </button>
-          <button
-            type="button"
-            class="key-kind__btn"
-            [class.key-kind__btn--active]="keyKind() === 'Z'"
-            (click)="onKeyKindChange('Z')"
-          >
+          <button type="button"
+                  class="key-kind__btn"
+                  [class.key-kind__btn--active]="keyKind() === 'Z'"
+                  (click)="onKeyKindChange('Z')">
             Zapasowy
+          </button>
+          <button type="button"
+                  class="key-kind__btn"
+                  [class.key-kind__btn--active]="keyKind() === 'B'"
+                  (click)="onKeyKindChange('B')">
+            Oryginalny + Zapasowy
           </button>
         </div>
       </div>
@@ -179,7 +179,7 @@
             <span class="custom-select-btn__text">{{ getCarLabel(editingId(), true) }}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </button>
-
+          
           @if (editDropdownOpen()) {
           <div class="settings-menu settings-menu--select" (click)="$event.stopPropagation()">
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wybierz auto...</button>
@@ -202,13 +202,17 @@
         <button type="submit" class="btn btn--primary" [disabled]="saving() || (formMode() === 'edit' && editingId() == null)">
           @if (saving()) { Zapisywanie… } @else { Zapisz }
         </button>
+        @if (formMode() === 'create') {
+        <button type="button" class="btn btn--secondary" (click)="saveAndAddAnother()" [disabled]="saving()">
+          Zapisz i dodaj kolejne
+        </button>
+        }
         <button type="button" class="btn btn--ghost" (click)="closeForm()" [disabled]="saving()">Anuluj</button>
         @if (formMode() === 'edit') {
-        <button
-          type="button"
-          class="btn btn--danger"
-          (click)="deleteFromForm()"
-          [disabled]="saving() || editingId() == null || deletingId() != null">
+        <button type="button"
+                class="btn btn--danger"
+                (click)="deleteFromForm()"
+                [disabled]="saving() || editingId() == null || deletingId() != null">
           Usuń auto
         </button>
         }
@@ -373,7 +377,7 @@
           <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(null); historyDropdownOpen.set(false)">Wybierz auto...</button>
           @for (row of rows(); track row.id) {
           <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(row.id); historyDropdownOpen.set(false)">
-            {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ row.keyNumber || '—' }})
+            {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
           </button>
           }
         </div>
@@ -386,8 +390,8 @@
     <div class="history-summary">
       <div><span class="muted">Auto:</span> <strong>{{ car.brand }} {{ car.model }}</strong></div>
       <div><span class="muted">Tablice:</span> <strong>{{ car.registration || '—' }}</strong></div>
-      <div><span class="muted">Kluczyk:</span> <strong>{{ car.keyNumber || '—' }}</strong></div>
-      <div><span class="muted">QR:</span> <code>{{ car.qrCode || '—' }}</code></div>
+      <div><span class="muted">Klucz:</span> <strong>{{ keyKindLabel(car) }}</strong></div>
+      <div><span class="muted">Kod QR:</span> <code>{{ car.qrCode || '—' }}</code></div>
       <div><span class="muted">Status teraz:</span> <strong>{{ statusLabel(car.status) }}</strong></div>
       <div><span class="muted">Posiada teraz:</span> <strong>{{ car.heldBy || '—' }}</strong></div>
     </div>
@@ -472,7 +476,7 @@
         <tr>
           <th>Tablice</th>
           <th>Auto</th>
-          <th>Kluczyk / QR</th>
+          <th>Klucz / QR</th>
           <th>Status</th>
           <th>Posiada</th>
           <th>Zabrane o</th>
@@ -523,10 +527,10 @@
         <tr [class.row--in-use]="row.status === 'IN_USE'">
           <td><strong class="plate">{{ row.registration || '—' }}</strong></td>
           <td><strong>{{ row.brand }} {{ row.model }}</strong></td>
-          <td>
+          <td class="key-meta-cell">
             <div class="key-meta">
-              <span>{{ row.keyNumber || '—' }}</span>
-              <code>{{ row.qrCode || '—' }}</code>
+              <strong class="key-meta__type">{{ keyKindLabel(row) }}</strong>
+              <span class="key-meta__qr">{{ row.qrCode || '—' }}</span>
             </div>
           </td>
           <td class="status-cell">
@@ -665,6 +669,7 @@
       <button type="button" class="btn btn--primary" (click)="confirmStatusChange()" [disabled]="isConfirmSaving(car.id)">
         @if (isConfirmSaving(car.id)) { Zapisywanie… } @else { Potwierdź }
       </button>
+      
       <button type="button" class="btn btn--ghost" (click)="closeStatusConfirm()" [disabled]="isConfirmSaving(car.id)">Anuluj</button>
     </div>
   </section>
