@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import JSZip from 'jszip';
 import { Component, OnInit, OnDestroy, computed, signal, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -9,6 +10,7 @@ import { ThemeService } from '../theme';
 import { forkJoin } from 'rxjs';
 type FormMode = 'closed' | 'create' | 'edit';
 type KeyKind = 'O' | 'Z' | 'B';
+type KeyKindFilter = 'all' | 'O' | 'Z';
 type StatusConfirmKind = 'lost' | 'found' | 'take' | 'return' | 'delete';
 type QrVehicle = {
   key: string;
@@ -34,6 +36,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('historyDropdownRef') historyDropdownRef!: ElementRef;
   @ViewChild('editDropdownRef') editDropdownRef!: ElementRef;
   @ViewChild('brandFilterRef') brandFilterRef!: ElementRef;
+  @ViewChild('keyKindFilterRef') keyKindFilterRef!: ElementRef;
 
   // Nasłuchiwanie kliknięć na całym dokumencie
   @HostListener('document:click', ['$event'])
@@ -57,6 +60,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     if (this.brandFilterOpen() && this.brandFilterRef && !this.brandFilterRef.nativeElement.contains(target)) {
       this.brandFilterOpen.set(false);
+    }
+    if (this.keyKindFilterOpen() && this.keyKindFilterRef && !this.keyKindFilterRef.nativeElement.contains(target)) {
+      this.keyKindFilterOpen.set(false);
     }
   }
 
@@ -85,6 +91,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly qrKeyName = signal('');
   readonly qrDataUrl = signal<string | null>(null);
   readonly qrGenerating = signal(false);
+  readonly qrBulkGenerating = signal(false);
   readonly qrError = signal('');
   readonly settingsMenuOpen = signal(false);
   readonly showHistoryPanel = signal(false);
@@ -96,7 +103,10 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly qrVehicleKey = signal<string | null>(null);
   readonly qrKeyKind = signal<KeyKind>('O');
   readonly historyDropdownOpen = signal(false);
+  readonly historyQuery = signal('');
   readonly editDropdownOpen = signal(false);
+  readonly editQuery = signal('');
+  readonly qrQuery = signal('');
   readonly keyKind = signal<KeyKind>('O');
   readonly noteCarId = signal<number | null>(null);
   readonly noteSaving = signal(false);
@@ -107,6 +117,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly toastMessage = signal('');
   readonly brandFilter = signal<string | null>(null);
   readonly brandFilterOpen = signal(false);
+  readonly keyKindFilter = signal<KeyKindFilter>('all');
+  readonly keyKindFilterOpen = signal(false);
   noteDraft = '';
   private toastTimer?: ReturnType<typeof setTimeout>;
 
@@ -155,6 +167,31 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly selectedHistoryCar = computed(
     () => this.rows().find((row) => row.id === this.selectedHistoryCarId()) ?? null,
   );
+  readonly filteredHistoryCars = computed(() =>
+    this.filterCarsByQuery(this.rows(), this.historyQuery(), this.selectedHistoryCarId()),
+  );
+  readonly filteredEditCars = computed(() =>
+    this.filterCarsByQuery(this.rows(), this.editQuery(), this.editingId()),
+  );
+  readonly filteredQrVehicles = computed(() => {
+    const query = this.qrQuery().trim().toLowerCase();
+    const list = this.qrVehicles();
+    const selectedKey = this.qrVehicleKey();
+    if (selectedKey) {
+      const selected = list.find((item) => item.key === selectedKey);
+      const selectedLabel = selected
+        ? `${selected.brand} ${selected.model} — ${selected.registration || 'brak tablic'}`.trim().toLowerCase()
+        : '';
+      if (!query || query === selectedLabel) return list;
+    }
+    if (!query) return list;
+    return list.filter((vehicle) => {
+      const haystack = [vehicle.brand, vehicle.model, vehicle.registration, vehicle.key]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  });
   readonly brands = computed(() => {
     const names = new Set<string>();
     for (const row of this.rows()) {
@@ -163,14 +200,24 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     return [...names].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
   });
-  readonly emptyTableMessage = computed(() =>
-    this.brandFilter() ? 'Brak aut dla wybranej marki.' : 'Brak aut w rejestrze.',
-  );
+  readonly emptyTableMessage = computed(() => {
+    if (this.brandFilter() && this.keyKindFilter() !== 'all') {
+      return 'Brak aut dla wybranych filtrów.';
+    }
+    if (this.brandFilter()) return 'Brak aut dla wybranej marki.';
+    if (this.keyKindFilter() !== 'all') return 'Brak kluczy tego rodzaju.';
+    return 'Brak aut w rejestrze.';
+  });
   readonly tableRows = computed(() => {
     const brand = this.brandFilter();
-    const list = brand
+    const kind = this.keyKindFilter();
+    let list = brand
       ? this.rows().filter((row) => (row.brand || '').trim().toLowerCase() === brand.toLowerCase())
       : [...this.rows()];
+
+    if (kind !== 'all') {
+      list = list.filter((row) => this.carKeyKind(row) === kind);
+    }
 
     return list.sort((left, right) => {
       const leftRank = this.tableRowRank(left);
@@ -191,12 +238,15 @@ export class AdminComponent implements OnInit, OnDestroy {
 
       const byBrand = (left.brand || '').localeCompare(right.brand || '', 'pl', { sensitivity: 'base' });
       if (byBrand !== 0) return byBrand;
-      return (left.model || '').localeCompare(right.model || '', 'pl', { sensitivity: 'base' });
+      const byModel = (left.model || '').localeCompare(right.model || '', 'pl', { sensitivity: 'base' });
+      if (byModel !== 0) return byModel;
+      return (left.registration || '').localeCompare(right.registration || '', 'pl', { sensitivity: 'base' });
     });
   });
 
   private tableRowRank(row: Car): number {
     if (row.status === 'IN_USE') return 0;
+    if (this.carKeyKind(row) === 'Z') return 3;
     if (row.status === 'LOST') return 1;
     return 2;
   }
@@ -212,10 +262,28 @@ export class AdminComponent implements OnInit, OnDestroy {
   setBrandFilter(brand: string | null): void {
     this.brandFilter.set(brand);
     this.brandFilterOpen.set(false);
+    this.keyKindFilterOpen.set(false);
   }
 
   toggleBrandFilter(): void {
     this.brandFilterOpen.set(!this.brandFilterOpen());
+    this.keyKindFilterOpen.set(false);
+  }
+
+  keyKindFilterLabel(): string {
+    if (this.keyKindFilter() === 'O') return 'Oryginalny';
+    if (this.keyKindFilter() === 'Z') return 'Zapasowy';
+    return 'Wszystkie';
+  }
+
+  setKeyKindFilter(kind: KeyKindFilter): void {
+    this.keyKindFilter.set(kind);
+    this.keyKindFilterOpen.set(false);
+  }
+
+  toggleKeyKindFilter(): void {
+    this.keyKindFilterOpen.set(!this.keyKindFilterOpen());
+    this.brandFilterOpen.set(false);
   }
 
   constructor(
@@ -297,32 +365,11 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.saving.set(true);
     this.formError.set('');
 
-    const requests$ = [];
-
-    if (this.keyKind() === 'B') {
-      
-      const genO = this.nextKeySlot('O', this.form.registration.trim());
-
-      
-      const genZ = this.nextKeySlot('Z', this.form.registration.trim());
-
-      const payloadO: CarWritePayload = { ...this.form, keyNumber: genO.keyNumber, qrCode: genO.qrCode };
-      const payloadZ: CarWritePayload = { ...this.form, keyNumber: genZ.keyNumber, qrCode: genZ.qrCode };
-
-      requests$.push(this.cars.createCar(payloadO));
-      requests$.push(this.cars.createCar(payloadZ));
-    }
-    else {
-      const gen = this.nextKeySlot(this.keyKind(), this.form.registration.trim());
-      const payload: CarWritePayload = { ...this.form, keyNumber: gen.keyNumber, qrCode: gen.qrCode };
-
-      requests$.push(this.cars.createCar(payload));
-    }
-
-    forkJoin(requests$).subscribe({
+    const payloads = this.buildCreatePayloads();
+    forkJoin(payloads.map((payload) => this.cars.createCar(payload))).subscribe({
       next: () => {
         this.saving.set(false);
-        this.showToast(this.keyKind() === 'B' ? 'Dodano OBA klucze.' : 'Dodano klucz.');
+        this.showToast(payloads.length > 1 ? 'Dodano oba klucze.' : 'Dodano klucz.');
         this.resetForm();
         this.loadRegistry(true);
       },
@@ -356,6 +403,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.qrError.set('');
       this.qrVehicleKey.set(null);
       this.qrKeyKind.set('O');
+      this.qrQuery.set('');
       this.qrDropdownOpen.set(false);
       this.qrKeyDropdownOpen.set(false);
       this.showHistoryPanel.set(false);
@@ -372,9 +420,11 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (!vehicle) {
       this.qrCarId.set(null);
       this.qrKeyName.set('');
+      this.qrQuery.set('');
       return;
     }
 
+    this.qrQuery.set(`${vehicle.brand} ${vehicle.model} — ${vehicle.registration || 'brak tablic'}`);
     const preferred = this.vehicleHasKind(vehicle, this.qrKeyKind())
       ? this.qrKeyKind()
       : vehicle.original
@@ -382,6 +432,29 @@ export class AdminComponent implements OnInit, OnDestroy {
         : 'Z';
     this.qrKeyKind.set(preferred);
     this.applyQrSelection();
+  }
+
+  onQrQueryInput(value: string): void {
+    this.qrQuery.set(value);
+    this.qrDropdownOpen.set(true);
+    if (this.qrVehicleKey() != null) {
+      this.qrVehicleKey.set(null);
+      this.qrCarId.set(null);
+      this.qrKeyName.set('');
+      this.qrDataUrl.set(null);
+    }
+  }
+
+  onQrQueryFocus(): void {
+    this.qrDropdownOpen.set(true);
+  }
+
+  onQrQueryEnter(): void {
+    const matches = this.filteredQrVehicles();
+    if (matches.length === 1) {
+      this.onQrVehicleSelect(matches[0].key);
+      this.qrDropdownOpen.set(false);
+    }
   }
 
   onQrKeyKindSelect(kind: KeyKind): void {
@@ -426,6 +499,8 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   closeQrPanel(): void {
     this.showQrPanel.set(false);
+    this.qrQuery.set('');
+    this.qrDropdownOpen.set(false);
   }
 
   openHistoryPanel(): void {
@@ -438,12 +513,29 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.closeStatusConfirm();
       this.selectedHistoryCarId.set(null);
       this.historyRows.set([]);
+      this.historyQuery.set('');
+      this.historyDropdownOpen.set(false);
     }
   }
 
   closeHistoryPanel(): void {
     this.showHistoryPanel.set(false);
     this.historyNoteText.set(null);
+    this.historyQuery.set('');
+    this.historyDropdownOpen.set(false);
+  }
+
+  onHistoryQueryInput(value: string): void {
+    this.historyQuery.set(value);
+    this.historyDropdownOpen.set(true);
+    if (this.selectedHistoryCarId() != null) {
+      this.selectedHistoryCarId.set(null);
+      this.historyRows.set([]);
+    }
+  }
+
+  onHistoryQueryFocus(): void {
+    this.historyDropdownOpen.set(true);
   }
 
   onHistoryCarChange(carId: number | string | null): void {
@@ -452,9 +544,20 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.selectedHistoryCarId.set(parsedId);
 
     if (parsedId) {
+      const car = this.rows().find((row) => row.id === parsedId);
+      this.historyQuery.set(car ? this.getCarLabel(parsedId, true) : '');
       this.loadHistoryForCar(parsedId);
     } else {
+      this.historyQuery.set('');
       this.historyRows.set([]);
+    }
+  }
+
+  onHistoryQueryEnter(): void {
+    const matches = this.filteredHistoryCars();
+    if (matches.length === 1) {
+      this.onHistoryCarChange(matches[0].id);
+      this.historyDropdownOpen.set(false);
     }
   }
 
@@ -546,13 +649,114 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (!dataUrl) return;
 
     const car = this.rows().find((r) => r.id === this.qrCarId());
-    const code = this.qrKeyName().trim() || car?.qrCode || 'kod';
-    const filename = `qr-${code}-${car?.registration ?? 'auto'}.png`;
+    const filename = this.qrDownloadFileName(car, this.qrKeyName().trim() || car?.qrCode || 'kod');
 
     const link = document.createElement('a');
     link.href = dataUrl;
     link.download = filename;
     link.click();
+  }
+
+  async generateAllQrZip(): Promise<void> {
+    if (this.qrBulkGenerating() || this.qrGenerating()) return;
+
+    const cars = this.rows().filter((row) => !!row.qrCode?.trim());
+    if (cars.length === 0) {
+      this.qrError.set('Brak aut z kodem QR do wygenerowania.');
+      return;
+    }
+
+    this.qrBulkGenerating.set(true);
+    this.qrError.set('');
+
+    try {
+      const zip = new JSZip();
+      const originalFolder = zip.folder('Klucze oryginalne');
+      const spareFolder = zip.folder('Klucze zapasowe');
+      if (!originalFolder || !spareFolder) {
+        throw new Error('Nie udało się utworzyć folderów ZIP.');
+      }
+
+      const usedNames = {
+        O: new Set<string>(),
+        Z: new Set<string>(),
+      };
+
+      for (const car of cars) {
+        const code = car.qrCode.trim();
+        const scanUrl = `${window.location.origin}/key/${encodeURIComponent(code)}`;
+        const qrOnly = await QRCode.toDataURL(scanUrl, {
+          width: 420,
+          margin: 2,
+          color: { dark: '#000000', light: '#ffffff' },
+        });
+        const label = await this.buildQrLabelImage(qrOnly, code, car);
+        const blob = this.dataUrlToBlob(label);
+        const kind = this.carKeyKind(car);
+        const folder = kind === 'Z' ? spareFolder : originalFolder;
+        const names = kind === 'Z' ? usedNames.Z : usedNames.O;
+        const filename = this.uniqueZipFileName(this.qrDownloadFileName(car, code), names);
+        folder.file(filename, blob);
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = this.sanitizeFileName('Kody QR wszystkie auta.zip');
+      link.click();
+      URL.revokeObjectURL(link.href);
+      this.showToast(`Wygenerowano ZIP z ${cars.length} kodami QR.`);
+    } catch {
+      this.qrError.set('Nie udało się wygenerować ZIP z kodami QR.');
+    } finally {
+      this.qrBulkGenerating.set(false);
+    }
+  }
+
+  private qrDownloadFileName(car: Car | undefined, code: string): string {
+    const kind = car
+      ? this.keyKindLabel(car)
+      : this.qrKeyKind() === 'Z'
+        ? 'Klucz zapasowy'
+        : 'Klucz oryginalny';
+    const brand = car?.brand?.trim() || 'Marka';
+    const model = car?.model?.trim() || 'Model';
+    const registration = car?.registration?.trim() || 'brak tablic';
+    return this.sanitizeFileName(`${kind} ${brand} ${model} ${registration} ${code}.png`);
+  }
+
+  private uniqueZipFileName(filename: string, used: Set<string>): string {
+    if (!used.has(filename.toLowerCase())) {
+      used.add(filename.toLowerCase());
+      return filename;
+    }
+
+    const dot = filename.lastIndexOf('.');
+    const base = dot >= 0 ? filename.slice(0, dot) : filename;
+    const ext = dot >= 0 ? filename.slice(dot) : '';
+    let index = 2;
+    let candidate = `${base} (${index})${ext}`;
+    while (used.has(candidate.toLowerCase())) {
+      index += 1;
+      candidate = `${base} (${index})${ext}`;
+    }
+    used.add(candidate.toLowerCase());
+    return candidate;
+  }
+
+  private dataUrlToBlob(dataUrl: string): Blob {
+    const [header, data] = dataUrl.split(',');
+    const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
+    const binary = atob(data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: mime });
+  }
+
+  private sanitizeFileName(value: string): string {
+    return value.replace(/[<>:"/\\|?*]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   private buildQrLabelImage(qrDataUrl: string, code: string, car: Car): Promise<string> {
@@ -638,6 +842,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     this.form = this.emptyForm();
     this.editingId.set(null);
+    this.editQuery.set('');
+    this.editDropdownOpen.set(false);
     this.formError.set('');
     this.formMode.set('edit');
     this.showQrPanel.set(false);
@@ -655,6 +861,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       qrCode: row.qrCode ?? '',
     };
     this.editingId.set(row.id);
+    this.editQuery.set(this.getCarLabel(row.id, true));
     this.formError.set('');
     this.formMode.set('edit');
     this.showQrPanel.set(false);
@@ -678,9 +885,32 @@ export class AdminComponent implements OnInit, OnDestroy {
           keyNumber: row.keyNumber ?? '',
           qrCode: row.qrCode ?? '',
         };
+        this.editQuery.set(this.getCarLabel(parsedId, true));
       }
     } else {
       this.form = this.emptyForm();
+      this.editQuery.set('');
+    }
+  }
+
+  onEditQueryInput(value: string): void {
+    this.editQuery.set(value);
+    this.editDropdownOpen.set(true);
+    if (this.editingId() != null) {
+      this.editingId.set(null);
+      this.form = this.emptyForm();
+    }
+  }
+
+  onEditQueryFocus(): void {
+    this.editDropdownOpen.set(true);
+  }
+
+  onEditQueryEnter(): void {
+    const matches = this.filteredEditCars();
+    if (matches.length === 1) {
+      this.onEditCarSelect(matches[0].id);
+      this.editDropdownOpen.set(false);
     }
   }
 
@@ -690,34 +920,16 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.formError.set('');
     this.keyKind.set('O');
     this.editDropdownOpen.set(false);
+    this.editQuery.set('');
     this.form = this.emptyForm();
   }
 
   saveForm(): void {
     if (this.saving()) return;
 
-    const generated = this.formMode() === 'create'
-      ? this.nextKeySlot(this.keyKind(), this.form.registration.trim())
-      : null;
     const selected = this.formMode() === 'edit'
       ? this.rows().find((row) => row.id === this.editingId())
       : undefined;
-
-    const payload: CarWritePayload = {
-      brand: this.form.brand.trim() || selected?.brand?.trim() || '—',
-      model: this.form.model.trim() || selected?.model?.trim() || '—',
-      registration: this.form.registration.trim(),
-      keyNumber: generated?.keyNumber || this.form.keyNumber.trim() || selected?.keyNumber?.trim() || '',
-      qrCode: generated?.qrCode || this.form.qrCode.trim() || selected?.qrCode?.trim() || '',
-    };
-
-    if (this.formMode() === 'edit' && selected) {
-      payload.qrCode = this.qrCodeForCar(
-        selected.keyNumber,
-        payload.registration,
-        selected.qrCode,
-      );
-    }
 
     if (this.formMode() === 'edit') {
       if (this.editingId() == null) {
@@ -725,11 +937,42 @@ export class AdminComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (!payload.registration) {
+      if (!this.form.registration.trim()) {
         this.formError.set('Podaj nowe tablice rejestracyjne.');
         return;
       }
-    } else if (!payload.brand || !payload.registration) {
+
+      const payload: CarWritePayload = {
+        brand: selected?.brand?.trim() || this.form.brand.trim() || '—',
+        model: selected?.model?.trim() || this.form.model.trim() || '—',
+        registration: this.form.registration.trim(),
+        keyNumber: selected?.keyNumber?.trim() || '',
+        qrCode: this.qrCodeForCar(
+          selected?.keyNumber ?? '',
+          this.form.registration.trim(),
+          selected?.qrCode,
+        ),
+      };
+
+      this.saving.set(true);
+      this.formError.set('');
+      this.cars.updateCar(this.editingId()!, payload).subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.closeForm();
+          this.loadRegistry();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.saving.set(false);
+          this.formError.set(
+            err?.error?.message ?? err?.message ?? 'Nie udało się zapisać auta.',
+          );
+        },
+      });
+      return;
+    }
+
+    if (!this.form.brand.trim() || !this.form.registration.trim()) {
       this.formError.set('Uzupełnij markę i tablice rejestracyjne.');
       return;
     }
@@ -737,16 +980,13 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.saving.set(true);
     this.formError.set('');
 
-    const request$ =
-      this.formMode() === 'edit' && this.editingId() != null
-        ? this.cars.updateCar(this.editingId()!, payload)
-        : this.cars.createCar(payload);
-
-    request$.subscribe({
+    const payloads = this.buildCreatePayloads();
+    forkJoin(payloads.map((payload) => this.cars.createCar(payload))).subscribe({
       next: () => {
         this.saving.set(false);
         this.closeForm();
         this.loadRegistry();
+        this.showToast(payloads.length > 1 ? 'Dodano oba klucze.' : 'Dodano klucz.');
       },
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);
@@ -755,6 +995,28 @@ export class AdminComponent implements OnInit, OnDestroy {
         );
       },
     });
+  }
+
+  private buildCreatePayloads(): CarWritePayload[] {
+    const brand = this.form.brand.trim() || '—';
+    const model = this.form.model.trim() || '—';
+    const registration = this.form.registration.trim();
+    const base = { brand, model, registration };
+
+    if (this.keyKind() === 'B') {
+      const genO = this.nextKeySlot('O', registration);
+      const genZ = this.nextKeySlot('Z', registration, {
+        keys: [genO.keyNumber],
+        qrs: [genO.qrCode],
+      });
+      return [
+        { ...base, keyNumber: genO.keyNumber, qrCode: genO.qrCode },
+        { ...base, keyNumber: genZ.keyNumber, qrCode: genZ.qrCode },
+      ];
+    }
+
+    const gen = this.nextKeySlot(this.keyKind() === 'Z' ? 'Z' : 'O', registration);
+    return [{ ...base, keyNumber: gen.keyNumber, qrCode: gen.qrCode }];
   }
 
   takeCar(row: Car): void {
@@ -1051,17 +1313,27 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  private nextKeySlot(kind: KeyKind, registration: string): { keyNumber: string; qrCode: string } {
+  private nextKeySlot(
+    kind: 'O' | 'Z',
+    registration: string,
+    reserved: { keys?: string[]; qrs?: string[] } = {},
+  ): { keyNumber: string; qrCode: string } {
     const takenKeys = new Set(
       this.rows().map((row) => row.keyNumber.trim().toUpperCase()),
     );
     const takenQrs = new Set(
       this.rows().map((row) => row.qrCode.trim().toUpperCase()),
     );
-    const usedGlobalSlots = new Set<number>();
+    for (const key of reserved.keys ?? []) takenKeys.add(key.trim().toUpperCase());
+    for (const qr of reserved.qrs ?? []) takenQrs.add(qr.trim().toUpperCase());
 
+    const usedGlobalSlots = new Set<number>();
     for (const row of this.rows()) {
       const qrSlot = this.parseQrSlot(row.qrCode);
+      if (qrSlot) usedGlobalSlots.add(qrSlot);
+    }
+    for (const qr of reserved.qrs ?? []) {
+      const qrSlot = this.parseQrSlot(qr);
       if (qrSlot) usedGlobalSlots.add(qrSlot);
     }
 
@@ -1100,8 +1372,8 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   private buildQrCode(slot: number, registration: string): string {
     const xxx = slot >= 100 ? String(slot) : String(slot).padStart(2, '0');
-    const digits = (registration || '').replace(/\D/g, '');
-    const yy = digits.length >= 2 ? digits.slice(-2) : digits.padStart(2, '0');
+    const chars = (registration || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const yy = chars.length >= 2 ? chars.slice(-2) : chars.padStart(2, '0');
     return `${xxx}${yy}`;
   }
 
@@ -1113,7 +1385,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   private parseQrSlot(qrCode: string): number | null {
     const legacy = qrCode?.trim().match(/^QR-[OZ]-(\d+)$/i);
     if (legacy) return Number(legacy[1]);
-    const modern = qrCode?.trim().match(/^(\d{2,3})(\d{2})$/);
+    const modern = qrCode?.trim().match(/^(\d{2,3})([A-Z0-9]{2})$/i);
     return modern ? Number(modern[1]) : null;
   }
 
@@ -1190,8 +1462,34 @@ export class AdminComponent implements OnInit, OnDestroy {
     return withKey ? `${base} (Klucz: ${this.keyKindLabel(car)})` : base;
   }
 
+  private filterCarsByQuery(cars: Car[], rawQuery: string, selectedId: number | null): Car[] {
+    const query = rawQuery.trim().toLowerCase();
+    const list = [...cars];
+    if (selectedId != null) {
+      const selectedLabel = this.getCarLabel(selectedId, true).trim().toLowerCase();
+      if (!query || query === selectedLabel) return list;
+    }
+    if (!query) return list;
+
+    return list.filter((row) => {
+      const haystack = [
+        row.brand,
+        row.model,
+        row.registration,
+        row.qrCode,
+        row.keyNumber,
+        this.keyKindLabel(row),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }
+
   carKeyKind(car: Car): KeyKind {
-    return this.keyKindLabel(car) === 'Zapasowy' ? 'Z' : 'O';
+    const key = car.keyNumber?.trim().toUpperCase() ?? '';
+    if (key.includes('-Z-') || key.startsWith('K-Z')) return 'Z';
+    return 'O';
   }
 
   keyKindLabel(car: Car): string {

@@ -130,26 +130,29 @@
         Tablice rejestracyjne
         <input type="text" name="registration" [(ngModel)]="form.registration" required placeholder="np. BB 1234A" />
       </label>
-      <div class="key-kind">
+      <div class="key-kind form-grid__full">
         <span>Rodzaj klucza</span>
         <div class="key-kind__options">
           <button type="button"
                   class="key-kind__btn"
                   [class.key-kind__btn--active]="keyKind() === 'O'"
                   (click)="onKeyKindChange('O')">
-            Oryginalny
+            <span class="key-kind__title">Oryginalny</span>
+            <span class="key-kind__hint">Jeden klucz główny</span>
           </button>
           <button type="button"
                   class="key-kind__btn"
                   [class.key-kind__btn--active]="keyKind() === 'Z'"
                   (click)="onKeyKindChange('Z')">
-            Zapasowy
+            <span class="key-kind__title">Zapasowy</span>
+            <span class="key-kind__hint">Drugi klucz do auta</span>
           </button>
           <button type="button"
-                  class="key-kind__btn"
+                  class="key-kind__btn key-kind__btn--both"
                   [class.key-kind__btn--active]="keyKind() === 'B'"
                   (click)="onKeyKindChange('B')">
-            Oryginalny + Zapasowy
+            <span class="key-kind__title">Oba klucze</span>
+            <span class="key-kind__hint">Oryginalny + zapasowy</span>
           </button>
         </div>
       </div>
@@ -157,18 +160,35 @@
       <div class="custom-select-wrap form-grid__full" #editDropdownRef>
         <span class="custom-label">Wybierz auto</span>
         <div class="custom-select-dropdown">
-          <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="editDropdownOpen()" (click)="$event.stopPropagation(); editDropdownOpen.set(!editDropdownOpen())">
-            <span class="custom-select-btn__text">{{ getCarLabel(editingId(), true) }}</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-          </button>
-          
+          <div class="car-search">
+            <input
+              type="text"
+              class="car-search__input"
+              [value]="editQuery()"
+              (input)="onEditQueryInput(($any($event.target)).value)"
+              (focus)="onEditQueryFocus()"
+              (keydown.enter)="onEditQueryEnter()"
+              placeholder="Wpisz tablice, markę, model lub QR..."
+              autocomplete="off" />
+            <button
+              type="button"
+              class="car-search__toggle"
+              [class.car-search__toggle--open]="editDropdownOpen()"
+              (click)="$event.stopPropagation(); editDropdownOpen.set(!editDropdownOpen())"
+              aria-label="Pokaż listę aut">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+          </div>
+
           @if (editDropdownOpen()) {
           <div class="settings-menu settings-menu--select" (click)="$event.stopPropagation()">
-            <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wybierz auto...</button>
-            @for (row of rows(); track row.id) {
+            <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wyczyść wybór</button>
+            @for (row of filteredEditCars(); track row.id) {
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(row.id); editDropdownOpen.set(false)">
               {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
             </button>
+            } @empty {
+            <div class="settings-menu__item settings-menu__item--empty">Brak pasujących aut</div>
             }
           </div>
           }
@@ -260,18 +280,35 @@
       <div class="custom-select-wrap" #qrDropdownRef>
         <span class="custom-label">Auto</span>
         <div class="custom-select-dropdown">
-          <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="qrDropdownOpen()" (click)="qrDropdownOpen.set(!qrDropdownOpen())">
-            <span class="custom-select-btn__text">{{ qrVehicleLabel() }}</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-          </button>
+          <div class="car-search">
+            <input
+              type="text"
+              class="car-search__input"
+              [value]="qrQuery()"
+              (input)="onQrQueryInput(($any($event.target)).value)"
+              (focus)="onQrQueryFocus()"
+              (keydown.enter)="onQrQueryEnter()"
+              placeholder="Wpisz tablice, markę lub model..."
+              autocomplete="off" />
+            <button
+              type="button"
+              class="car-search__toggle"
+              [class.car-search__toggle--open]="qrDropdownOpen()"
+              (click)="$event.stopPropagation(); qrDropdownOpen.set(!qrDropdownOpen())"
+              aria-label="Pokaż listę aut">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+          </div>
 
           @if (qrDropdownOpen()) {
           <div class="settings-menu settings-menu--select">
-            <button type="button" class="settings-menu__item" (click)="onQrVehicleSelect(null); qrDropdownOpen.set(false)">Wybierz auto...</button>
-            @for (vehicle of qrVehicles(); track vehicle.key) {
+            <button type="button" class="settings-menu__item" (click)="onQrVehicleSelect(null); qrDropdownOpen.set(false)">Wyczyść wybór</button>
+            @for (vehicle of filteredQrVehicles(); track vehicle.key) {
             <button type="button" class="settings-menu__item" (click)="onQrVehicleSelect(vehicle.key); qrDropdownOpen.set(false)">
               {{ vehicle.brand }} {{ vehicle.model }} — {{ vehicle.registration || 'brak tablic' }}
             </button>
+            } @empty {
+            <div class="settings-menu__item settings-menu__item--empty">Brak pasujących aut</div>
             }
           </div>
           }
@@ -329,13 +366,16 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn btn--qr" [disabled]="!qrCanGenerate() || qrGenerating()" (click)="generateQr()">
+      <button type="button" class="btn btn--qr" [disabled]="!qrCanGenerate() || qrGenerating() || qrBulkGenerating()" (click)="generateQr()">
         @if (qrGenerating()) { Generowanie… } @else { Generuj }
       </button>
+      <button type="button" class="btn btn--bulk-qr" [disabled]="qrGenerating() || qrBulkGenerating() || rows().length === 0" (click)="generateAllQrZip()">
+        @if (qrBulkGenerating()) { Generowanie ZIP… } @else { Generuj do wszystkich aut }
+      </button>
       @if (qrDataUrl()) {
-      <button type="button" class="btn btn--primary" (click)="downloadQr()">Pobierz</button>
+      <button type="button" class="btn btn--primary" [disabled]="qrBulkGenerating()" (click)="downloadQr()">Pobierz</button>
       }
-      <button type="button" class="btn btn--ghost" (click)="closeQrPanel()">Anuluj</button>
+      <button type="button" class="btn btn--ghost" (click)="closeQrPanel()" [disabled]="qrBulkGenerating()">Anuluj</button>
     </div>
   </section>
   }
@@ -349,18 +389,35 @@
     <div class="custom-select-wrap form-grid__full" #historyDropdownRef>
       <span class="custom-label">Wybierz klucz (auto), który chcesz sprawdzić</span>
       <div class="custom-select-dropdown">
-        <button type="button" class="custom-select-btn" [class.custom-select-btn--active]="historyDropdownOpen()" (click)="historyDropdownOpen.set(!historyDropdownOpen())">
-          <span class="custom-select-btn__text">{{ getCarLabel(selectedHistoryCarId(), true) }}</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-        </button>
+        <div class="car-search">
+          <input
+            type="text"
+            class="car-search__input"
+            [value]="historyQuery()"
+            (input)="onHistoryQueryInput(($any($event.target)).value)"
+            (focus)="onHistoryQueryFocus()"
+            (keydown.enter)="onHistoryQueryEnter()"
+            placeholder="Wpisz tablice, markę, model lub QR..."
+            autocomplete="off" />
+          <button
+            type="button"
+            class="car-search__toggle"
+            [class.car-search__toggle--open]="historyDropdownOpen()"
+            (click)="$event.stopPropagation(); historyDropdownOpen.set(!historyDropdownOpen())"
+            aria-label="Pokaż listę aut">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+        </div>
 
         @if (historyDropdownOpen()) {
         <div class="settings-menu settings-menu--select">
-          <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(null); historyDropdownOpen.set(false)">Wybierz auto...</button>
-          @for (row of rows(); track row.id) {
+          <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(null); historyDropdownOpen.set(false)">Wyczyść wybór</button>
+          @for (row of filteredHistoryCars(); track row.id) {
           <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(row.id); historyDropdownOpen.set(false)">
             {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
           </button>
+          } @empty {
+          <div class="settings-menu__item settings-menu__item--empty">Brak pasujących aut</div>
           }
         </div>
         }
@@ -452,13 +509,50 @@
   @if (loading()) {
   <p class="muted">Ładowanie rejestru…</p>
   } @else {
-  <div class="table-wrap registry__table" [class.table-wrap--menu]="brandFilterOpen()">
+  <div class="table-wrap registry__table" [class.table-wrap--menu]="brandFilterOpen() || keyKindFilterOpen()">
     <table>
       <thead>
         <tr>
           <th>Tablice</th>
           <th>Auto</th>
-          <th>Klucz / QR</th>
+          <th class="key-kind-head-cell">
+            <div class="key-kind-filter" #keyKindFilterRef>
+              <button
+                type="button"
+                class="brand-filter__btn key-kind-filter__btn"
+                [class.brand-filter__btn--open]="keyKindFilterOpen()"
+                [class.brand-filter__btn--filtered]="keyKindFilter() !== 'all'"
+                (click)="$event.stopPropagation(); toggleKeyKindFilter()">
+                <span class="brand-filter__label">{{ keyKindFilter() === 'all' ? 'Klucz / QR' : keyKindFilterLabel() }}</span>
+                <svg class="brand-filter__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              @if (keyKindFilterOpen()) {
+              <div class="settings-menu settings-menu--select brand-filter__menu key-kind-filter__menu" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="settings-menu__item"
+                  [class.settings-menu__item--active]="keyKindFilter() === 'all'"
+                  (click)="setKeyKindFilter('all')">
+                  Wszystkie
+                </button>
+                <button
+                  type="button"
+                  class="settings-menu__item"
+                  [class.settings-menu__item--active]="keyKindFilter() === 'O'"
+                  (click)="setKeyKindFilter('O')">
+                  Oryginalny
+                </button>
+                <button
+                  type="button"
+                  class="settings-menu__item"
+                  [class.settings-menu__item--active]="keyKindFilter() === 'Z'"
+                  (click)="setKeyKindFilter('Z')">
+                  Zapasowy
+                </button>
+              </div>
+              }
+            </div>
+          </th>
           <th>Status</th>
           <th>Posiada</th>
           <th>Zabrane o</th>
