@@ -46,7 +46,6 @@
                 (click)="toggleDarkMode()"
                 aria-label="Przełącz motyw">
 
-          <!-- Ikona Słońca (widoczna w trybie jasnym) -->
           <svg class="theme-icon icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
             <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -59,7 +58,6 @@
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
           </svg>
 
-          <!-- Ikona Księżyca (widoczna w trybie ciemnym) -->
           <svg class="theme-icon icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
@@ -153,21 +151,23 @@
       <div class="key-kind">
         <span>Rodzaj klucza</span>
         <div class="key-kind__options">
-          <button
-            type="button"
-            class="key-kind__btn"
-            [class.key-kind__btn--active]="keyKind() === 'O'"
-            (click)="onKeyKindChange('O')"
-          >
+          <button type="button"
+                  class="key-kind__btn"
+                  [class.key-kind__btn--active]="keyKind() === 'O'"
+                  (click)="onKeyKindChange('O')">
             Oryginalny
           </button>
-          <button
-            type="button"
-            class="key-kind__btn"
-            [class.key-kind__btn--active]="keyKind() === 'Z'"
-            (click)="onKeyKindChange('Z')"
-          >
+          <button type="button"
+                  class="key-kind__btn"
+                  [class.key-kind__btn--active]="keyKind() === 'Z'"
+                  (click)="onKeyKindChange('Z')">
             Zapasowy
+          </button>
+          <button type="button"
+                  class="key-kind__btn"
+                  [class.key-kind__btn--active]="keyKind() === 'B'"
+                  (click)="onKeyKindChange('B')">
+            Oryginalny + Zapasowy
           </button>
         </div>
       </div>
@@ -179,7 +179,7 @@
             <span class="custom-select-btn__text">{{ getCarLabel(editingId(), true) }}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </button>
-
+          
           @if (editDropdownOpen()) {
           <div class="settings-menu settings-menu--select" (click)="$event.stopPropagation()">
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wybierz auto...</button>
@@ -202,13 +202,17 @@
         <button type="submit" class="btn btn--primary" [disabled]="saving() || (formMode() === 'edit' && editingId() == null)">
           @if (saving()) { Zapisywanie… } @else { Zapisz }
         </button>
+        @if (formMode() === 'create') {
+        <button type="button" class="btn btn--secondary" (click)="saveAndAddAnother()" [disabled]="saving()">
+          Zapisz i dodaj kolejne
+        </button>
+        }
         <button type="button" class="btn btn--ghost" (click)="closeForm()" [disabled]="saving()">Anuluj</button>
         @if (formMode() === 'edit') {
-        <button
-          type="button"
-          class="btn btn--danger"
-          (click)="deleteFromForm()"
-          [disabled]="saving() || editingId() == null || deletingId() != null">
+        <button type="button"
+                class="btn btn--danger"
+                (click)="deleteFromForm()"
+                [disabled]="saving() || editingId() == null || deletingId() != null">
           Usuń auto
         </button>
         }
@@ -665,6 +669,7 @@
       <button type="button" class="btn btn--primary" (click)="confirmStatusChange()" [disabled]="isConfirmSaving(car.id)">
         @if (isConfirmSaving(car.id)) { Zapisywanie… } @else { Potwierdź }
       </button>
+      
       <button type="button" class="btn btn--ghost" (click)="closeStatusConfirm()" [disabled]="isConfirmSaving(car.id)">Anuluj</button>
     </div>
   </section>

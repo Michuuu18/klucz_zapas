@@ -6,8 +6,9 @@ import { AuthService } from '../services/auth.service';
 import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 import { CarService } from '../services/car.service';
 import { ThemeService } from '../theme';
+import { forkJoin } from 'rxjs';
 type FormMode = 'closed' | 'create' | 'edit';
-type KeyKind = 'O' | 'Z';
+type KeyKind = 'O' | 'Z' | 'B';
 type StatusConfirmKind = 'lost' | 'found' | 'take' | 'return' | 'delete';
 type QrVehicle = {
   key: string;
@@ -292,7 +293,61 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.closeNotePanel();
     this.closeStatusConfirm();
   }
+  saveAndAddAnother(): void {
+    if (this.saving()) return;
 
+    if (!this.form.brand.trim() || !this.form.registration.trim()) {
+      this.formError.set('Uzupełnij markę i tablice rejestracyjne.');
+      return;
+    }
+
+    this.saving.set(true);
+    this.formError.set('');
+
+    const requests$ = [];
+
+    if (this.keyKind() === 'B') {
+      
+      const genO = this.nextKeySlot('O', this.form.registration.trim());
+
+      
+      const genZ = this.nextKeySlot('Z', this.form.registration.trim());
+
+      const payloadO: CarWritePayload = { ...this.form, keyNumber: genO.keyNumber, qrCode: genO.qrCode };
+      const payloadZ: CarWritePayload = { ...this.form, keyNumber: genZ.keyNumber, qrCode: genZ.qrCode };
+
+      requests$.push(this.cars.createCar(payloadO));
+      requests$.push(this.cars.createCar(payloadZ));
+    }
+    else {
+      const gen = this.nextKeySlot(this.keyKind(), this.form.registration.trim());
+      const payload: CarWritePayload = { ...this.form, keyNumber: gen.keyNumber, qrCode: gen.qrCode };
+
+      requests$.push(this.cars.createCar(payload));
+    }
+
+    forkJoin(requests$).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.showToast(this.keyKind() === 'B' ? 'Dodano OBA klucze.' : 'Dodano klucz.');
+        this.resetForm();
+        this.loadRegistry(true);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.formError.set(err?.error?.message ?? err?.message ?? 'Nie udało się zapisać aut.');
+      },
+    });
+  }
+  resetForm(): void {
+    this.form = {
+      ...this.form,
+      registration: '',
+      keyNumber: '',
+      qrCode: ''
+    };
+    this.formError.set('');
+  }
   onKeyKindChange(kind: KeyKind): void {
     this.keyKind.set(kind);
   }
