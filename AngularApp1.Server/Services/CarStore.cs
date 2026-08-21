@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AngularApp1.Server.Services;
 
+// Operacje na rejestrze kluczy (zabranie, zwrot, CRUD, historia).
 public class CarStore
 {
     private readonly AppDbContext _db;
@@ -48,6 +49,9 @@ public class CarStore
     public Car? FindById(int id) =>
         _db.Cars.AsNoTracking().FirstOrDefault(c => c.Id == id);
 
+
+    
+    // Zabranie klucza: FREE → IN_USE.
     public (Car? car, string? error) Take(string qrCode, string loginId)
     {
         var car = FindTracked(qrCode);
@@ -93,6 +97,8 @@ public class CarStore
         return (car, null);
     }
 
+    
+    // Zwrot klucza: IN_USE → FREE.
     public (Car? car, string? error) Return(string qrCode, string loginId)
     {
         var car = FindTracked(qrCode);
@@ -178,6 +184,7 @@ public class CarStore
         return (car, null);
     }
 
+    // Dodanie nowego klucza (QrCode musi być unikalny).
     public (Car? car, string? error) Create(CarWriteRequest request)
     {
         var payload = NormalizePayload(request);
@@ -418,6 +425,7 @@ public class CarStore
     private bool PlateKindExists(string plate, string keyNumber, int? excludeId = null)
         => PlateKindExists(plate, keyNumber, excludeId is null ? [] : [excludeId.Value]);
 
+    // Sprawdza, czy dla tej rejestracji istnieje już klucz tego samego rodzaju (O/Z).
     private bool PlateKindExists(string plate, string keyNumber, IReadOnlyCollection<int> excludeIds)
     {
         var normalized = plate.ToUpperInvariant();
@@ -472,6 +480,8 @@ public class CarStore
 
         return (data, null);
     }
+    
+    // Historia sesji TAKE/RETURN z ostatnich 30 dni.
     public IReadOnlyList<CarHistoryRecord> GetHistory(int carId)
     {
         var cutoff = DateTime.UtcNow.AddDays(-30);
@@ -486,8 +496,7 @@ public class CarStore
         }
         catch (PostgresException ex) when (ex.SqlState == "42P01")
         {
-            // 42P01 = undefined_table. Jeśli ktoś nie odpalił migracji (tabela car_logs),
-            // to zamiast wywalać UI zwracamy pustą historię.
+            // Brak tabeli car_logs — zwracamy pustą historię zamiast błędu.
             return [];
         }
 

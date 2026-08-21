@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AngularApp1.Server.Controllers;
 
+// API rejestru kluczy (CRUD, zabranie/zwrot, historia).
 [ApiController]
 [Route("api/cars")]
 [Authorize]

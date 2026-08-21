@@ -171,13 +171,13 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
         await this.html5QrCode.stop();
       }
     } catch {
-      // already stopped
+      
     }
 
     try {
       this.html5QrCode.clear();
     } catch {
-      // ignore
+      
     }
 
     this.html5QrCode = null;

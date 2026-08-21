@@ -21,7 +21,6 @@ builder.Services.AddControllers()
     });
 builder.Services.AddOpenApi();
 
-// --- JWT Authentication (wzorowane na RestaurantAPI Startup.cs) ---
 var authenticationSettings = new AuthenticationSettings();
 builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
 
@@ -58,7 +57,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Policies jak w RestaurantAPI/Authorization
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("PracownikOrAdmin", policy =>
@@ -130,7 +128,8 @@ if (useHttpsRedirection)
     app.UseHttpsRedirection();
 }
 
-// Kolejność jak w RestaurantAPI: Authentication PRZED Authorization
+
+// Authentication musi być przed Authorization.
 app.UseAuthentication();
 app.UseAuthorization();
 

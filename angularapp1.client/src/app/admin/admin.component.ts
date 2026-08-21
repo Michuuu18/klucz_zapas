@@ -38,7 +38,6 @@ export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('brandFilterRef') brandFilterRef!: ElementRef;
   @ViewChild('keyKindFilterRef') keyKindFilterRef!: ElementRef;
 
-  // Nasłuchiwanie kliknięć na całym dokumencie
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as Node;
@@ -244,6 +243,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     });
   });
 
+  
+  // Kolejność listy: w użyciu → oryginalne → zapasowe (zapasowe w użyciu zostają na górze).
   private tableRowRank(row: Car): number {
     if (row.status === 'IN_USE') return 0;
     if (this.carKeyKind(row) === 'Z') return 3;
@@ -604,7 +605,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.qrDataUrl.set(label);
     };
 
-    // Jeśli kod się nie zmienił — tylko generuj obraz, bez zapisu do API.
+    // Bez zmiany kodu QR tylko renderujemy etykietę — bez zapisu do API.
     if (car.qrCode === newCode) {
       try {
         await renderQr();
@@ -657,6 +658,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     link.click();
   }
 
+  
+  // Generuje ZIP z etykietami QR w folderach „Klucze oryginalne” i „Klucze zapasowe”.
   async generateAllQrZip(): Promise<void> {
     if (this.qrBulkGenerating() || this.qrGenerating()) return;
 
@@ -780,14 +783,12 @@ export class AdminComponent implements OnInit, OnDestroy {
 
         const frameColor = '#0b1f33';
 
-        // Góra: QR + gruba ramka tej samej szerokości co dolny box.
         ctx.fillStyle = frameColor;
         ctx.fillRect(0, 0, width, frame + qrSize + frame);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(frame, frame, qrSize, qrSize);
         ctx.drawImage(qrImage, frame, frame, qrSize, qrSize);
 
-        // Dół: biały box równo pod ramką QR, te same lewa i prawa krawędź.
         const footerTop = frame + qrSize + frame;
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, footerTop, width, footerHeight);
@@ -997,6 +998,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Buduje dane do zapisu: jeden klucz albo para O+Z z unikalnymi kodami QR.
   private buildCreatePayloads(): CarWritePayload[] {
     const brand = this.form.brand.trim() || '—';
     const model = this.form.model.trim() || '—';
@@ -1313,6 +1315,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  // Następny wolny numer klucza (K-O-XX / K-Z-XX) i unikalny QR.
+  // Parametr reserved chroni przed kolizją przy jednoczesnym tworzeniu obu kluczy.
   private nextKeySlot(
     kind: 'O' | 'Z',
     registration: string,
@@ -1370,6 +1374,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     return this.buildQrCode(slot, registration);
   }
 
+  // Format QR: slot (01–99 / 100+) + 2 ostatnie litery lub cyfry z rejestracji.
   private buildQrCode(slot: number, registration: string): string {
     const xxx = slot >= 100 ? String(slot) : String(slot).padStart(2, '0');
     const chars = (registration || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();

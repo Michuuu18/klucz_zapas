@@ -1,8 +1,7 @@
 namespace AngularApp1.Server;
 
-/// <summary>
-/// Ustawienia JWT — wzorowane na RestaurantAPI (AuthenticationSettings).
-/// </summary>
+
+// Ustawienia JWT z sekcji Authentication w appsettings.json.
 public class AuthenticationSettings
 {
     public string JwtKey { get; set; } = string.Empty;
