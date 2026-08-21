@@ -9,7 +9,7 @@ public static class DbInitializer
 {
     private static readonly Regex NewKeyRegex = new(@"^K-([OZ])-(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex LegacyQrRegex = new(@"^QR-([OZ])-(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex PlateQrRegex = new(@"^\d{2,3}\d{2}$", RegexOptions.Compiled);
+    private static readonly Regex PlateQrRegex = new(@"^\d{2,3}[A-Za-z0-9]{2}$", RegexOptions.Compiled);
 
     public static void Initialize(AppDbContext db)
     {
@@ -19,6 +19,7 @@ public static class DbInitializer
         EnsureLogNoteColumn(db);
         RenameLegacyKeyNames(db);
         MigrateLegacyQrCodes(db);
+        SyncQrRegistrationSuffix(db);
 
         if (db.Cars.Any())
         {
@@ -135,6 +136,55 @@ public static class DbInitializer
         }
     }
 
+    private static void SyncQrRegistrationSuffix(AppDbContext db)
+    {
+        var cars = db.Cars.OrderBy(c => c.Id).ToList();
+        var used = new HashSet<string>(
+            cars.Select(c => c.QrCode.Trim().ToUpperInvariant()),
+            StringComparer.Ordinal);
+
+        var changed = false;
+        foreach (var car in cars)
+        {
+            var slot = ExtractSlotFromPlateQr(car.QrCode)
+                ?? ExtractSlotFromLegacyQr(car.QrCode)
+                ?? ExtractSlotFromKey(car.KeyNumber);
+            if (slot is null || slot <= 0)
+            {
+                continue;
+            }
+
+            var nextQr = BuildQrCode(slot.Value, car.Registration);
+            if (string.Equals(car.QrCode.Trim(), nextQr, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var nextKey = nextQr.ToUpperInvariant();
+            var currentKey = car.QrCode.Trim().ToUpperInvariant();
+            if (used.Contains(nextKey) && !string.Equals(nextKey, currentKey, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            used.Remove(currentKey);
+            used.Add(nextKey);
+            car.QrCode = nextQr;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            db.SaveChanges();
+        }
+    }
+
+    private static int? ExtractSlotFromPlateQr(string qrCode)
+    {
+        var match = Regex.Match(qrCode.Trim(), @"^(\d{2,3})[A-Za-z0-9]{2}$");
+        return match.Success ? int.Parse(match.Groups[1].Value) : null;
+    }
+
     private static bool IsNewKey(string value) => NewKeyRegex.IsMatch(value.Trim());
 
     private static bool IsPlateQr(string value) => PlateQrRegex.IsMatch(value.Trim());
@@ -154,8 +204,8 @@ public static class DbInitializer
     private static string BuildQrCode(int slot, string registration)
     {
         var xxx = slot >= 100 ? slot.ToString() : slot.ToString("D2");
-        var digits = Regex.Replace(registration ?? string.Empty, @"\D", string.Empty);
-        var yy = digits.Length >= 2 ? digits[^2..] : digits.PadLeft(2, '0');
+        var chars = Regex.Replace(registration ?? string.Empty, @"[^A-Za-z0-9]", string.Empty).ToUpperInvariant();
+        var yy = chars.Length >= 2 ? chars[^2..] : chars.PadLeft(2, '0');
         return $"{xxx}{yy}";
     }
 
