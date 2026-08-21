@@ -8,27 +8,9 @@
       />
       <div class="registry__head">
         <h1 class="registry__title">Panel administratora</h1>
-        @if (lastSyncedAt()) {
-        <p class="registry__sync">
-          @if (autoRefreshing()) {
-          Aktualizacja…
-          } @else {
-          Zaktualizowano {{ lastSyncedAt() | date: 'dd.MM.yyyy HH:mm' }}
-          }
-        </p>
-        }
       </div>
     </div>
     <div class="registry__actions">
-      <button
-        type="button"
-        class="btn btn--secondary btn--sm"
-        (click)="loadRegistry()"
-        [disabled]="loading()"
-      >
-        Odśwież
-      </button>
-
       <div class="settings-dropdown" #settingsDropdown>
         <button type="button"
                 class="btn btn--secondary btn--sm settings-btn"
@@ -333,15 +315,15 @@
 
     <div class="qr-preview">
       @if (qrDataUrl()) {
-      <img [src]="qrDataUrl()" alt="Wygenerowany kod QR" width="180" height="180" />
+      <img class="qr-preview__label" [src]="qrDataUrl()" alt="Etykieta kodu QR" />
       } @else {
-      <div class="qr-preview__box">podgląd kodu QR</div>
+      <div class="qr-preview__box">podgląd etykiety QR</div>
       }
       <p class="muted">
         @if (qrDataUrl()) {
-        Kod wygenerowany — możesz go pobrać.
+        Etykieta gotowa do pobrania — kod i dane auta są już na obrazku.
         } @else {
-        Wybierz auto i podaj kod QR, aby wygenerować obraz.
+        Wybierz auto i klucz, potem kliknij Generuj.
         }
       </p>
     </div>

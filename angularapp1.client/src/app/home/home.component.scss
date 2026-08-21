@@ -261,6 +261,15 @@
     color: var(--text-main);
   }
 
+  .home__logo {
+    mix-blend-mode: normal;
+    filter: brightness(0) invert(1);
+  }
+
+  .home__subtitle {
+    color: var(--text-muted);
+  }
+
   .home__user-bar {
     border-bottom-color: var(--frame);
   }
@@ -285,12 +294,12 @@
   }
 
   .home__btn--take {
-    background: #1f7a3a;
+    background: #3da776;
     color: #fff;
   }
 
   .home__btn--return {
-    background: var(--bg-input);
+    background: #444751;
     color: var(--text-main);
     border-color: var(--frame);
   }
