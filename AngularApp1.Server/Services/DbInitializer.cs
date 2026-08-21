@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AngularApp1.Server.Services;
 
+// Start aplikacji: migracje, poprawki schematu, seed danych.
 public static class DbInitializer
 {
     private static readonly Regex NewKeyRegex = new(@"^K-([OZ])-(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -42,6 +43,7 @@ public static class DbInitializer
         db.SaveChanges();
     }
 
+    // Ta sama rejestracja może mieć klucz O i Z — usuwa unikalny indeks na Registration.
     private static void AllowSpareKeysForSamePlate(AppDbContext db)
     {
         db.Database.ExecuteSqlRaw("""
@@ -138,6 +140,7 @@ public static class DbInitializer
         }
     }
 
+    // Aktualizuje suffix QR do 2 ostatnich liter/cyfr rejestracji (bez zmiany slotu).
     private static void SyncQrRegistrationSuffix(AppDbContext db)
     {
         var cars = db.Cars.OrderBy(c => c.Id).ToList();
@@ -203,6 +206,7 @@ public static class DbInitializer
         return match.Success ? int.Parse(match.Groups[2].Value) : null;
     }
 
+    // Format QR: numer slotu + 2 ostatnie znaki alfanumeryczne rejestracji.
     private static string BuildQrCode(int slot, string registration)
     {
         var xxx = slot >= 100 ? slot.ToString() : slot.ToString("D2");

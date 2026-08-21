@@ -6,9 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AngularApp1.Server.Services;
 
-/// <summary>
-/// Generowanie tokena JWT — wzorowane na AccountService.GenerateJwt z RestaurantAPI.
-/// </summary>
+
+// Generowanie tokena JWT po zalogowaniu.
 public class JwtService
 {
     private readonly AuthenticationSettings _settings;

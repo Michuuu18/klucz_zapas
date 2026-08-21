@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AngularApp1.Server.Migrations
 {
-    /// <inheritdoc />
+    
     public partial class AddCarRegistryFields : Migration
     {
-        /// <inheritdoc />
+        
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -65,7 +65,7 @@ namespace AngularApp1.Server.Migrations
                 unique: true);
         }
 
-        /// <inheritdoc />
+        
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(

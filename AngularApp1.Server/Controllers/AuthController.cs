@@ -18,9 +18,7 @@ public class AuthController : ControllerBase
         _jwt = jwt;
     }
 
-    /// <summary>
-    /// Logowanie — zwraca JWT (jak POST /api/account/login w RestaurantAPI).
-    /// </summary>
+    // Logowanie — zwraca użytkownika i token JWT.
     [HttpPost("login")]
     [AllowAnonymous]
     public ActionResult<LoginResponse> Login([FromBody] LoginRequest request)

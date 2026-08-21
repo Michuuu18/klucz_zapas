@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace AngularApp1.Server.Migrations
 {
-    /// <inheritdoc />
+    
     [Migration("20260818120000_AddCarLogs")]
     public partial class AddCarLogs : Migration
     {

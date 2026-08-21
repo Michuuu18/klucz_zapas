@@ -2,10 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AngularApp1.Server.Authorization;
 
-/// <summary>
-/// Prosta reguła autoryzacji — wzorowana na policies z RestaurantAPI/Authorization.
-/// U nas: wymaga konkretnej roli (Admin lub Pracownik).
-/// </summary>
+
+// Wymaga roli Admin lub Pracownik (Admin zawsze przechodzi).
 public class RoleRequirement : IAuthorizationRequirement
 {
     public string Role { get; }

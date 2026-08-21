@@ -5,7 +5,6 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace AngularApp1.Server.Migrations
 {
-    //nowosc
     public partial class Init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
