@@ -51,8 +51,8 @@ public class CarStore
 
 
     
-    // Zabranie klucza: FREE → IN_USE.
-    public (Car? car, string? error) Take(string qrCode, string loginId)
+    // Zabranie klucza: FREE → IN_USE (albo przejęcie IN_USE przy force=true).
+    public (Car? car, string? error) Take(string qrCode, string loginId, bool force = false)
     {
         var car = FindTracked(qrCode);
         if (car is null)
@@ -67,7 +67,18 @@ public class CarStore
 
         if (car.Status == "IN_USE")
         {
-            return (null, "To auto jest już zabrane.");
+            var holder = car.HeldBy?.Trim() ?? string.Empty;
+            if (string.Equals(holder, loginId, StringComparison.OrdinalIgnoreCase))
+            {
+                return (null, "To auto jest już u Ciebie.");
+            }
+
+            if (!force)
+            {
+                return (null, "Auto nie zostało oddane w aplikacji. Potwierdź przejęcie.");
+            }
+
+            CloseOpenTakeSession(car, holder, loginId);
         }
 
         car.Status = "IN_USE";
@@ -76,7 +87,6 @@ public class CarStore
         car.ReturnedBy = null;
         car.ReturnedAt = null;
 
-       
         _db.SaveChanges();
 
         try
@@ -95,6 +105,32 @@ public class CarStore
             _logger.LogWarning("Pomijam log historii (brak tabeli car_logs). Akcja TAKE carId={CarId}", car.Id);
         }
         return (car, null);
+    }
+
+    // Zamyka poprzednią sesję TAKE w historii przy wymuszonym przejęciu klucza.
+    private void CloseOpenTakeSession(Car car, string previousHolder, string takenOverBy)
+    {
+        if (string.IsNullOrWhiteSpace(previousHolder))
+        {
+            previousHolder = takenOverBy;
+        }
+
+        try
+        {
+            _db.CarLogs.Add(new CarLog
+            {
+                CarId = car.Id,
+                Username = previousHolder,
+                Action = "RETURN",
+                Timestamp = DateTime.UtcNow,
+                Note = $"Automatyczny zwrot przy przejęciu przez {takenOverBy}",
+            });
+            _db.SaveChanges();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P01")
+        {
+            _logger.LogWarning("Pomijam log historii (brak tabeli car_logs). Akcja FORCE-RETURN carId={CarId}", car.Id);
+        }
     }
 
     

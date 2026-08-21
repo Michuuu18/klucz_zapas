@@ -126,34 +126,35 @@
         Model
         <input type="text" name="model" [(ngModel)]="form.model" required />
       </label>
-      <label>
-        Tablice rejestracyjne
-        <input type="text" name="registration" [(ngModel)]="form.registration" required placeholder="np. BB 1234A" />
-      </label>
-      <div class="key-kind form-grid__full">
-        <span>Rodzaj klucza</span>
-        <div class="key-kind__options">
-          <button type="button"
-                  class="key-kind__btn"
-                  [class.key-kind__btn--active]="keyKind() === 'O'"
-                  (click)="onKeyKindChange('O')">
-            <span class="key-kind__title">Oryginalny</span>
-            <span class="key-kind__hint">Jeden klucz główny</span>
-          </button>
-          <button type="button"
-                  class="key-kind__btn"
-                  [class.key-kind__btn--active]="keyKind() === 'Z'"
-                  (click)="onKeyKindChange('Z')">
-            <span class="key-kind__title">Zapasowy</span>
-            <span class="key-kind__hint">Drugi klucz do auta</span>
-          </button>
-          <button type="button"
-                  class="key-kind__btn key-kind__btn--both"
-                  [class.key-kind__btn--active]="keyKind() === 'B'"
-                  (click)="onKeyKindChange('B')">
-            <span class="key-kind__title">Oba klucze</span>
-            <span class="key-kind__hint">Oryginalny + zapasowy</span>
-          </button>
+      <div class="create-row form-grid__full">
+        <label class="create-row__plates">
+          Tablice rejestracyjne
+          <input type="text" name="registration" [(ngModel)]="form.registration" required placeholder="np. BB 1234A" />
+        </label>
+        <div class="key-kind create-row__kinds" role="group" aria-label="Rodzaj klucza">
+          <div class="key-kind__options">
+            <button type="button"
+                    class="key-kind__btn"
+                    [class.key-kind__btn--active]="keyKind() === 'O'"
+                    (click)="onKeyKindChange('O')">
+              <span class="key-kind__title">Oryginalny</span>
+              <span class="key-kind__hint">Jeden klucz główny</span>
+            </button>
+            <button type="button"
+                    class="key-kind__btn"
+                    [class.key-kind__btn--active]="keyKind() === 'Z'"
+                    (click)="onKeyKindChange('Z')">
+              <span class="key-kind__title">Zapasowy</span>
+              <span class="key-kind__hint">Drugi klucz do auta</span>
+            </button>
+            <button type="button"
+                    class="key-kind__btn key-kind__btn--both"
+                    [class.key-kind__btn--active]="keyKind() === 'B'"
+                    (click)="onKeyKindChange('B')">
+              <span class="key-kind__title">Oba klucze</span>
+              <span class="key-kind__hint">Oryginalny + zapasowy</span>
+            </button>
+          </div>
         </div>
       </div>
       } @else {
@@ -205,7 +206,7 @@
           @if (saving()) { Zapisywanie… } @else { Zapisz }
         </button>
         @if (formMode() === 'create') {
-        <button type="button" class="btn btn--secondary" (click)="saveAndAddAnother()" [disabled]="saving()">
+        <button type="button" class="btn btn--soft" (click)="saveAndAddAnother()" [disabled]="saving()">
           Zapisz i dodaj kolejne
         </button>
         }
