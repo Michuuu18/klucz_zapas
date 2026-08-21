@@ -95,7 +95,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   }
 
   submitManualCode(): void {
-    const code = this.manualCode.trim();
+    const code = this.normalizeCode(this.manualCode);
     if (!code) {
       return;
     }
@@ -140,18 +140,39 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     this.scanHandled = true;
     await this.stopScanner();
 
-    const code = this.extractCode(decodedText);
+    const code = this.normalizeCode(decodedText);
+    if (!code) {
+      this.scanHandled = false;
+      await this.startScanner();
+      return;
+    }
+
+    // Zawsze przekazuj tryb ze skanera — sam kod QR to tylko /key/XXXX bez mode.
     this.router.navigate(['/key', code], {
       queryParams: { mode: this.mode },
+      replaceUrl: true,
     });
   }
 
-  private extractCode(text: string): string {
+  private normalizeCode(text: string): string {
     const trimmed = text.trim();
-    const fromPath = trimmed.match(/\/key\/([^/?#]+)/i);
+    if (!trimmed) {
+      return '';
+    }
 
-    if (fromPath) {
-      return decodeURIComponent(fromPath[1]);
+    const fromPath = trimmed.match(/\/key\/([^/?#]+)/i);
+    if (fromPath?.[1]) {
+      return decodeURIComponent(fromPath[1]).trim();
+    }
+
+    try {
+      const asUrl = new URL(trimmed);
+      const keyMatch = asUrl.pathname.match(/\/key\/([^/]+)/i);
+      if (keyMatch?.[1]) {
+        return decodeURIComponent(keyMatch[1]).trim();
+      }
+    } catch {
+      // zwykły kod, nie URL
     }
 
     return trimmed;
