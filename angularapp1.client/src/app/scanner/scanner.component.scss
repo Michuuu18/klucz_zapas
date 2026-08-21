@@ -300,8 +300,8 @@
     }
 
     &:focus {
-      border-color: #2ea043;
-      box-shadow: 0 0 0 4px rgba(46, 160, 67, 0.18);
+      border-color: #f56e38;
+      box-shadow: 0 0 0 4px rgba(245, 110, 56, 0.16);
     }
   }
 
@@ -324,24 +324,24 @@
 
   .scanner__camera-btn,
   .scanner__manual-btn {
-    background: #1f7a3a;
+    background: #3da776;
     color: #fff;
     border: none;
-    box-shadow: 0 6px 16px rgba(31, 122, 58, 0.28);
+    box-shadow: 0 6px 16px rgba(61, 167, 118, 0.28);
   }
 
   .scanner--return {
     .scanner__camera-btn,
     .scanner__manual-btn {
-      background: rgba(31, 122, 58, 0.22);
-      color: #8fd4a4;
-      border: 1px solid rgba(46, 160, 67, 0.35);
+      background: rgba(61, 167, 118, 0.16);
+      color: #7ed0a8;
+      border: 1px solid rgba(61, 167, 118, 0.35);
       box-shadow: none;
     }
 
     .scanner__manual-input:focus {
-      border-color: #2ea043;
-      box-shadow: 0 0 0 4px rgba(46, 160, 67, 0.18);
+      border-color: #f56e38;
+      box-shadow: 0 0 0 4px rgba(245, 110, 56, 0.16);
     }
   }
 }

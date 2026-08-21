@@ -70,8 +70,6 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   readonly rows = signal<Car[]>([]);
   readonly loading = signal(false);
-  readonly autoRefreshing = signal(false);
-  readonly lastSyncedAt = signal<Date | null>(null);
   readonly saving = signal(false);
   readonly returningId = signal<number | null>(null);
   readonly takingId = signal<number | null>(null);
@@ -254,20 +252,15 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (!silent) {
       this.loading.set(true);
       this.error.set('');
-    } else {
-      this.autoRefreshing.set(true);
     }
 
     this.cars.getRegistry().subscribe({
       next: (data) => {
         this.rows.set(data);
-        this.lastSyncedAt.set(new Date());
         this.loading.set(false);
-        this.autoRefreshing.set(false);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.autoRefreshing.set(false);
         if (!silent) {
           this.error.set(
             err?.error?.message ?? err?.message ?? 'Nie udało się pobrać rejestru.',
@@ -443,10 +436,14 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.qrError.set('');
 
     const renderQr = async () => {
-    // Tryb (oddanie/zabranie) ustalamy dynamicznie po zeskanowaniu na podstawie statusu auta.
-    const scanUrl = `${window.location.origin}/key/${encodeURIComponent(newCode)}`;
-      const dataUrl = await QRCode.toDataURL(scanUrl, { width: 280, margin: 1 });
-      this.qrDataUrl.set(dataUrl);
+      const scanUrl = `${window.location.origin}/key/${encodeURIComponent(newCode)}`;
+      const qrOnly = await QRCode.toDataURL(scanUrl, {
+        width: 420,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' },
+      });
+      const label = await this.buildQrLabelImage(qrOnly, newCode, car);
+      this.qrDataUrl.set(label);
     };
 
     // Jeśli kod się nie zmienił — tylko generuj obraz, bez zapisu do API.
@@ -494,12 +491,89 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (!dataUrl) return;
 
     const car = this.rows().find((r) => r.id === this.qrCarId());
-    const filename = `qr-${car?.registration ?? 'auto'}-${this.qrKeyKind() === 'Z' ? 'zapasowy' : 'oryginalny'}.png`;
+    const code = this.qrKeyName().trim() || car?.qrCode || 'kod';
+    const filename = `qr-${code}-${car?.registration ?? 'auto'}.png`;
 
     const link = document.createElement('a');
     link.href = dataUrl;
     link.download = filename;
     link.click();
+  }
+
+  private buildQrLabelImage(qrDataUrl: string, code: string, car: Car): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const qrImage = new Image();
+      qrImage.onload = () => {
+        const frame = 20;
+        const qrSize = 420;
+        const footerHeight = 112;
+        const width = qrSize + frame * 2;
+        const height = frame + qrSize + frame + footerHeight;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Brak canvas'));
+          return;
+        }
+
+        const frameColor = '#0b1f33';
+
+        // Góra: QR + gruba ramka tej samej szerokości co dolny box.
+        ctx.fillStyle = frameColor;
+        ctx.fillRect(0, 0, width, frame + qrSize + frame);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(frame, frame, qrSize, qrSize);
+        ctx.drawImage(qrImage, frame, frame, qrSize, qrSize);
+
+        // Dół: biały box równo pod ramką QR, te same lewa i prawa krawędź.
+        const footerTop = frame + qrSize + frame;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, footerTop, width, footerHeight);
+
+        const stroke = 4;
+        ctx.strokeStyle = frameColor;
+        ctx.lineWidth = stroke;
+        ctx.beginPath();
+        ctx.moveTo(stroke / 2, footerTop);
+        ctx.lineTo(stroke / 2, height - stroke / 2);
+        ctx.lineTo(width - stroke / 2, height - stroke / 2);
+        ctx.lineTo(width - stroke / 2, footerTop);
+        ctx.stroke();
+
+        const registration = (car.registration || 'BRAK TABLIC').toUpperCase();
+        const brand = `${car.brand || ''} ${car.model || ''}`.trim().toUpperCase() || 'AUTO';
+        const line1 = `KOD: ${code}`;
+        const line2 = `${registration} ${brand}`;
+        const textLeft = frame;
+        const maxTextWidth = qrSize;
+
+        ctx.fillStyle = frameColor;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        ctx.font = '700 28px Manrope, Segoe UI, sans-serif';
+        ctx.fillText(this.fitCanvasText(ctx, line1, maxTextWidth), textLeft, footerTop + 40);
+
+        ctx.font = '700 24px Manrope, Segoe UI, sans-serif';
+        ctx.fillText(this.fitCanvasText(ctx, line2, maxTextWidth), textLeft, footerTop + 78);
+
+        resolve(canvas.toDataURL('image/png'));
+      };
+      qrImage.onerror = () => reject(new Error('Nie udało się wczytać QR'));
+      qrImage.src = qrDataUrl;
+    });
+  }
+
+  private fitCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+    if (ctx.measureText(text).width <= maxWidth) return text;
+    let value = text;
+    while (value.length > 1 && ctx.measureText(`${value}…`).width > maxWidth) {
+      value = value.slice(0, -1);
+    }
+    return `${value}…`;
   }
 
   openEditMode(): void {
