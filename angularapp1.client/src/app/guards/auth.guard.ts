@@ -7,7 +7,8 @@ function redirectToLogin(returnUrl: string) {
   return router.createUrlTree(['/login'], { queryParams: { returnUrl } });
 }
 
-/** Wymaga zalogowania (dowolna rola). */
+
+// Wymaga zalogowania.
 export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
 
@@ -18,7 +19,8 @@ export const authGuard: CanActivateFn = (_route, state) => {
   return redirectToLogin(state.url);
 };
 
-/** Wymaga roli Admin. */
+
+// Wymaga roli Admin.
 export const adminGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -34,7 +36,8 @@ export const adminGuard: CanActivateFn = (_route, state) => {
   return router.createUrlTree(['/panel']);
 };
 
-/** Wymaga roli Pracownik (Admin też ma dostęp). */
+
+// Wymaga roli Pracownik (Admin też przechodzi).
 export const employeeGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -50,7 +53,8 @@ export const employeeGuard: CanActivateFn = (_route, state) => {
   return router.createUrlTree(['/admin']);
 };
 
-/** Blokuje dostęp do /login jeśli użytkownik jest już zalogowany. */
+
+// Przekierowuje zalogowanego użytkownika poza /login.
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

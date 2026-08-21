@@ -12,7 +12,7 @@ const SAVED_USERNAME_KEY = 'klucz-zapas.savedUsername';
 export class AuthService {
   private readonly apiUrl = '/api/auth';
 
-  /** Aktualnie zalogowany użytkownik + JWT (null = brak sesji). */
+  // Aktualnie zalogowany użytkownik (null = brak sesji).
   readonly currentUser = signal<AppUser | null>(this.readFromStorage());
 
   constructor(private readonly http: HttpClient) {}
@@ -43,7 +43,7 @@ export class AuthService {
     return localStorage.getItem(SAVED_USERNAME_KEY) ?? '';
   }
 
-  /** Token JWT do nagłówka Authorization: Bearer ... */
+  // Token JWT do nagłówka Authorization.
   getToken(): string | null {
     return this.currentUser()?.token ?? null;
   }

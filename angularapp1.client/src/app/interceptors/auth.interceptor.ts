@@ -2,9 +2,8 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
-/**
- * Dołącza JWT do każdego żądania API — jak Authorization: Bearer w RestaurantAPI.
- */
+
+// Dołącza JWT do żądań /api/* (poza logowaniem).
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const token = auth.getToken();
@@ -13,7 +12,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  // Login nie wymaga tokena.
   if (req.url.includes('/api/auth/login')) {
     return next(req);
   }

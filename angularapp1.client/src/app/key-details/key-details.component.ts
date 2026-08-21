@@ -44,8 +44,7 @@ export class KeyDetailsComponent implements OnInit {
     this.cars.getByQrCode(this.code).subscribe({
       next: (car) => {
         this.record = car;
-        // Zawsze decyduj na podstawie statusu auta, a nie na podstawie query string z QR.
-        // Dzięki temu ten sam kod działa poprawnie nawet jeśli wcześniej był wygenerowany jako `mode=take`.
+        // Tryb akcji wynika ze statusu auta, nie z query stringa QR.
         this.mode = this.getModeForStatus(car.status);
         this.loading = false;
         this.cdr.detectChanges();

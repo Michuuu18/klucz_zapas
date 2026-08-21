@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 
+// Klient HTTP do API rejestru kluczy.
 @Injectable({ providedIn: 'root' })
 export class CarService {
   private readonly apiUrl = '/api/cars';
