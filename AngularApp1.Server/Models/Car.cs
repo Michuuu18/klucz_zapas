@@ -22,6 +22,7 @@ public class CarActionRequest
 {
     public string QrCode { get; set; } = string.Empty;
     public bool Force { get; set; }
+    public string? Note { get; set; }
 }
 
 public class CarWriteRequest

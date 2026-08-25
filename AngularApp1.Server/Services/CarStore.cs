@@ -52,7 +52,7 @@ public class CarStore
 
     
     // Zabranie klucza: FREE → IN_USE (albo przejęcie IN_USE przy force=true).
-    public (Car? car, string? error) Take(string qrCode, string loginId, bool force = false)
+    public (Car? car, string? error) Take(string qrCode, string loginId, bool force = false, string? note = null)
     {
         var car = FindTracked(qrCode);
         if (car is null)
@@ -81,11 +81,18 @@ public class CarStore
             CloseOpenTakeSession(car, holder, loginId);
         }
 
+        var noteValue = (note ?? string.Empty).Trim();
+        if (noteValue.Length > 2000)
+        {
+            return (null, "Notatka jest za długa (max 2000 znaków).");
+        }
+
         car.Status = "IN_USE";
         car.HeldBy = loginId;
         car.TakenAt = DateTime.UtcNow;
         car.ReturnedBy = null;
         car.ReturnedAt = null;
+        car.Note = string.IsNullOrEmpty(noteValue) ? null : noteValue;
 
         _db.SaveChanges();
 
@@ -97,6 +104,7 @@ public class CarStore
                 Username = loginId,
                 Action = "TAKE",
                 Timestamp = DateTime.UtcNow,
+                Note = car.Note,
             });
             _db.SaveChanges();
         }

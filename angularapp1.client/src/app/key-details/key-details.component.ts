@@ -18,6 +18,7 @@ export class KeyDetailsComponent implements OnInit {
   error = '';
   confirming = false;
   needsForceTake = false;
+  takeNoteDraft = '';
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -44,6 +45,7 @@ export class KeyDetailsComponent implements OnInit {
     this.error = '';
     this.record = null;
     this.needsForceTake = false;
+    this.takeNoteDraft = '';
     this.cdr.detectChanges();
 
     this.cars.getByQrCode(this.code).subscribe({
@@ -140,7 +142,7 @@ export class KeyDetailsComponent implements OnInit {
     const request =
       this.mode === 'return'
         ? this.cars.returnCar(this.record.qrCode)
-        : this.cars.takeCar(this.record.qrCode, this.needsForceTake);
+        : this.cars.takeCar(this.record.qrCode, this.needsForceTake, this.takeNoteDraft);
 
     request.subscribe({
       next: () => {

@@ -7,7 +7,7 @@ import { AuthService } from '../services/auth.service';
 import { Car, CarWritePayload, HistoryRecord } from '../models/car.model';
 import { CarService } from '../services/car.service';
 import { ThemeService } from '../theme';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of, switchMap } from 'rxjs';
 type FormMode = 'closed' | 'create' | 'edit';
 type KeyKind = 'O' | 'Z' | 'B';
 type KeyKindFilter = 'all' | 'O' | 'Z';
@@ -37,6 +37,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   @ViewChild('editDropdownRef') editDropdownRef!: ElementRef;
   @ViewChild('brandFilterRef') brandFilterRef!: ElementRef;
   @ViewChild('keyKindFilterRef') keyKindFilterRef!: ElementRef;
+  @ViewChild('confirmNoteArea') confirmNoteArea?: ElementRef<HTMLTextAreaElement>;
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
@@ -119,6 +120,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly keyKindFilter = signal<KeyKindFilter>('all');
   readonly keyKindFilterOpen = signal(false);
   noteDraft = '';
+  confirmNoteDraft = '';
   private toastTimer?: ReturnType<typeof setTimeout>;
 
   form: CarWritePayload = this.emptyForm();
@@ -1084,6 +1086,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.showHistoryPanel.set(false);
       this.closeNotePanel();
     }
+    this.confirmNoteDraft = '';
     this.confirmKind.set(kind);
     this.confirmRow.set(row);
   }
@@ -1092,6 +1095,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.isConfirmBusy()) return;
     this.confirmRow.set(null);
     this.confirmKind.set(null);
+    this.confirmNoteDraft = '';
   }
 
   isConfirmSaving(id: number): boolean {
@@ -1136,7 +1140,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   confirmHint(): string {
     switch (this.confirmKind()) {
       case 'take':
-        return 'W historii pojawi się pobranie na Twoje konto administratora.';
+        return 'Opcjonalnie dodaj notatkę — będzie widoczna przy tym kluczyku do momentu zwrotu.';
       case 'return':
         return 'Notatka przy tym kluczyku zostanie zapisana w historii i wyczyszczona.';
       case 'found':
@@ -1146,6 +1150,11 @@ export class AdminComponent implements OnInit, OnDestroy {
       default:
         return 'Stan możesz później zmienić przyciskiem „Znaleziony”.';
     }
+  }
+
+  private takeNoteFromConfirm(): string {
+    const typed = this.confirmNoteArea?.nativeElement.value ?? this.confirmNoteDraft;
+    return typed.trim();
   }
 
   confirmStatusChange(): void {
@@ -1163,13 +1172,17 @@ export class AdminComponent implements OnInit, OnDestroy {
       }
 
       this.takingId.set(row.id);
-      this.cars.takeCar(qrCode).subscribe({
-        next: () => this.finishStatusAction('Kluczyk został zabrany.'),
-        error: (err: HttpErrorResponse) =>
-          this.failStatusAction(
-            err?.error?.message ?? err?.message ?? 'Nie udało się zabrać auta.',
-          ),
-      });
+      const note = this.takeNoteFromConfirm();
+      this.cars
+        .takeCar(qrCode, false, note)
+        .pipe(switchMap((car) => (note ? this.cars.updateNote(row.id, note) : of(car))))
+        .subscribe({
+          next: () => this.finishStatusAction('Kluczyk został zabrany.'),
+          error: (err: HttpErrorResponse) =>
+            this.failStatusAction(
+              err?.error?.message ?? err?.message ?? 'Nie udało się zabrać auta.',
+            ),
+        });
       return;
     }
 

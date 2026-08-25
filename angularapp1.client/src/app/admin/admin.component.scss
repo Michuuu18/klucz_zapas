@@ -830,22 +830,49 @@ tbody tr:last-child td {
 
 .note-preview {
   width: 100%;
-  max-width: 16rem;
+  max-width: 14rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   border: 1px solid rgba(11, 42, 74, 0.12);
-  border-radius: 12px;
-  padding: 0.5rem 0.75rem;
+  border-radius: 16px 16px 16px 4px;
+  padding: 0.55rem 0.75rem;
   background: #f7f9fb;
   color: #1a3352;
   font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.4;
   text-align: left;
-  white-space: pre-wrap;
+  /* Podgląd ma być stały (clamp), pełna treść tylko w popoverze. */
+  white-space: normal;
   word-break: break-word;
+}
+
+.note-preview--clickable {
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.note-preview--clickable:hover {
+  /* Nie pozwalamy, żeby podgląd "rósł" w tabeli — chmurka ma się pojawiać osobno. */
+  border-color: rgba(11, 42, 74, 0.12);
+  background: #f7f9fb;
+  box-shadow: none;
+}
+
+.note-preview--empty {
+  color: #5a6f82;
+  font-style: italic;
+  font-weight: 600;
+  background: #fff;
+  border-style: dashed;
+}
+
+.note-cell {
+  min-width: 10rem;
+  max-width: 16rem;
 }
 
 .history-note {
@@ -855,7 +882,7 @@ tbody tr:last-child td {
 .note-wrap {
   position: relative;
   min-width: 12rem;
-  max-width: 16rem;
+  max-width: 14rem;
 }
 
 .note-popover {
@@ -1359,6 +1386,44 @@ tbody tr:last-child td {
   font-weight: 600;
 }
 
+.confirm-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+}
+
+.confirm-note__label {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #1a3352;
+}
+
+.confirm-note__text {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  min-height: 5.5rem;
+  border: 1px solid rgba(11, 42, 74, 0.16);
+  border-radius: 14px;
+  padding: 0.75rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #1a3352;
+}
+
+.confirm-note__text:focus {
+  border-color: #1f7a3a;
+  outline: none;
+}
+
+.confirm-note__count {
+  font-size: 0.78rem;
+  text-align: right;
+}
+
 .confirm-dialog .form-actions {
   margin-top: 1.15rem;
 }
@@ -1462,6 +1527,34 @@ tbody tr:last-child td {
   .confirm-hint,
   td {
     color: var(--text-muted);
+  }
+
+  .confirm-note__label {
+    color: var(--text-main);
+  }
+
+  .note-preview {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+  }
+
+  .note-preview--clickable:hover {
+    background: var(--bg-input);
+    border-color: var(--frame);
+    box-shadow: none;
+  }
+
+  .note-preview--empty {
+    background: transparent;
+    color: var(--text-muted);
+  }
+
+  .note-popover {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border-color: var(--frame);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42);
   }
 
   .stat-card,
@@ -1623,6 +1716,7 @@ tbody tr:last-child td {
   .form-grid input:not([type='radio']):not([type='checkbox']),
   .form-grid select,
   .note-panel__text,
+  .confirm-note__text,
   .custom-select-btn {
     background: var(--bg-input);
     color: var(--text-main);
@@ -1638,6 +1732,7 @@ tbody tr:last-child td {
   .form-grid input:not([type='radio']):not([type='checkbox']):focus,
   .form-grid select:focus,
   .note-panel__text:focus,
+  .confirm-note__text:focus,
   .custom-select-btn:focus {
     border-color: var(--accent);
   }
