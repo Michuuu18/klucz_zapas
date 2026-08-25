@@ -507,6 +507,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   openHistoryPanel(): void {
+
     const opening = !this.showHistoryPanel();
     this.showHistoryPanel.set(opening);
     if (opening) {
@@ -520,6 +521,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.historyDropdownOpen.set(false);
     }
   }
+ 
 
   closeHistoryPanel(): void {
     this.showHistoryPanel.set(false);

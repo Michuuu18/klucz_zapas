@@ -1,4 +1,4 @@
-﻿# System kluczykowy — REKORD
+﻿# System kluczykowy - REKORD
 
 Aplikacja do ewidencji kluczy samochodowych firmy **REKORD Systemy Informatyczne** (Bielsko-Biała).
 
@@ -16,9 +16,9 @@ Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie 
 
 ### Panel administratora
 
-![Panel administratora — tryb ciemny](docs/screenshots/02-panel-admin-ciemny.png)
+![Panel administratora - tryb ciemny](docs/screenshots/02-panel-admin-ciemny.png)
 
-![Panel administratora — tryb jasny](docs/screenshots/03-panel-admin-jasny.png)
+![Panel administratora - tryb jasny](docs/screenshots/03-panel-admin-jasny.png)
 
 ### Dodawanie klucza
 

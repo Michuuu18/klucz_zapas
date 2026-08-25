@@ -1,16 +1,49 @@
 <div class="registry">
   <header class="registry__top">
     <div class="registry__brand">
-      <img
-        class="registry__logo"
-        src="assets/rekord-logo.png"
-        alt="REKORD – Systemy Informatyczne"
-      />
+      <img class="registry__logo"
+           src="assets/rekord-logo.png"
+           alt="REKORD – Systemy Informatyczne" />
       <div class="registry__head">
         <h1 class="registry__title">Panel administratora</h1>
       </div>
     </div>
     <div class="registry__actions">
+
+      <button type="button"
+              class="btn btn--secondary btn--sm history-btn"
+              [class.history-btn--open]="showHistoryPanel()"
+              (click)="openHistoryPanel()"
+              aria-label="Historia kluczy"
+              title="Historia kluczy">
+        <svg class="history-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+          <path d="M3 3v5h5"></path>
+          <path d="M12 7v5l4 2"></path>
+        </svg>
+      </button>
+
+      <button type="button"
+              class="btn btn--secondary btn--sm theme-toggle-btn"
+              [class.is-dark]="isDarkMode()"
+              (click)="toggleDarkMode()"
+              aria-label="Przełącz motyw">
+        <svg class="theme-icon icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="theme-icon icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+
       <div class="settings-dropdown" #settingsDropdown>
         <button type="button"
                 class="btn btn--secondary btn--sm settings-btn"
@@ -22,28 +55,7 @@
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </button>
-        <button type="button"
-                class="btn btn--secondary btn--sm theme-toggle-btn"
-                [class.is-dark]="isDarkMode()"
-                (click)="toggleDarkMode()"
-                aria-label="Przełącz motyw">
 
-          <svg class="theme-icon icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-          </svg>
-
-          <svg class="theme-icon icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-          </svg>
-        </button>
         @if (settingsMenuOpen()) {
         <div class="settings-menu">
           <button type="button" class="settings-menu__item" (click)="openCreate(); toggleSettingsMenu()">
@@ -55,10 +67,6 @@
           <button type="button" class="settings-menu__item" (click)="openQrPanel(); toggleSettingsMenu()">
             Generuj kod QR
           </button>
-          <button type="button" class="settings-menu__item" (click)="openHistoryPanel(); toggleSettingsMenu()">
-            Historia kluczy
-          </button>
-          
         </div>
         }
       </div>
@@ -66,7 +74,6 @@
       <button type="button" class="btn btn--danger btn--sm" (click)="logout()">Wyloguj</button>
     </div>
   </header>
-
   <section class="stats-grid">
     <article class="stat-card stat-card--total">
       <div class="stat-card__text">
@@ -162,21 +169,19 @@
         <span class="custom-label">Wybierz auto</span>
         <div class="custom-select-dropdown">
           <div class="car-search">
-            <input
-              type="text"
-              class="car-search__input"
-              [value]="editQuery()"
-              (input)="onEditQueryInput(($any($event.target)).value)"
-              (focus)="onEditQueryFocus()"
-              (keydown.enter)="onEditQueryEnter()"
-              placeholder="Wpisz tablice, markę, model lub QR..."
-              autocomplete="off" />
-            <button
-              type="button"
-              class="car-search__toggle"
-              [class.car-search__toggle--open]="editDropdownOpen()"
-              (click)="$event.stopPropagation(); editDropdownOpen.set(!editDropdownOpen())"
-              aria-label="Pokaż listę aut">
+            <input type="text"
+                   class="car-search__input"
+                   [value]="editQuery()"
+                   (input)="onEditQueryInput(($any($event.target)).value)"
+                   (focus)="onEditQueryFocus()"
+                   (keydown.enter)="onEditQueryEnter()"
+                   placeholder="Wpisz tablice, markę, model lub QR..."
+                   autocomplete="off" />
+            <button type="button"
+                    class="car-search__toggle"
+                    [class.car-search__toggle--open]="editDropdownOpen()"
+                    (click)="$event.stopPropagation(); editDropdownOpen.set(!editDropdownOpen())"
+                    aria-label="Pokaż listę aut">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
             </button>
           </div>
@@ -242,16 +247,14 @@
     }
 
     @if (noteCarId() != null) {
-    <textarea
-      class="note-panel__text"
-      name="noteDraft"
-      rows="10"
-      maxlength="2000"
-      [(ngModel)]="noteDraft"
-      [ngModelOptions]="{standalone: true}"
-      placeholder="Wpisz notatkę"
-      [disabled]="noteSaving()"
-    ></textarea>
+    <textarea class="note-panel__text"
+              name="noteDraft"
+              rows="10"
+              maxlength="2000"
+              [(ngModel)]="noteDraft"
+              [ngModelOptions]="{standalone: true}"
+              placeholder="Wpisz notatkę"
+              [disabled]="noteSaving()"></textarea>
     <p class="muted note-count">{{ noteDraft.length }}/2000</p>
 
     <div class="form-actions">
@@ -282,21 +285,19 @@
         <span class="custom-label">Auto</span>
         <div class="custom-select-dropdown">
           <div class="car-search">
-            <input
-              type="text"
-              class="car-search__input"
-              [value]="qrQuery()"
-              (input)="onQrQueryInput(($any($event.target)).value)"
-              (focus)="onQrQueryFocus()"
-              (keydown.enter)="onQrQueryEnter()"
-              placeholder="Wpisz tablice, markę lub model..."
-              autocomplete="off" />
-            <button
-              type="button"
-              class="car-search__toggle"
-              [class.car-search__toggle--open]="qrDropdownOpen()"
-              (click)="$event.stopPropagation(); qrDropdownOpen.set(!qrDropdownOpen())"
-              aria-label="Pokaż listę aut">
+            <input type="text"
+                   class="car-search__input"
+                   [value]="qrQuery()"
+                   (input)="onQrQueryInput(($any($event.target)).value)"
+                   (focus)="onQrQueryFocus()"
+                   (keydown.enter)="onQrQueryEnter()"
+                   placeholder="Wpisz tablice, markę lub model..."
+                   autocomplete="off" />
+            <button type="button"
+                    class="car-search__toggle"
+                    [class.car-search__toggle--open]="qrDropdownOpen()"
+                    (click)="$event.stopPropagation(); qrDropdownOpen.set(!qrDropdownOpen())"
+                    aria-label="Pokaż listę aut">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
             </button>
           </div>
@@ -319,30 +320,27 @@
       <div class="custom-select-wrap" #qrKeyDropdownRef>
         <span class="custom-label">Wybór klucza</span>
         <div class="custom-select-dropdown">
-          <button
-            type="button"
-            class="custom-select-btn"
-            [class.custom-select-btn--active]="qrKeyDropdownOpen()"
-            [disabled]="!qrVehicleKey()"
-            (click)="qrKeyDropdownOpen.set(!qrKeyDropdownOpen())">
+          <button type="button"
+                  class="custom-select-btn"
+                  [class.custom-select-btn--active]="qrKeyDropdownOpen()"
+                  [disabled]="!qrVehicleKey()"
+                  (click)="qrKeyDropdownOpen.set(!qrKeyDropdownOpen())">
             <span class="custom-select-btn__text" [class.qr-key-select__value]="!!qrVehicleKey()">{{ qrKeySelectLabel() }}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </button>
 
           @if (qrKeyDropdownOpen()) {
           <div class="settings-menu settings-menu--select">
-            <button
-              type="button"
-              class="settings-menu__item qr-key-select__option"
-              [disabled]="!qrHasKeyKind('O')"
-              (click)="onQrKeyKindSelect('O'); qrKeyDropdownOpen.set(false)">
+            <button type="button"
+                    class="settings-menu__item qr-key-select__option"
+                    [disabled]="!qrHasKeyKind('O')"
+                    (click)="onQrKeyKindSelect('O'); qrKeyDropdownOpen.set(false)">
               Klucz oryginalny
             </button>
-            <button
-              type="button"
-              class="settings-menu__item qr-key-select__option"
-              [disabled]="!qrHasKeyKind('Z')"
-              (click)="onQrKeyKindSelect('Z'); qrKeyDropdownOpen.set(false)">
+            <button type="button"
+                    class="settings-menu__item qr-key-select__option"
+                    [disabled]="!qrHasKeyKind('Z')"
+                    (click)="onQrKeyKindSelect('Z'); qrKeyDropdownOpen.set(false)">
               Klucz zapasowy
             </button>
           </div>
@@ -391,21 +389,19 @@
       <span class="custom-label">Wybierz klucz (auto), który chcesz sprawdzić</span>
       <div class="custom-select-dropdown">
         <div class="car-search">
-          <input
-            type="text"
-            class="car-search__input"
-            [value]="historyQuery()"
-            (input)="onHistoryQueryInput(($any($event.target)).value)"
-            (focus)="onHistoryQueryFocus()"
-            (keydown.enter)="onHistoryQueryEnter()"
-            placeholder="Wpisz tablice, markę, model lub QR..."
-            autocomplete="off" />
-          <button
-            type="button"
-            class="car-search__toggle"
-            [class.car-search__toggle--open]="historyDropdownOpen()"
-            (click)="$event.stopPropagation(); historyDropdownOpen.set(!historyDropdownOpen())"
-            aria-label="Pokaż listę aut">
+          <input type="text"
+                 class="car-search__input"
+                 [value]="historyQuery()"
+                 (input)="onHistoryQueryInput(($any($event.target)).value)"
+                 (focus)="onHistoryQueryFocus()"
+                 (keydown.enter)="onHistoryQueryEnter()"
+                 placeholder="Wpisz tablice, markę, model lub QR..."
+                 autocomplete="off" />
+          <button type="button"
+                  class="car-search__toggle"
+                  [class.car-search__toggle--open]="historyDropdownOpen()"
+                  (click)="$event.stopPropagation(); historyDropdownOpen.set(!historyDropdownOpen())"
+                  aria-label="Pokaż listę aut">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </button>
         </div>
@@ -518,36 +514,32 @@
           <th>Auto</th>
           <th class="key-kind-head-cell">
             <div class="key-kind-filter" #keyKindFilterRef>
-              <button
-                type="button"
-                class="brand-filter__btn key-kind-filter__btn"
-                [class.brand-filter__btn--open]="keyKindFilterOpen()"
-                [class.brand-filter__btn--filtered]="keyKindFilter() !== 'all'"
-                (click)="$event.stopPropagation(); toggleKeyKindFilter()">
+              <button type="button"
+                      class="brand-filter__btn key-kind-filter__btn"
+                      [class.brand-filter__btn--open]="keyKindFilterOpen()"
+                      [class.brand-filter__btn--filtered]="keyKindFilter() !== 'all'"
+                      (click)="$event.stopPropagation(); toggleKeyKindFilter()">
                 <span class="brand-filter__label">{{ keyKindFilter() === 'all' ? 'Klucz / QR' : keyKindFilterLabel() }}</span>
                 <svg class="brand-filter__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
               </button>
               @if (keyKindFilterOpen()) {
               <div class="settings-menu settings-menu--select brand-filter__menu key-kind-filter__menu" (click)="$event.stopPropagation()">
-                <button
-                  type="button"
-                  class="settings-menu__item"
-                  [class.settings-menu__item--active]="keyKindFilter() === 'all'"
-                  (click)="setKeyKindFilter('all')">
+                <button type="button"
+                        class="settings-menu__item"
+                        [class.settings-menu__item--active]="keyKindFilter() === 'all'"
+                        (click)="setKeyKindFilter('all')">
                   Wszystkie
                 </button>
-                <button
-                  type="button"
-                  class="settings-menu__item"
-                  [class.settings-menu__item--active]="keyKindFilter() === 'O'"
-                  (click)="setKeyKindFilter('O')">
+                <button type="button"
+                        class="settings-menu__item"
+                        [class.settings-menu__item--active]="keyKindFilter() === 'O'"
+                        (click)="setKeyKindFilter('O')">
                   Oryginalny
                 </button>
-                <button
-                  type="button"
-                  class="settings-menu__item"
-                  [class.settings-menu__item--active]="keyKindFilter() === 'Z'"
-                  (click)="setKeyKindFilter('Z')">
+                <button type="button"
+                        class="settings-menu__item"
+                        [class.settings-menu__item--active]="keyKindFilter() === 'Z'"
+                        (click)="setKeyKindFilter('Z')">
                   Zapasowy
                 </button>
               </div>
@@ -563,12 +555,11 @@
           <th class="actions-head-cell">
             <div class="table-filters">
               <div class="brand-filter" #brandFilterRef>
-                <button
-                  type="button"
-                  class="brand-filter__btn"
-                  [class.brand-filter__btn--open]="brandFilterOpen()"
-                  [class.brand-filter__btn--filtered]="!!brandFilter()"
-                  (click)="$event.stopPropagation(); toggleBrandFilter()">
+                <button type="button"
+                        class="brand-filter__btn"
+                        [class.brand-filter__btn--open]="brandFilterOpen()"
+                        [class.brand-filter__btn--filtered]="!!brandFilter()"
+                        (click)="$event.stopPropagation(); toggleBrandFilter()">
                   <svg class="brand-filter__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 5h16l-6.2 7.4V19l-3.6 2v-8.6L4 5Z" />
                   </svg>
@@ -577,19 +568,17 @@
                 </button>
                 @if (brandFilterOpen()) {
                 <div class="settings-menu settings-menu--select brand-filter__menu" (click)="$event.stopPropagation()">
-                  <button
-                    type="button"
-                    class="settings-menu__item"
-                    [class.settings-menu__item--active]="!brandFilter()"
-                    (click)="setBrandFilter(null)">
+                  <button type="button"
+                          class="settings-menu__item"
+                          [class.settings-menu__item--active]="!brandFilter()"
+                          (click)="setBrandFilter(null)">
                     Wszystkie marki
                   </button>
                   @for (brand of brands(); track brand) {
-                  <button
-                    type="button"
-                    class="settings-menu__item"
-                    [class.settings-menu__item--active]="brandFilter() === brand"
-                    (click)="setBrandFilter(brand)">
+                  <button type="button"
+                          class="settings-menu__item"
+                          [class.settings-menu__item--active]="brandFilter() === brand"
+                          (click)="setBrandFilter(brand)">
                     {{ brand }}
                   </button>
                   }

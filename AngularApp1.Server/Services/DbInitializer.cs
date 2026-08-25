@@ -119,6 +119,8 @@ public static class DbInitializer
             }
 
             var slot = ExtractSlotFromLegacyQr(car.QrCode) ?? ExtractSlotFromKey(car.KeyNumber);
+            if (slot <= 0)
+
             if (slot is null || slot <= 0)
             {
                 continue;
