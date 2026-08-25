@@ -59,6 +59,17 @@
             Auto nie zostało oddane w aplikacji.<br />
             Czy na pewno chcesz je odznaczyć i zabrać?
           </p>
+          <label class="details__note">
+            <span class="details__note-label">Notatka (opcjonalnie)</span>
+            <textarea
+              class="details__note-input"
+              name="takeNoteDraft"
+              rows="3"
+              maxlength="2000"
+              [(ngModel)]="takeNoteDraft"
+              [disabled]="confirming"
+            ></textarea>
+          </label>
           @if (error) {
             <p class="details__error">{{ error }}</p>
           }
@@ -82,6 +93,20 @@
       } @else {
         @if (error) {
           <p class="details__error">{{ error }}</p>
+        }
+
+        @if (mode === 'take') {
+        <label class="details__note">
+          <span class="details__note-label">Notatka (opcjonalnie)</span>
+          <textarea
+            class="details__note-input"
+            name="takeNoteDraft"
+            rows="3"
+            maxlength="2000"
+            [(ngModel)]="takeNoteDraft"
+            [disabled]="confirming"
+          ></textarea>
+        </label>
         }
 
         <button

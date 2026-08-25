@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>System kluczykowy — prezentacja</title>
+  <style>
+    :root {
+      --bg: #0c1016;
+      --card: #141820;
+      --text: #e8ecf2;
+      --muted: #8b909c;
+      --accent: #3da776;
+      --accent-soft: #7ed0a8;
+      --warn: #f56e38;
+      --info: #5e8cc8;
+      --frame: #262b36;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      background:
+        radial-gradient(ellipse at 12% 8%, rgba(61, 167, 118, 0.16) 0%, transparent 42%),
+        radial-gradient(ellipse at 88% 90%, rgba(94, 140, 200, 0.12) 0%, transparent 40%),
+        #0c1016;
+    }
+
+    .deck {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1.5rem, 6vw, 5rem);
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .slide.is-active { display: flex; }
+
+    .eyebrow {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 0.85rem;
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1.25rem;
+    }
+
+    .lead {
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      color: var(--muted);
+      max-width: 40rem;
+      line-height: 1.55;
+    }
+
+    .meta {
+      margin-top: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem 1.25rem;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .meta strong { color: var(--text); font-weight: 800; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--frame);
+      border-radius: 16px;
+      padding: 1.1rem 1.15rem;
+    }
+
+    .card h3 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin-bottom: 0.45rem;
+      color: var(--accent-soft);
+    }
+
+    .card p, .card li {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .card li::before {
+      content: "•";
+      color: var(--accent);
+      margin-right: 0.45rem;
+      font-weight: 800;
+    }
+
+    .stack-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 0.35rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(61, 167, 118, 0.12);
+      border: 1px solid rgba(61, 167, 118, 0.35);
+      color: var(--accent-soft);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .pill.warn {
+      background: rgba(245, 110, 56, 0.12);
+      border-color: rgba(245, 110, 56, 0.35);
+      color: #f7a47a;
+    }
+
+    .pill.info {
+      background: rgba(94, 140, 200, 0.14);
+      border-color: rgba(94, 140, 200, 0.35);
+      color: #9ec0eb;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 800px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.85rem;
+      align-items: start;
+      background: var(--card);
+      border: 1px solid var(--frame);
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+    }
+
+    .step-num {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .step strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .step span {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .quote {
+      margin-top: 0.5rem;
+      padding: 1.15rem 1.25rem;
+      border-left: 4px solid var(--accent);
+      background: rgba(61, 167, 118, 0.08);
+      border-radius: 0 14px 14px 0;
+      color: var(--text);
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      font-weight: 600;
+      line-height: 1.55;
+      max-width: 46rem;
+    }
+
+    .footer-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1.25rem;
+      background: rgba(8, 11, 16, 0.88);
+      border-top: 1px solid var(--frame);
+      backdrop-filter: blur(8px);
+      z-index: 20;
+    }
+
+    .progress {
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: #1c222c;
+      overflow: hidden;
+      max-width: 280px;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2f9a68, #3da776);
+      transition: width 0.25s ease;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav button {
+      border: 1px solid var(--frame);
+      background: #1c222c;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 0.45rem 0.95rem;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .nav button:hover { border-color: rgba(126, 208, 168, 0.45); }
+    .nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .counter {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.85rem;
+      min-width: 4.5rem;
+      text-align: center;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .slide { padding-bottom: 5rem; }
+
+    .title-brand {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--accent-soft);
+      margin-bottom: 0.35rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck">
+
+    <section class="slide is-active" data-slide="0">
+      <div class="title-brand">REKORD Systemy Informatyczne · Bielsko-Biała</div>
+      <p class="eyebrow">Projekt zaliczeniowy / prezentacja</p>
+      <h1>System kluczykowy</h1>
+      <p class="lead">
+        Aplikacja webowa do ewidencji zabierania i oddawania kluczy samochodowych —
+        z rolami Admin / Pracownik, skanerem QR i historią zdarzeń.
+      </p>
+      <div class="meta">
+        <span><strong>Stack:</strong> Angular · ASP.NET Core · PostgreSQL</span>
+        <span><strong>Czas:</strong> ok. 5–10 min</span>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="1">
+      <p class="eyebrow">Problem</p>
+      <h2>Po co powstała aplikacja?</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Potrzeba biznesowa</h3>
+          <p>Kontrola, kto ma który klucz firmowego auta — bez papierowych list i domysłów.</p>
+        </article>
+        <article class="card">
+          <h3>Cel systemu</h3>
+          <p>Szybkie zabranie / oddanie klucza (QR), aktualny status floty i historia dla administratora.</p>
+        </article>
+        <article class="card">
+          <h3>Użytkownicy</h3>
+          <p>Pracownik — skaner i akcje. Administrator — rejestr, QR, historia, zagubione.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="2">
+      <p class="eyebrow">Architektura</p>
+      <h2>Co zostało użyte?</h2>
+      <div class="two-col">
+        <article class="card">
+          <h3>Frontend</h3>
+          <ul>
+            <li>Angular 21 + TypeScript</li>
+            <li>RxJS, routing, guards</li>
+            <li>SCSS, motyw jasny/ciemny</li>
+            <li>html5-qrcode, qrcode, jszip</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Backend i dane</h3>
+          <ul>
+            <li>ASP.NET Core (REST API)</li>
+            <li>PostgreSQL + EF Core</li>
+            <li>JWT + role (Admin / Pracownik)</li>
+            <li>Migracje, logi historii</li>
+          </ul>
+        </article>
+      </div>
+      <div class="stack-row" style="margin-top: 1rem;">
+        <span class="pill">SPA</span>
+        <span class="pill info">REST API</span>
+        <span class="pill warn">JWT</span>
+        <span class="pill">QR</span>
+        <span class="pill info">Git / GitHub</span>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="3">
+      <p class="eyebrow">Funkcje — pracownik</p>
+      <h2>Panel pracownika</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Zbierz / Oddaj</h3>
+          <p>Dwie ścieżki: zabranie klucza albo zwrot do szafki.</p>
+        </article>
+        <article class="card">
+          <h3>Skaner QR</h3>
+          <p>Kamera lub ręczne wpisanie kodu z etykiety.</p>
+        </article>
+        <article class="card">
+          <h3>Przejęcie nieoddanego</h3>
+          <p>Jeśli auto jest nadal „w użyciu”, system prosi o potwierdzenie odznaczenia i zabrania.</p>
+        </article>
+        <article class="card">
+          <h3>Prywatność</h3>
+          <p>Pracownik nie widzi, kto aktualnie posiada klucz.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="4">
+      <p class="eyebrow">Funkcje — administrator</p>
+      <h2>Panel administratora</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Rejestr floty</h3>
+          <ul>
+            <li>Wolne / w użyciu / zagubione</li>
+            <li>Filtry i wyszukiwanie</li>
+            <li>Statystyki na kartach</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Klucze</h3>
+          <ul>
+            <li>Oryginalny, zapasowy lub oba</li>
+            <li>Edycja tablic</li>
+            <li>Notatki, zagubione</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>QR i historia</h3>
+          <ul>
+            <li>Etykiety QR (druk)</li>
+            <li>ZIP dla całej floty</li>
+            <li>Historia ~30 dni</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="5">
+      <p class="eyebrow">Logika domenowa</p>
+      <h2>Cykl życia klucza</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <strong>FREE — wolny</strong>
+            <span>Klucz w szafce, gotowy do zabrania.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <strong>IN_USE — w użyciu</strong>
+            <span>Przypisany do użytkownika (TakenAt / HeldBy), widoczny w rejestrze.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <strong>Zwrot lub przejęcie</strong>
+            <span>Oddanie → FREE. Przejęcie nieoddanego → wymuszone potwierdzenie + log.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div>
+            <strong>LOST — zagubiony</strong>
+            <span>Admin oznacza klucz; po odnalezieniu wraca do obiegu.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="6">
+      <p class="eyebrow">Demo — co pokazać na żywo</p>
+      <h2>Scenariusz prezentacji</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <strong>Logowanie</strong>
+            <span>Admin i pracownik — różne panele po roli.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <strong>Admin: dodaj klucz + QR</strong>
+            <span>Oryginał / zapas / oba → wygeneruj etykietę.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <strong>Pracownik: zbierz klucz</strong>
+            <span>Skan lub kod ręczny → potwierdzenie zabrania.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div>
+            <strong>Przejęcie i historia</strong>
+            <span>Drugi użytkownik przy nieoddanym aucie + podgląd historii u admina.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="7">
+      <p class="eyebrow">Bezpieczeństwo i jakość</p>
+      <h2>Ważne decyzje techniczne</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Autoryzacja</h3>
+          <p>JWT w API, Angular guards, rozdział endpointów Admin vs Pracownik.</p>
+        </article>
+        <article class="card">
+          <h3>Dane wrażliwe</h3>
+          <p>Maskowanie posiadacza klucza dla pracowników w odpowiedzi API.</p>
+        </article>
+        <article class="card">
+          <h3>Trwałość</h3>
+          <p>PostgreSQL, migracje EF, logi TAKE/RETURN w historii.</p>
+        </article>
+        <article class="card">
+          <h3>UX</h3>
+          <p>Motyw light/dark z zapisem wyboru, UI pod telefon (skaner).</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="8">
+      <p class="eyebrow">Podsumowanie</p>
+      <h2>Efekt końcowy</h2>
+      <div class="quote">
+        Pełnostackowa aplikacja do zarządzania kluczami floty: Angular + ASP.NET Core + PostgreSQL.
+        Pracownicy operują skanerem QR, administrator prowadzi rejestr, generuje etykiety i analizuje historię.
+      </div>
+      <div class="meta">
+        <span><strong>Wynik:</strong> działający system z rolami, QR, historią i motywem</span>
+      </div>
+      <div class="stack-row" style="margin-top: 1.25rem;">
+        <span class="pill">Gotowe do demo</span>
+        <span class="pill info">Dokumentacja w README</span>
+      </div>
+    </section>
+
+    <section class="slide" data-slide="9">
+      <p class="eyebrow">Koniec</p>
+      <h1>Dziękuję za uwagę</h1>
+      <p class="lead">Pytania?</p>
+      <div class="meta">
+        <span><strong>Projekt:</strong> System kluczykowy — REKORD SI</span>
+        <span><strong>Repo / lokalnie:</strong> AngularApp1</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="footer-bar">
+    <div class="hint">← → lub spacja · F = pełny ekran</div>
+    <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+    <div class="nav">
+      <button type="button" id="prevBtn">Wstecz</button>
+      <div class="counter" id="counter">1 / 10</div>
+      <button type="button" id="nextBtn">Dalej</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const progressBar = document.getElementById('progressBar');
+      const counter = document.getElementById('counter');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      let index = 0;
+
+      function show(i) {
+        index = Math.max(0, Math.min(slides.length - 1, i));
+        slides.forEach((slide, n) => {
+          slide.classList.toggle('is-active', n === index);
+        });
+        const pct = ((index + 1) / slides.length) * 100;
+        progressBar.style.width = pct + '%';
+        counter.textContent = (index + 1) + ' / ' + slides.length;
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === slides.length - 1;
+      }
+
+      prevBtn.addEventListener('click', () => show(index - 1));
+      nextBtn.addEventListener('click', () => show(index + 1));
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+          e.preventDefault();
+          show(index + 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          show(index - 1);
+        } else if (e.key === 'Home') {
+          show(0);
+        } else if (e.key === 'End') {
+          show(slides.length - 1);
+        } else if (e.key === 'f' || e.key === 'F') {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen?.();
+          } else {
+            document.exitFullscreen?.();
+          }
+        }
+      });
+
+      show(0);
+    })();
+  </script>
+</body>
+</html>

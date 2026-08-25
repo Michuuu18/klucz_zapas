@@ -97,7 +97,7 @@ public class CarsController : ControllerBase
         }
 
         var loginId = GetLoginId();
-        var (car, error) = _cars.Take(request.QrCode, loginId, request.Force);
+        var (car, error) = _cars.Take(request.QrCode, loginId, request.Force, request.Note);
         if (error is not null)
         {
             return BadRequest(new { message = error });

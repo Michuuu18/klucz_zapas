@@ -34,8 +34,13 @@ export class CarService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  takeCar(qrCode: string, force = false): Observable<Car> {
-    return this.http.post<Car>(`${this.apiUrl}/take`, { qrCode, force });
+  takeCar(qrCode: string, force = false, note?: string | null): Observable<Car> {
+    const payload: { qrCode: string; force: boolean; note?: string } = { qrCode, force };
+    const trimmed = note?.trim();
+    if (trimmed) {
+      payload.note = trimmed;
+    }
+    return this.http.post<Car>(`${this.apiUrl}/take`, payload);
   }
 
   returnCar(qrCode: string): Observable<Car> {

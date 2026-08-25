@@ -547,6 +547,7 @@
             </div>
           </th>
           <th>Status</th>
+          <th>Notatka</th>
           <th>Posiada</th>
           <th>Zabrane o</th>
           <th>Zwrócone o</th>
@@ -607,6 +608,24 @@
               {{ statusLabel(row.status) }}
             </span>
           </td>
+          <td class="note-cell">
+            @if (row.status === 'IN_USE') {
+            <div class="note-wrap">
+              <button
+                type="button"
+                class="note-preview note-preview--clickable"
+                [class.note-preview--empty]="!row.note"
+                (click)="openNote(row)">
+                {{ row.note || 'Dodaj notatkę…' }}
+              </button>
+              @if (row.note) {
+              <div class="note-popover" role="tooltip">{{ row.note }}</div>
+              }
+            </div>
+            } @else {
+            <span class="muted">-</span>
+            }
+          </td>
           <td>
             @if (row.status === 'IN_USE' && row.heldBy) {
             {{ row.heldBy }}
@@ -651,9 +670,6 @@
                       (click)="returnCar(row)">
                 @if (returningId() === row.id) { … } @else { Zwróć }
               </button>
-              <button type="button" class="btn btn--note btn--sm" (click)="openNote(row)">
-                Notatka
-              </button>
               } @else {
               <button type="button"
                       class="btn btn--found btn--sm"
@@ -676,7 +692,7 @@
         }
         @if (tableRows().length === 0) {
         <tr>
-          <td colspan="9" class="muted">{{ emptyTableMessage() }}</td>
+          <td colspan="10" class="muted">{{ emptyTableMessage() }}</td>
         </tr>
         }
       </tbody>
@@ -730,6 +746,22 @@
       <strong>{{ car.brand }} {{ car.model }}</strong>
       <span>{{ car.registration || 'brak tablic' }} · {{ keyKindLabel(car) }}</span>
     </div>
+    @if (confirmKind() === 'take') {
+    <label class="confirm-note">
+      <span class="confirm-note__label">Notatka (opcjonalnie)</span>
+      <textarea
+        #confirmNoteArea
+        class="confirm-note__text"
+        name="confirmNoteDraft"
+        rows="4"
+        maxlength="2000"
+        [(ngModel)]="confirmNoteDraft"
+        [ngModelOptions]="{standalone: true}"
+        [disabled]="isConfirmSaving(car.id)"
+      ></textarea>
+      <span class="muted confirm-note__count">{{ confirmNoteDraft.length }}/2000</span>
+    </label>
+    }
     <p class="muted confirm-hint">{{ confirmHint() }}</p>
     <div class="form-actions">
       <button type="button" class="btn btn--primary" (click)="confirmStatusChange()" [disabled]="isConfirmSaving(car.id)">
