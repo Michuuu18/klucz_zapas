@@ -5,9 +5,11 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeCameraScanConfig } from 'html5-qrcode';
 
 type CameraStatus = 'loading' | 'active' | 'denied' | 'error';
+type CameraSource = string | { facingMode: ConciseFacingMode };
+type ConciseFacingMode = 'environment' | 'user';
 
 @Component({
   selector: 'app-scanner',
@@ -42,7 +44,8 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Krótka pauza: DOM musi mieć gotowy #qr-reader (szczególnie Safari/iOS).
+    await new Promise((resolve) => setTimeout(resolve, 120));
     await this.startScanner();
   }
 
@@ -59,33 +62,49 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     await this.stopScanner();
 
     try {
-      if (!navigator.mediaDevices?.getUserMedia) {
+      if (!window.isSecureContext) {
         throw new Error(
-          'Ta przeglądarka nie obsługuje kamery. Użyj Chrome lub Edge.',
+          'Kamera wymaga bezpiecznego połączenia (HTTPS). Otwórz aplikację przez https://… albo użyj trybu ręcznego poniżej.',
         );
       }
 
-      const cameras = await Html5Qrcode.getCameras();
-      if (!cameras.length) {
-        throw new Error('Nie wykryto żadnej kamery w tym urządzeniu.');
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error(
+          'Ta przeglądarka nie obsługuje kamery. Spróbuj Chrome, Edge lub Safari albo wpisz kod ręcznie.',
+        );
       }
 
-      const cameraId = this.pickCameraId(cameras);
-      const config = this.buildScanConfig();
+      // Najpierw prośba o uprawnienie — na iOS/Brave etykiety kamer pojawiają się dopiero potem.
+      await this.warmUpCameraPermission();
 
       this.html5QrCode = new Html5Qrcode(this.scannerElementId, {
         verbose: false,
       });
 
-      await this.html5QrCode.start(
-        cameraId,
-        config,
-        (decodedText) => void this.onScanSuccess(decodedText),
-        () => undefined,
-      );
+      const sources = await this.buildCameraSources();
+      let lastError: unknown;
 
-      this.cameraStatus = 'active';
-      this.cdr.detectChanges();
+      for (const source of sources) {
+        for (const config of this.buildScanConfigs()) {
+          try {
+            await this.html5QrCode.start(
+              source,
+              config,
+              (decodedText) => void this.onScanSuccess(decodedText),
+              () => undefined,
+            );
+            this.applyVideoCompatibilityFixes();
+            this.cameraStatus = 'active';
+            this.cdr.detectChanges();
+            return;
+          } catch (error) {
+            lastError = error;
+            await this.safeStopCurrent();
+          }
+        }
+      }
+
+      throw lastError ?? new Error('Nie udało się uruchomić kamery.');
     } catch (error) {
       await this.stopScanner();
       this.cameraStatus = 'denied';
@@ -106,30 +125,97 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  private async warmUpCameraPermission(): Promise<void> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: 'environment' } },
+      });
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+    } catch {
+      // Jeśli tu padnie, właściwy start i tak spróbuje i pokaże czytelny błąd.
+    }
+  }
+
+  private async buildCameraSources(): Promise<CameraSource[]> {
+    const sources: CameraSource[] = [
+      { facingMode: 'environment' },
+      { facingMode: 'user' },
+    ];
+
+    try {
+      const cameras = await Html5Qrcode.getCameras();
+      if (cameras.length) {
+        const preferredId = this.pickCameraId(cameras);
+        sources.push(preferredId);
+        for (const camera of cameras) {
+          if (camera.id !== preferredId) {
+            sources.push(camera.id);
+          }
+        }
+      }
+    } catch {
+      // Brak listy kamer — zostają facingMode.
+    }
+
+    return sources;
+  }
+
   private pickCameraId(
     cameras: Array<{ id: string; label: string }>,
   ): string {
     const back = cameras.find((camera) =>
-      /back|rear|environment|tyl/i.test(camera.label),
+      /back|rear|environment|tyl|traseira|achter/i.test(camera.label),
     );
-    return back?.id ?? cameras[cameras.length - 1].id ?? cameras[0].id;
+    return back?.id ?? cameras[cameras.length - 1]?.id ?? cameras[0].id;
   }
 
-  private buildScanConfig() {
+  private buildScanConfigs(): Html5QrcodeCameraScanConfig[] {
     const viewport = document.getElementById(this.scannerElementId);
-    const viewWidth = viewport?.clientWidth || 400;
-    const viewHeight = viewport?.clientHeight || 420;
+    const viewWidth = Math.max(viewport?.clientWidth || 320, 240);
+    const viewHeight = Math.max(viewport?.clientHeight || 360, 240);
     const scanSize = Math.max(
-      180,
-      Math.floor(Math.min(viewWidth, viewHeight) * 0.7),
+      160,
+      Math.min(280, Math.floor(Math.min(viewWidth, viewHeight) * 0.65)),
     );
 
-    return {
-      fps: 10,
-      qrbox: { width: scanSize, height: scanSize },
-      aspectRatio: viewWidth / viewHeight,
-      disableFlip: false,
-    };
+    // Najpierw pełniejsza konfiguracja, potem uproszczona (Safari/Brave bywają kapryśne).
+    return [
+      {
+        fps: 10,
+        qrbox: { width: scanSize, height: scanSize },
+        aspectRatio: 1,
+        disableFlip: false,
+      },
+      {
+        fps: 8,
+        qrbox: scanSize,
+        disableFlip: false,
+      },
+      {
+        fps: 8,
+        disableFlip: false,
+      },
+    ];
+  }
+
+  private applyVideoCompatibilityFixes(): void {
+    const root = document.getElementById(this.scannerElementId);
+    if (!root) return;
+
+    const video = root.querySelector('video');
+    if (!video) return;
+
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('webkit-playsinline', 'true');
+    video.muted = true;
+    video.setAttribute('muted', 'true');
+    video.autoplay = true;
+
+    // Niektóre przeglądarki mobilne pauzują stream po starcie.
+    void video.play().catch(() => undefined);
   }
 
   private async onScanSuccess(decodedText: string): Promise<void> {
@@ -147,7 +233,6 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    // Zawsze przekazuj tryb ze skanera — sam kod QR to tylko /key/XXXX bez mode.
     this.router.navigate(['/key', code], {
       queryParams: { mode: this.mode },
       replaceUrl: true,
@@ -178,6 +263,33 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     return trimmed;
   }
 
+  private async safeStopCurrent(): Promise<void> {
+    if (!this.html5QrCode) return;
+
+    try {
+      if (this.html5QrCode.isScanning) {
+        await this.html5QrCode.stop();
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      this.html5QrCode.clear();
+    } catch {
+      // ignore
+    }
+
+    const element = document.getElementById(this.scannerElementId);
+    if (element) {
+      element.innerHTML = '';
+    }
+
+    this.html5QrCode = new Html5Qrcode(this.scannerElementId, {
+      verbose: false,
+    });
+  }
+
   private async stopScanner(): Promise<void> {
     if (!this.html5QrCode) {
       const element = document.getElementById(this.scannerElementId);
@@ -192,13 +304,13 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
         await this.html5QrCode.stop();
       }
     } catch {
-      
+      // ignore
     }
 
     try {
       this.html5QrCode.clear();
     } catch {
-      
+      // ignore
     }
 
     this.html5QrCode = null;
@@ -224,11 +336,11 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
       lower.includes('permission') ||
       lower.includes('denied')
     ) {
-      return 'Brak dostępu do kamery. Zezwól na kamerę w przeglądarce i kliknij „Włącz kamerę”.';
+      return 'Brak dostępu do kamery. W ustawieniach przeglądarki zezwól na kamerę dla tej strony i kliknij „Włącz kamerę”. Na Brave sprawdź też Shields.';
     }
 
     if (lower.includes('notfound') || lower.includes('requested device not found')) {
-      return 'Nie wykryto kamery w tym urządzeniu.';
+      return 'Nie wykryto kamery w tym urządzeniu. Możesz wpisać kod ręcznie poniżej.';
     }
 
     if (
@@ -242,13 +354,21 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     }
 
     if (lower.includes('overconstrained')) {
-      return 'Wybrana kamera nie jest dostępna. Kliknij „Włącz kamerę” ponownie.';
+      return 'Wybrana kamera nie jest dostępna na tej przeglądarce. Kliknij „Włącz kamerę” ponownie albo użyj trybu ręcznego.';
     }
 
-    if (message.trim()) {
+    if (
+      lower.includes('secure') ||
+      lower.includes('https') ||
+      lower.includes('insecure')
+    ) {
       return message;
     }
 
-    return 'Nie udało się uruchomić kamery.';
+    if (message.trim()) {
+      return `${message} Jeśli kamera nadal nie działa, użyj Chrome/Safari albo wpisz kod ręcznie.`;
+    }
+
+    return 'Nie udało się uruchomić kamery na tej przeglądarce. Użyj trybu ręcznego poniżej albo spróbuj Chrome/Safari.';
   }
 }

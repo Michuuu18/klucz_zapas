@@ -166,7 +166,7 @@
 .details__note-input {
   width: 100%;
   box-sizing: border-box;
-  resize: vertical;
+  resize: none;
   min-height: 4.5rem;
   border: 1px solid rgba(11, 42, 74, 0.16);
   border-radius: 14px;
@@ -386,6 +386,24 @@
 
   .details__error {
     color: #ef9a95;
+  }
+
+  .details__note-label {
+    color: var(--text-main);
+  }
+
+  .details__note-input {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--frame);
+  }
+
+  .details__note-input:focus {
+    border-color: var(--accent);
+  }
+
+  .details__note-input::placeholder {
+    color: var(--text-muted);
   }
 
   .details__hint {
