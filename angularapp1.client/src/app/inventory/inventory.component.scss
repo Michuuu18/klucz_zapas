@@ -1,15 +1,14 @@
 :host {
   display: block;
   width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .inventory {
   width: 100%;
-  min-height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -460,8 +459,12 @@
 
 .inventory__actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.55rem;
+
+  .inventory__btn {
+    width: 100%;
+  }
 }
 
 .inventory__btn {
@@ -489,6 +492,12 @@
     background: var(--bg-input);
     color: var(--text-main);
     border: 1px solid var(--frame);
+  }
+
+  &--danger {
+    background: rgba(222, 92, 84, 0.12);
+    color: var(--accent-danger);
+    border: 1px solid var(--accent-danger);
   }
 }
 
@@ -556,6 +565,20 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.inventory__section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.inventory__section-hint {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .inventory__section-title {

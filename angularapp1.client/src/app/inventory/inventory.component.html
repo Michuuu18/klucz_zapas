@@ -100,7 +100,7 @@
         Zakończ i pokaż raport
       </button>
       <button
-        class="inventory__btn inventory__btn--ghost"
+        class="inventory__btn inventory__btn--danger"
         type="button"
         (click)="clearSession()"
         [disabled]="!scans().length">
@@ -141,7 +141,10 @@
 
     @if (checkRows().length) {
     <section class="inventory__section">
-      <h3 class="inventory__section-title inventory__section-title--check">Do sprawdzenia</h3>
+      <div class="inventory__section-head">
+        <h3 class="inventory__section-title inventory__section-title--check">Do sprawdzenia</h3>
+        <span class="inventory__section-hint">Zmień status klucza:</span>
+      </div>
       <ul class="inventory__list">
         @for (row of checkRows(); track row.car.id) {
         <li class="inventory__list-item">
@@ -177,7 +180,10 @@
 
     @if (missingRows().length) {
     <section class="inventory__section">
-      <h3 class="inventory__section-title inventory__section-title--missing">Brakujące w szafce</h3>
+      <div class="inventory__section-head">
+        <h3 class="inventory__section-title inventory__section-title--missing">Brakujące w szafce</h3>
+        <span class="inventory__section-hint">Zmień status klucza:</span>
+      </div>
       <ul class="inventory__list">
         @for (row of missingRows(); track row.car.id) {
         <li class="inventory__list-item">
@@ -218,7 +224,10 @@
 
     @if (outRows().length) {
     <section class="inventory__section">
-      <h3 class="inventory__section-title">Niezeskanowane (poza firmą / zagubione)</h3>
+      <div class="inventory__section-head">
+        <h3 class="inventory__section-title">Niezeskanowane (poza firmą / zagubione)</h3>
+        <span class="inventory__section-hint">Zmień status klucza:</span>
+      </div>
       <ul class="inventory__list">
         @for (row of outRows(); track row.car.id) {
         <li class="inventory__list-item">
