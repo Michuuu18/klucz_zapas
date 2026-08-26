@@ -20,33 +20,38 @@ Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie 
 
 ![Panel administratora - tryb jasny](docs/screenshots/03-panel-admin-jasny.png)
 
+### Historia kluczy
+
+![Historia kluczy](docs/screenshots/09-historia-kluczy.png)
+
 ### Dodawanie klucza
 
 ![Dodaj nowy klucz](docs/screenshots/04-dodaj-klucz.png)
+
+### Edycja tablic
+
+![Edycja tablic](docs/screenshots/11-edycja-tablic.png)
 
 ### Generowanie kodów QR
 
 ![Generuj kod QR](docs/screenshots/05-generuj-qr.png)
 
-### Skaner (pracownik)
-
-![Skaner QR](docs/screenshots/06-skaner-qr.png)
-
 ### Zapisywanie kodów QR
 
 ![Zapisywanie kodów QR](docs/screenshots/07-Zapisywanie-kodów-qr.png)
-
-### Historia kluczy
-
-![Historia kluczy](docs/screenshots/09-historia-kluczy.png)
 
 ### Notatki
 
 ![Notatki](docs/screenshots/10-notatki.png)
 
-### Edycja tablic
+### Skaner (pracownik)
 
-![Edycja tablic](docs/screenshots/11-edycja-tablic.png)
+![Skaner QR](docs/screenshots/06-skaner-qr.png)
+
+
+
+
+
 ---
 
 ## Funkcje
