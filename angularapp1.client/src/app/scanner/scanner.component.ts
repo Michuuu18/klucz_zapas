@@ -64,13 +64,13 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     try {
       if (!window.isSecureContext) {
         throw new Error(
-          'Kamera wymaga bezpiecznego połączenia (HTTPS). Otwórz aplikację przez https://… albo użyj trybu ręcznego poniżej.',
+          'Kamera wymaga bezpiecznego połączenia (HTTPS).',
         );
       }
 
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error(
-          'Ta przeglądarka nie obsługuje kamery. Spróbuj Chrome, Edge lub Safari albo wpisz kod ręcznie.',
+          'Ta przeglądarka nie obsługuje kamery. Użyj Chrome lub Edge.',
         );
       }
 
@@ -336,11 +336,11 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
       lower.includes('permission') ||
       lower.includes('denied')
     ) {
-      return 'Brak dostępu do kamery. W ustawieniach przeglądarki zezwól na kamerę dla tej strony i kliknij „Włącz kamerę”. Na Brave sprawdź też Shields.';
+      return 'Brak dostępu do kamery. Zezwól na kamerę w przeglądarce i kliknij „Włącz kamerę”.';
     }
 
     if (lower.includes('notfound') || lower.includes('requested device not found')) {
-      return 'Nie wykryto kamery w tym urządzeniu. Możesz wpisać kod ręcznie poniżej.';
+      return 'Nie wykryto kamery w tym urządzeniu.';
     }
 
     if (
@@ -354,7 +354,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     }
 
     if (lower.includes('overconstrained')) {
-      return 'Wybrana kamera nie jest dostępna na tej przeglądarce. Kliknij „Włącz kamerę” ponownie albo użyj trybu ręcznego.';
+      return 'Wybrana kamera nie jest dostępna. Kliknij „Włącz kamerę” ponownie.';
     }
 
     if (
@@ -366,9 +366,9 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     }
 
     if (message.trim()) {
-      return `${message} Jeśli kamera nadal nie działa, użyj Chrome/Safari albo wpisz kod ręcznie.`;
+      return message;
     }
 
-    return 'Nie udało się uruchomić kamery na tej przeglądarce. Użyj trybu ręcznego poniżej albo spróbuj Chrome/Safari.';
+    return 'Nie udało się uruchomić kamery.';
   }
 }
