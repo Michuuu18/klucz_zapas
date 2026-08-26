@@ -2,9 +2,11 @@
 
 Aplikacja do ewidencji kluczy samochodowych firmy **REKORD Systemy Informatyczne** (Bielsko-Biała).
 
-Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie statusu floty oraz zarządzanie rejestrami przez administratora.
+Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie statusu floty oraz kompleksowe zarządzanie rejestrami przez administratora. 
+System pozwala dodatkowo na dodawanie notatek do wypożyczeń, oznaczanie kluczy jako zagubione lub odnalezione, 
+a także dodawanie nowych kluczy, edycję tablic rejestracyjnych oraz generowanie kodów QR.
 
-**Stack:** Angular · ASP.NET Core · PostgreSQL
+**Stack:** Angular (TypeScript, SCSS, HTML) • ASP.NET Core (C#) • PostgreSQL
 
 ---
 
@@ -69,9 +71,12 @@ Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie 
 ## Konta testowe
 
 | Login | Hasło | Rola |
-|-------|-------|------|
+| :--- | :--- | :--- |
 | `admin` | `admin123` | Administrator |
 | `pracownik` | `pracownik123` | Pracownik |
+| `dominik` | `dominik123` | Pracownik |
+| `michal` | `michal123` | Pracownik |
+| `agnieszka` | `agnieszka123` | Pracownik |
 
 ---
 
@@ -114,7 +119,7 @@ Przy pierwszym starcie API samo utworzy tabele i doda przykładowe auta.
 
 1. Zaloguj się
 2. Wybierz **Zabierz** albo **Oddaj**
-3. Zeskanuj kod QR kamerą albo wpisz go ręcznie
+3. Zeskanuj kod QR od razu za pomocą aparatu w urządzeniu (np. w telefonie) albo wpisz go ręcznie
 4. Potwierdź operację
 
 **Administrator**
