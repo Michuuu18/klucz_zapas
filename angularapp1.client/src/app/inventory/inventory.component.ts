@@ -7,9 +7,11 @@ import {
   computed,
   signal,
 } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Html5Qrcode, Html5QrcodeCameraScanConfig } from 'html5-qrcode';
 import { Car } from '../models/car.model';
+import { AuthService } from '../services/auth.service';
 import { CarService } from '../services/car.service';
 
 type CameraStatus = 'loading' | 'active' | 'denied' | 'error';
@@ -17,6 +19,7 @@ type CameraSource = string | { facingMode: ConciseFacingMode };
 type ConciseFacingMode = 'environment' | 'user';
 type InventoryPhase = 'scan' | 'report';
 type ScanFlag = 'ok' | 'attention' | 'unknown';
+type FixAction = 'return' | 'found' | 'lost';
 
 type ScanEntry = {
   qrCode: string;
@@ -36,6 +39,13 @@ type ReportRow = {
   keyKind: string;
   category: 'check' | 'missing' | 'ok' | 'out';
   detail: string;
+};
+
+type PendingFix = {
+  car: Car;
+  action: FixAction;
+  title: string;
+  copy: string;
 };
 
 @Component({
@@ -58,6 +68,8 @@ export class InventoryComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly cars = signal<Car[]>([]);
   readonly scans = signal<ScanEntry[]>([]);
   readonly showOkSection = signal(false);
+  readonly actionBusyId = signal<number | null>(null);
+  readonly pendingFix = signal<PendingFix | null>(null);
 
   readonly scannedCount = computed(() => this.scans().filter((s) => s.carId != null).length);
   readonly totalCount = computed(() => this.cars().length);
@@ -77,6 +89,7 @@ export class InventoryComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private readonly carsApi: CarService,
+    private readonly auth: AuthService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -133,6 +146,102 @@ export class InventoryComponent implements OnInit, AfterViewInit, OnDestroy {
   clearSession(): void {
     this.scans.set([]);
     this.showToast('Wyczyszczono listę skanów.');
+  }
+
+  askMarkFree(car: Car): void {
+    this.pendingFix.set({
+      car,
+      action: 'return',
+      title: 'Oznaczyć jako wolny?',
+      copy: 'Kluczyk wróci do stanu wolny. Sesja „w użyciu” zostanie zamknięta w historii.',
+    });
+  }
+
+  askMarkFound(car: Car): void {
+    this.pendingFix.set({
+      car,
+      action: 'found',
+      title: 'Oznaczyć jako znaleziony?',
+      copy: 'Kluczyk wróci do stanu wolny i będzie dostępny do wydania.',
+    });
+  }
+
+  askMarkLost(car: Car): void {
+    this.pendingFix.set({
+      car,
+      action: 'lost',
+      title: 'Oznaczyć jako zagubiony?',
+      copy: 'Kluczyk zostanie zablokowany w rejestrze jako zagubiony.',
+    });
+  }
+
+  closeFixConfirm(): void {
+    if (this.actionBusyId() != null) return;
+    this.pendingFix.set(null);
+  }
+
+  confirmFix(): void {
+    const pending = this.pendingFix();
+    if (!pending || this.actionBusyId() != null) return;
+
+    const loginId = this.auth.currentUser()?.username?.trim();
+    if (!loginId && (pending.action === 'return' || pending.action === 'lost')) {
+      this.showToast('Brak zalogowanego użytkownika.');
+      return;
+    }
+
+    this.actionBusyId.set(pending.car.id);
+    const request =
+      pending.action === 'return'
+        ? this.carsApi.returnCarById(pending.car.id, loginId!)
+        : pending.action === 'found'
+          ? this.carsApi.markFound(pending.car.id)
+          : this.carsApi.markLost(pending.car.id, loginId!);
+
+    request.subscribe({
+      next: (updated) => {
+        this.applyCarUpdate(updated);
+        this.actionBusyId.set(null);
+        this.pendingFix.set(null);
+        this.showToast(
+          pending.action === 'return'
+            ? 'Oznaczono jako wolny.'
+            : pending.action === 'found'
+              ? 'Oznaczono jako znaleziony.'
+              : 'Oznaczono jako zagubiony.',
+        );
+        this.cdr.detectChanges();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.actionBusyId.set(null);
+        this.showToast(
+          err?.error?.message ?? err?.message ?? 'Nie udało się zmienić statusu.',
+        );
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  isActionBusy(id: number): boolean {
+    return this.actionBusyId() === id;
+  }
+
+  private applyCarUpdate(updated: Car): void {
+    this.cars.update((list) => list.map((car) => (car.id === updated.id ? updated : car)));
+    this.carsByQr.set(updated.qrCode.trim().toLowerCase(), updated);
+    this.scans.update((list) =>
+      list.map((scan) => {
+        if (scan.carId !== updated.id) return scan;
+        const flag: ScanFlag =
+          updated.status === 'IN_USE' || updated.status === 'LOST' ? 'attention' : 'ok';
+        return {
+          ...scan,
+          status: updated.status,
+          heldBy: updated.heldBy ?? null,
+          flag,
+        };
+      }),
+    );
   }
 
   submitManualCode(): void {

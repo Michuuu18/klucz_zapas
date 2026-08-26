@@ -165,20 +165,25 @@ body.dark-theme .brand-logo img {
 
 body.dark-theme {
   .scanner,
-  .details {
+  .details,
+  .inventory {
     color: var(--text-main);
   }
 
   .scanner__title,
   .scanner__card-title,
   .details__title,
-  .details__card-title {
+  .details__card-title,
+  .inventory__title,
+  .inventory__card-title {
     color: var(--text-main) !important;
   }
 
   .scanner__card-hint,
   .scanner__manual-label,
-  .details__card-hint {
+  .details__card-hint,
+  .inventory__hint,
+  .inventory__manual-label {
     color: var(--text-muted) !important;
   }
 
@@ -187,58 +192,68 @@ body.dark-theme {
   }
 
   .scanner__card,
-  .details__card {
+  .details__card,
+  .inventory__card {
     background: var(--bg-card) !important;
     border: 1px solid var(--frame) !important;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
   }
 
   .scanner__back,
-  .details__back {
+  .details__back,
+  .inventory__back {
     background: var(--bg-input) !important;
     color: var(--text-main) !important;
     border: 1px solid var(--frame) !important;
     box-shadow: none !important;
   }
 
-  .scanner__manual {
+  .scanner__manual,
+  .inventory__manual {
     border-top-color: var(--frame) !important;
   }
 
-  .scanner__manual-input {
+  .scanner__manual-input,
+  .inventory__manual-input {
     background: var(--bg-input) !important;
     color: var(--text-main) !important;
     border-color: var(--frame) !important;
   }
 
-  .scanner__manual-input::placeholder {
+  .scanner__manual-input::placeholder,
+  .inventory__manual-input::placeholder {
     color: var(--text-muted) !important;
   }
 
   .scanner__camera-btn,
   .scanner__manual-btn,
-  .details__confirm {
+  .details__confirm,
+  .inventory__btn--primary {
     background: var(--accent) !important;
     color: #fff !important;
     border: none !important;
   }
 
-  .details__confirm--secondary {
+  .details__confirm--secondary,
+  .inventory__btn--ghost {
     background: var(--btn-secondary-bg) !important;
     color: var(--text-main) !important;
     border: 1px solid var(--frame) !important;
   }
 
-  .scanner__overlay {
+  .scanner__overlay,
+  .inventory__overlay {
     background: rgba(10, 13, 18, 0.92) !important;
     color: var(--text-muted) !important;
   }
 
-  .scanner__overlay p {
+  .scanner__overlay p,
+  .inventory__overlay p {
     color: var(--text-main) !important;
   }
 
   .scanner__overlay--error p,
+  .inventory__overlay--error p,
   .details__error {
     color: var(--accent-danger) !important;
   }

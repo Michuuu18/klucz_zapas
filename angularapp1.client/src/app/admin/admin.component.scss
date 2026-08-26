@@ -1062,6 +1062,7 @@ tbody tr:last-child td {
 
 
 .history-btn,
+.inventory-btn,
 .settings-btn,
 .theme-toggle-btn {
   display: inline-flex;
@@ -1080,6 +1081,7 @@ tbody tr:last-child td {
 
 .history-btn:hover:not(:disabled),
 .history-btn.history-btn--open,
+.inventory-btn:hover:not(:disabled),
 .settings-btn:hover:not(:disabled),
 .settings-btn.settings-btn--open,
 .theme-toggle-btn:hover:not(:disabled) {
@@ -1091,6 +1093,7 @@ tbody tr:last-child td {
 
 :host-context(body.dark-theme) {
   .history-btn,
+  .inventory-btn,
   .settings-btn,
   .theme-toggle-btn {
     background: var(--btn-secondary-bg);
@@ -1101,6 +1104,7 @@ tbody tr:last-child td {
 
   .history-btn:hover:not(:disabled),
   .history-btn.history-btn--open,
+  .inventory-btn:hover:not(:disabled),
   .settings-btn:hover:not(:disabled),
   .settings-btn.settings-btn--open,
   .theme-toggle-btn:hover:not(:disabled) {

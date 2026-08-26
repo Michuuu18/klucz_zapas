@@ -114,7 +114,7 @@
       <div>
         <h2 class="inventory__card-title">Wynik porównania</h2>
         <p class="inventory__hint">
-          Stan faktu (zeskanowane) vs stan w aplikacji. Bez automatycznej zmiany statusów.
+          Stan faktu vs aplikacja. Możesz od razu poprawić statusy przyciskami przy wierszach.
         </p>
       </div>
       <button class="inventory__back" type="button" (click)="goBack()">WSTECZ</button>
@@ -144,13 +144,31 @@
       <h3 class="inventory__section-title inventory__section-title--check">Do sprawdzenia</h3>
       <ul class="inventory__list">
         @for (row of checkRows(); track row.car.id) {
-        <li>
-          <div>
-            <strong>{{ row.car.registration || '—' }}</strong>
+        <li class="inventory__list-item">
+          <div class="inventory__list-main">
+            <div class="inventory__list-head">
+              <strong>{{ row.car.registration || '—' }}</strong>
+              <span
+                class="inventory__status"
+                [class.inventory__status--busy]="row.car.status === 'IN_USE'"
+                [class.inventory__status--lost]="row.car.status === 'LOST'">
+                {{ statusLabel(row.car.status) }}
+              </span>
+            </div>
             <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
             <small>{{ row.detail }}</small>
           </div>
-          <span class="inventory__badge inventory__badge--busy">{{ statusLabel(row.car.status) }}</span>
+          <div class="inventory__list-side">
+            @if (row.car.status === 'IN_USE') {
+            <button type="button" class="inventory__fix-btn" [disabled]="isActionBusy(row.car.id)" (click)="askMarkFree(row.car)">
+              @if (isActionBusy(row.car.id)) { … } @else { Wolny }
+            </button>
+            } @else if (row.car.status === 'LOST') {
+            <button type="button" class="inventory__fix-btn" [disabled]="isActionBusy(row.car.id)" (click)="askMarkFound(row.car)">
+              @if (isActionBusy(row.car.id)) { … } @else { Znaleziony }
+            </button>
+            }
+          </div>
         </li>
         }
       </ul>
@@ -162,13 +180,20 @@
       <h3 class="inventory__section-title inventory__section-title--missing">Brakujące w szafce</h3>
       <ul class="inventory__list">
         @for (row of missingRows(); track row.car.id) {
-        <li>
-          <div>
-            <strong>{{ row.car.registration || '—' }}</strong>
+        <li class="inventory__list-item">
+          <div class="inventory__list-main">
+            <div class="inventory__list-head">
+              <strong>{{ row.car.registration || '—' }}</strong>
+              <span class="inventory__status inventory__status--free">{{ statusLabel(row.car.status) }}</span>
+            </div>
             <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
             <small>{{ row.detail }}</small>
           </div>
-          <span class="inventory__badge inventory__badge--free">{{ statusLabel(row.car.status) }}</span>
+          <div class="inventory__list-side">
+            <button type="button" class="inventory__fix-btn inventory__fix-btn--warn" [disabled]="isActionBusy(row.car.id)" (click)="askMarkLost(row.car)">
+              @if (isActionBusy(row.car.id)) { … } @else { Zagubiony }
+            </button>
+          </div>
         </li>
         }
       </ul>
@@ -181,7 +206,7 @@
       <ul class="inventory__list">
         @for (scan of unknownScans(); track scan.qrCode) {
         <li>
-          <div>
+          <div class="inventory__list-main">
             <strong>{{ scan.qrCode }}</strong>
             <small>Kod nie należy do żadnego klucza w rejestrze</small>
           </div>
@@ -196,18 +221,34 @@
       <h3 class="inventory__section-title">Niezeskanowane (poza firmą / zagubione)</h3>
       <ul class="inventory__list">
         @for (row of outRows(); track row.car.id) {
-        <li>
-          <div>
-            <strong>{{ row.car.registration || '—' }}</strong>
+        <li class="inventory__list-item">
+          <div class="inventory__list-main">
+            <div class="inventory__list-head">
+              <strong>{{ row.car.registration || '—' }}</strong>
+              <span
+                class="inventory__status"
+                [class.inventory__status--busy]="row.car.status === 'IN_USE'"
+                [class.inventory__status--lost]="row.car.status === 'LOST'">
+                {{ statusLabel(row.car.status) }}
+              </span>
+            </div>
             <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
             <small>{{ row.detail }}</small>
           </div>
-          <span
-            class="inventory__badge"
-            [class.inventory__badge--busy]="row.car.status === 'IN_USE'"
-            [class.inventory__badge--lost]="row.car.status === 'LOST'">
-            {{ statusLabel(row.car.status) }}
-          </span>
+          <div class="inventory__list-side">
+            @if (row.car.status === 'IN_USE') {
+            <button type="button" class="inventory__fix-btn inventory__fix-btn--warn" [disabled]="isActionBusy(row.car.id)" (click)="askMarkLost(row.car)">
+              @if (isActionBusy(row.car.id)) { … } @else { Zagubiony }
+            </button>
+            <button type="button" class="inventory__fix-btn" [disabled]="isActionBusy(row.car.id)" (click)="askMarkFree(row.car)">
+              @if (isActionBusy(row.car.id)) { … } @else { Wolny }
+            </button>
+            } @else if (row.car.status === 'LOST') {
+            <button type="button" class="inventory__fix-btn" [disabled]="isActionBusy(row.car.id)" (click)="askMarkFound(row.car)">
+              @if (isActionBusy(row.car.id)) { … } @else { Znaleziony }
+            </button>
+            }
+          </div>
         </li>
         }
       </ul>
@@ -226,13 +267,20 @@
       @if (showOkSection()) {
       <ul class="inventory__list">
         @for (row of okRows(); track row.car.id) {
-        <li>
-          <div>
-            <strong>{{ row.car.registration || '—' }}</strong>
+        <li class="inventory__list-item">
+          <div class="inventory__list-main">
+            <div class="inventory__list-head">
+              <strong>{{ row.car.registration || '—' }}</strong>
+              <span class="inventory__status inventory__status--free">{{ statusLabel(row.car.status) }}</span>
+            </div>
             <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
             <small>{{ row.detail }}</small>
           </div>
-          <span class="inventory__badge inventory__badge--free">{{ statusLabel(row.car.status) }}</span>
+          <div class="inventory__list-side">
+            <button type="button" class="inventory__fix-btn inventory__fix-btn--warn" [disabled]="isActionBusy(row.car.id)" (click)="askMarkLost(row.car)">
+              @if (isActionBusy(row.car.id)) { … } @else { Zagubiony }
+            </button>
+          </div>
         </li>
         }
       </ul>
@@ -248,6 +296,35 @@
         Zamknij
       </button>
     </div>
+  </div>
+  }
+
+  @if (pendingFix(); as fix) {
+  <div class="inventory__confirm-overlay" (click)="closeFixConfirm()">
+    <section class="inventory__confirm" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2>{{ fix.title }}</h2>
+      <p>{{ fix.copy }}</p>
+      <div class="inventory__confirm-car">
+        <strong>{{ fix.car.brand }} {{ fix.car.model }}</strong>
+        <span>{{ fix.car.registration || 'brak tablic' }} · {{ statusLabel(fix.car.status) }}</span>
+      </div>
+      <div class="inventory__actions">
+        <button
+          type="button"
+          class="inventory__btn inventory__btn--primary"
+          [disabled]="isActionBusy(fix.car.id)"
+          (click)="confirmFix()">
+          @if (isActionBusy(fix.car.id)) { Zapisywanie… } @else { Potwierdź }
+        </button>
+        <button
+          type="button"
+          class="inventory__btn inventory__btn--ghost"
+          [disabled]="isActionBusy(fix.car.id)"
+          (click)="closeFixConfirm()">
+          Anuluj
+        </button>
+      </div>
+    </section>
   </div>
   }
 
