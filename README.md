@@ -2,9 +2,11 @@
 
 Aplikacja do ewidencji kluczy samochodowych firmy **REKORD Systemy Informatyczne** (Bielsko-Biała).
 
-Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie statusu floty oraz zarządzanie rejestrami przez administratora.
+Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie statusu floty oraz kompleksowe zarządzanie rejestrami przez administratora. 
+System pozwala dodatkowo na dodawanie notatek do wypożyczeń, oznaczanie kluczy jako zagubione lub odnalezione, 
+a także dodawanie nowych kluczy, edycję tablic rejestracyjnych oraz generowanie kodów QR.
 
-**Stack:** Angular · ASP.NET Core · PostgreSQL
+**Stack:** Angular (TypeScript, SCSS, HTML) • ASP.NET Core (C#) • PostgreSQL
 
 ---
 
@@ -20,17 +22,37 @@ Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie 
 
 ![Panel administratora - tryb jasny](docs/screenshots/03-panel-admin-jasny.png)
 
+### Historia kluczy
+
+![Historia kluczy](docs/screenshots/09-historia-kluczy.png)
+
 ### Dodawanie klucza
 
 ![Dodaj nowy klucz](docs/screenshots/04-dodaj-klucz.png)
+
+### Edycja tablic
+
+![Edycja tablic](docs/screenshots/11-edycja-tablic.png)
 
 ### Generowanie kodów QR
 
 ![Generuj kod QR](docs/screenshots/05-generuj-qr.png)
 
+### Zapisywanie kodów QR
+
+![Zapisywanie kodów QR](docs/screenshots/07-Zapisywanie-kodów-qr.png)
+
+### Notatki
+
+![Notatki](docs/screenshots/10-notatki.png)
+
 ### Skaner (pracownik)
 
 ![Skaner QR](docs/screenshots/06-skaner-qr.png)
+
+
+
+
 
 ---
 
@@ -49,43 +71,38 @@ Umożliwia zabieranie i oddawanie kluczy (skan QR lub wpis ręczny), śledzenie 
 ## Konta testowe
 
 | Login | Hasło | Rola |
-|-------|-------|------|
+| :--- | :--- | :--- |
 | `admin` | `admin123` | Administrator |
 | `pracownik` | `pracownik123` | Pracownik |
+| `dominik` | `dominik123` | Pracownik |
+| `michal` | `michal123` | Pracownik |
+| `agnieszka` | `agnieszka123` | Pracownik |
 
 ---
 
 ## Uruchomienie lokalne
 
-### 1. Baza PostgreSQL
-
-W pgAdmin utwórz bazę: `system_kluczykowy`.
-
-W plikach:
-
-- `AngularApp1.Server/appsettings.json`
-- `AngularApp1.Server/appsettings.Development.json`
-
-ustaw hasło użytkownika `postgres`:
-
-```
-Password=TWOJE_HASLO
-```
+### 1. Baza PostgreSQL (Wymagane tylko przy pierwszym uruchomieniu na nowym komputerze)
+W pgAdmin utwórz bazę o nazwie `system_kluczykowy`. 
+Następnie w plikach `appsettings.json` oraz `appsettings.Development.json` (w projekcie AngularApp1.Server) podmień hasło w connection stringu na hasło do swojego lokalnego użytkownika `postgres`:
+`Password=TWOJE_HASLO`
 
 ### 2. Start aplikacji
 
-1. Uruchom `1-URUCHOM-API.bat`
-2. Uruchom `2-URUCHOM-FRONT.bat`
-3. Otwórz **https://localhost:4200**
+**Opcja A: Visual Studio (Zalecane - 1 kliknięcie)**
+Najszybszy i najwygodniejszy sposób:
+1. Otwórz rozwiązanie (`AngularApp1.slnx` lub `.sln`) w Visual Studio.
+2. Upewnij się, że projekt startowy to `AngularApp1.Server`.
+3. Kliknij zielony przycisk **"Play" (profil https)** na górnym pasku lub wciśnij **F5**.
+*Visual Studio automatycznie uruchomi zarówno API (backend), jak i serwer Angulara (frontend).*
 
-Przy pierwszym starcie API samo utworzy tabele i doda przykładowe auta.
+**Opcja B: Bez Visual Studio (Skrypty .bat)**
+Jeśli używasz innego edytora kodu (np. VS Code):
+1. Uruchom plik `1-URUCHOM-API.bat`
+2. Uruchom plik `2-URUCHOM-FRONT.bat`
+3. Otwórz przeglądarkę pod adresem `https://localhost:4200`
 
-### Visual Studio (opcjonalnie)
-
-1. Otwórz `AngularApp1.slnx`
-2. Projekt startowy: `AngularApp1.Server`
-3. Profil `https` → F5
-
+*Uwaga: Przy pierwszym starcie API za pomocą Entity Framework samo utworzy brakujące tabele w bazie i doda przykładowe auta.*
 ---
 
 ## Jak korzystać
@@ -94,7 +111,7 @@ Przy pierwszym starcie API samo utworzy tabele i doda przykładowe auta.
 
 1. Zaloguj się
 2. Wybierz **Zabierz** albo **Oddaj**
-3. Zeskanuj kod QR kamerą albo wpisz go ręcznie
+3. Zeskanuj kod QR od razu za pomocą aparatu w urządzeniu (np. w telefonie) albo wpisz go ręcznie
 4. Potwierdź operację
 
 **Administrator**
