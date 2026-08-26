@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { AdminComponent } from './admin/admin.component';
 import { HomeComponent } from './home/home.component';
+import { InventoryComponent } from './inventory/inventory.component';
 import { KeyDetailsComponent } from './key-details/key-details.component';
 import { LoginComponent } from './login/login.component';
 import { ScannerComponent } from './scanner/scanner.component';
@@ -18,6 +19,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
     App,
     HomeComponent,
     ScannerComponent,
+    InventoryComponent,
     KeyDetailsComponent,
     LoginComponent,
     AdminComponent,

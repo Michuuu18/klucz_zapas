@@ -1,0 +1,257 @@
+<div class="inventory">
+  <header class="inventory__header">
+    <div class="brand-logo brand-logo--scanner">
+      <img src="assets/rekord-logo.png" alt="REKORD – Systemy Informatyczne" />
+    </div>
+    <h1 class="inventory__title">
+      {{ phase === 'scan' ? 'Inwentaryzacja kluczy' : 'Raport inwentaryzacji' }}
+    </h1>
+  </header>
+
+  @if (phase === 'scan') {
+  <div class="inventory__card">
+    <div class="inventory__card-top">
+      <div>
+        <h2 class="inventory__card-title">Skanuj klucze po kolei</h2>
+        <p class="inventory__hint">
+          Przykładaj telefon do QR. Aplikacja sama dopisze klucz i status — bez zabierania.
+        </p>
+      </div>
+      <button class="inventory__back" type="button" (click)="goBack()">WSTECZ</button>
+    </div>
+
+    @if (registryError) {
+    <div class="inventory__alert">{{ registryError }}</div>
+    }
+
+    <div class="inventory__progress">
+      <strong>{{ scannedCount() }}</strong>
+      <span>/ {{ loadingRegistry ? '…' : totalCount() }} zeskanowano</span>
+    </div>
+
+    <div class="inventory__viewport">
+      <div [id]="scannerElementId" class="inventory__reader"></div>
+
+      @if (cameraStatus === 'loading') {
+      <div class="inventory__overlay">
+        <span class="inventory__spinner"></span>
+        <p>Łączenie z kamerą…</p>
+      </div>
+      }
+
+      @if (cameraStatus === 'denied' || cameraStatus === 'error') {
+      <div class="inventory__overlay inventory__overlay--error">
+        <p>{{ cameraError }}</p>
+        <button class="inventory__btn inventory__btn--primary" type="button" (click)="startScanner()">
+          WŁĄCZ KAMERĘ
+        </button>
+      </div>
+      }
+    </div>
+
+    <section class="inventory__manual">
+      <label class="inventory__manual-label" for="inventory-manual">Tryb ręczny</label>
+      <div class="inventory__manual-row">
+        <input
+          id="inventory-manual"
+          class="inventory__manual-input"
+          type="text"
+          placeholder="Wpisz kod z kluczyka"
+          [(ngModel)]="manualCode"
+          (keydown.enter)="submitManualCode()"
+        />
+        <button class="inventory__btn inventory__btn--primary" type="button" (click)="submitManualCode()">
+          DODAJ
+        </button>
+      </div>
+    </section>
+
+    @if (recentScans().length) {
+    <section class="inventory__recent">
+      <h3>Ostatnie skany</h3>
+      <ul>
+        @for (scan of recentScans(); track scan.qrCode) {
+        <li [class.inventory__scan--ok]="scan.flag === 'ok'"
+            [class.inventory__scan--attention]="scan.flag === 'attention'"
+            [class.inventory__scan--unknown]="scan.flag === 'unknown'">
+          <div class="inventory__scan-main">
+            <strong>{{ scan.registration }}</strong>
+            <span>{{ scan.keyKind }} · {{ statusLabel(scan.status) }}</span>
+          </div>
+          @if (scan.flag === 'attention') {
+          <em>Do sprawdzenia</em>
+          } @else if (scan.flag === 'unknown') {
+          <em>Nieznany QR</em>
+          } @else {
+          <em>OK</em>
+          }
+        </li>
+        }
+      </ul>
+    </section>
+    }
+
+    <div class="inventory__actions">
+      <button
+        class="inventory__btn inventory__btn--primary"
+        type="button"
+        (click)="finishAndShowReport()"
+        [disabled]="loadingRegistry">
+        Zakończ i pokaż raport
+      </button>
+      <button
+        class="inventory__btn inventory__btn--ghost"
+        type="button"
+        (click)="clearSession()"
+        [disabled]="!scans().length">
+        Wyczyść skany
+      </button>
+    </div>
+  </div>
+  } @else {
+  <div class="inventory__card inventory__card--report">
+    <div class="inventory__card-top">
+      <div>
+        <h2 class="inventory__card-title">Wynik porównania</h2>
+        <p class="inventory__hint">
+          Stan faktu (zeskanowane) vs stan w aplikacji. Bez automatycznej zmiany statusów.
+        </p>
+      </div>
+      <button class="inventory__back" type="button" (click)="goBack()">WSTECZ</button>
+    </div>
+
+    <div class="inventory__stats">
+      <article class="inventory__stat inventory__stat--ok">
+        <span>Zgodne</span>
+        <strong>{{ okRows().length }}</strong>
+      </article>
+      <article class="inventory__stat inventory__stat--check">
+        <span>Do sprawdzenia</span>
+        <strong>{{ checkRows().length }}</strong>
+      </article>
+      <article class="inventory__stat inventory__stat--missing">
+        <span>Brakujące</span>
+        <strong>{{ missingRows().length }}</strong>
+      </article>
+      <article class="inventory__stat inventory__stat--total">
+        <span>Zeskanowano</span>
+        <strong>{{ scannedCount() }}/{{ totalCount() }}</strong>
+      </article>
+    </div>
+
+    @if (checkRows().length) {
+    <section class="inventory__section">
+      <h3 class="inventory__section-title inventory__section-title--check">Do sprawdzenia</h3>
+      <ul class="inventory__list">
+        @for (row of checkRows(); track row.car.id) {
+        <li>
+          <div>
+            <strong>{{ row.car.registration || '—' }}</strong>
+            <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
+            <small>{{ row.detail }}</small>
+          </div>
+          <span class="inventory__badge inventory__badge--busy">{{ statusLabel(row.car.status) }}</span>
+        </li>
+        }
+      </ul>
+    </section>
+    }
+
+    @if (missingRows().length) {
+    <section class="inventory__section">
+      <h3 class="inventory__section-title inventory__section-title--missing">Brakujące w szafce</h3>
+      <ul class="inventory__list">
+        @for (row of missingRows(); track row.car.id) {
+        <li>
+          <div>
+            <strong>{{ row.car.registration || '—' }}</strong>
+            <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
+            <small>{{ row.detail }}</small>
+          </div>
+          <span class="inventory__badge inventory__badge--free">{{ statusLabel(row.car.status) }}</span>
+        </li>
+        }
+      </ul>
+    </section>
+    }
+
+    @if (unknownScans().length) {
+    <section class="inventory__section">
+      <h3 class="inventory__section-title inventory__section-title--missing">Nieznane kody QR</h3>
+      <ul class="inventory__list">
+        @for (scan of unknownScans(); track scan.qrCode) {
+        <li>
+          <div>
+            <strong>{{ scan.qrCode }}</strong>
+            <small>Kod nie należy do żadnego klucza w rejestrze</small>
+          </div>
+        </li>
+        }
+      </ul>
+    </section>
+    }
+
+    @if (outRows().length) {
+    <section class="inventory__section">
+      <h3 class="inventory__section-title">Niezeskanowane (poza firmą / zagubione)</h3>
+      <ul class="inventory__list">
+        @for (row of outRows(); track row.car.id) {
+        <li>
+          <div>
+            <strong>{{ row.car.registration || '—' }}</strong>
+            <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
+            <small>{{ row.detail }}</small>
+          </div>
+          <span
+            class="inventory__badge"
+            [class.inventory__badge--busy]="row.car.status === 'IN_USE'"
+            [class.inventory__badge--lost]="row.car.status === 'LOST'">
+            {{ statusLabel(row.car.status) }}
+          </span>
+        </li>
+        }
+      </ul>
+    </section>
+    }
+
+    @if (okRows().length) {
+    <section class="inventory__section">
+      <button
+        type="button"
+        class="inventory__section-toggle"
+        (click)="showOkSection.set(!showOkSection())">
+        Zgodne ({{ okRows().length }})
+        <span>{{ showOkSection() ? '▾' : '▸' }}</span>
+      </button>
+      @if (showOkSection()) {
+      <ul class="inventory__list">
+        @for (row of okRows(); track row.car.id) {
+        <li>
+          <div>
+            <strong>{{ row.car.registration || '—' }}</strong>
+            <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
+            <small>{{ row.detail }}</small>
+          </div>
+          <span class="inventory__badge inventory__badge--free">{{ statusLabel(row.car.status) }}</span>
+        </li>
+        }
+      </ul>
+      }
+    </section>
+    }
+
+    <div class="inventory__actions">
+      <button class="inventory__btn inventory__btn--primary" type="button" (click)="continueScanning()">
+        Wróć do skanowania
+      </button>
+      <button class="inventory__btn inventory__btn--ghost" type="button" (click)="goBack()">
+        Zamknij
+      </button>
+    </div>
+  </div>
+  }
+
+  @if (toastMessage) {
+  <div class="inventory__toast" role="status">{{ toastMessage }}</div>
+  }
+</div>
