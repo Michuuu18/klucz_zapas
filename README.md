@@ -22,6 +22,18 @@ a także dodawanie nowych kluczy, edycję tablic rejestracyjnych oraz generowani
 
 ![Panel administratora - tryb jasny](docs/screenshots/03-panel-admin-jasny.png)
 
+### Raport
+
+<img src="docs/screenshots/12-raport.png" width="100%">
+
+### Wynik raportu
+
+<img src="docs/screenshots/12-wynik-raportu.png" width="100%">
+
+### Wynik raportu 2
+
+<img src="docs/screenshots/12-wynik_raportu_2.png" width="100%">
+
 ### Historia kluczy
 
 ![Historia kluczy](docs/screenshots/09-historia-kluczy.png)
@@ -103,6 +115,20 @@ Jeśli używasz innego edytora kodu (np. VS Code):
 3. Otwórz przeglądarkę pod adresem `https://localhost:4200`
 
 *Uwaga: Przy pierwszym starcie API za pomocą Entity Framework samo utworzy brakujące tabele w bazie i doda przykładowe auta.*
+
+**Opcja C: Testowanie na telefonie (urządzenia w tej samej sieci)**
+
+Aby sprawdzić aplikację na smartfonie bez konieczności wdrażania jej na serwer:
+
+1. Uruchom aplikację (korzystając z Opcji A lub B).
+2. Otwórz konsolę/terminal, w którym działa serwer Angulara.
+3. Znajdź w logach adres oznaczony jako **Network** (będzie wyglądał podobnie do `https://192.168.x.x:4200/`). 
+   > **Ważne:** Zamiast `x.x` zobaczysz swoje lokalne IP. Ten adres może ulegać zmianom (np. po resecie routera lub zmianie sieci),
+   > dlatego **za każdym razem sprawdzaj aktualny adres w terminalu** po uruchomieniu aplikacji.
+4. Przepisz ten dokładny adres do przeglądarki na swoim telefonie.
+
+*Wskazówka: Aby to zadziałało, Twój komputer oraz telefon muszą być połączone z tą samą siecią (np. tym samym domowym Wi-Fi).*
+
 ---
 
 ## Jak korzystać
