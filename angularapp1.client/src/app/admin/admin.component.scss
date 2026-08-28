@@ -2019,3 +2019,50 @@ tbody tr:last-child td {
     color: var(--accent-soft);
   }
 }
+.registry__table th:first-child,
+.registry__table td:first-child {
+  position: sticky;
+  left: 0;
+}
+
+.registry__table th:first-child {
+  z-index: 6;
+  background: #f3f6f9;
+}
+
+.registry__table td:first-child {
+  z-index: 1;
+  background: #fff;
+}
+
+.registry__table tbody tr.row--in-use td:first-child {
+  background: #faeaea;
+}
+
+.registry__table tbody tr:hover td:first-child {
+  background: #f7f9fb;
+}
+
+.registry__table tbody tr.row--in-use:hover td:first-child {
+  background: #f5dfdf;
+}
+
+:host-context(body.dark-theme) .registry__table th:first-child {
+  background: #0c1016;
+}
+
+:host-context(body.dark-theme) .registry__table td:first-child {
+  background: var(--bg-card);
+}
+
+:host-context(body.dark-theme) .registry__table tbody tr.row--in-use td:first-child {
+  background: #2a1819;
+}
+
+:host-context(body.dark-theme) .registry__table tbody tr:hover td:first-child {
+  background: #18231e;
+}
+
+:host-context(body.dark-theme) .registry__table tbody tr.row--in-use:hover td:first-child {
+  background: #391c1d;
+}
