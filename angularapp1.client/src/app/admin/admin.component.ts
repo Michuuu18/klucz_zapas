@@ -122,7 +122,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly brandFilterOpen = signal(false);
   readonly keyKindFilter = signal<KeyKindFilter>('all');
   readonly keyKindFilterOpen = signal(false);
+  readonly brandFilterMenuPos = signal<{ top: number; right: number } | null>(null);
+  readonly keyKindFilterMenuPos = signal<{ top: number; right: number } | null>(null);
   readonly rowMenuOpenId = signal<number | null>(null);
+  readonly rowMenuPos = signal<{ top: number; right: number; direction: 'up' | 'down' } | null>(null);
+  @HostListener('scroll')
+  onHostScroll(): void {
+    this.closeFilterMenus();
+  }
   noteDraft = '';
   confirmNoteDraft = '';
   private toastTimer?: ReturnType<typeof setTimeout>;
@@ -197,13 +204,33 @@ export class AdminComponent implements OnInit, OnDestroy {
       return haystack.includes(query);
     });
   });
+  // Klucz do porównań marek — usuwa niewidoczne znaki (np. zero-width space
+  // wklejone przypadkiem), normalizuje formy Unicode, ujednolica spacje
+  // i wielkość liter. Dzięki temu porównanie jest odporne na "niewidzialne"
+  // różnice w danych, które same trim()+toLowerCase() by nie złapały.
+  private brandKey(value: string | null | undefined): string {
+    return (value ?? '')
+      .normalize('NFKC')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
   readonly brands = computed(() => {
-    const names = new Set<string>();
+    // Klucz mapy to znormalizowana (lowercase) nazwa marki — dzięki temu
+    // "Ford" i "ford" trafiają do tej samej pozycji, a w filtrze widać
+    // tylko jedną, ładnie sformatowaną nazwę (np. "Ford").
+    const map = new Map<string, string>();
     for (const row of this.rows()) {
       const brand = row.brand?.trim();
-      if (brand) names.add(brand);
+      if (!brand) continue;
+      const key = this.brandKey(brand);
+      if (!map.has(key)) {
+        map.set(key, this.normalizeBrand(brand));
+      }
     }
-    return [...names].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
+    return [...map.values()].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
   });
   readonly emptyTableMessage = computed(() => {
     if (this.brandFilter() && this.keyKindFilter() !== 'all') {
@@ -217,7 +244,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     const brand = this.brandFilter();
     const kind = this.keyKindFilter();
     let list = brand
-      ? this.rows().filter((row) => (row.brand || '').trim().toLowerCase() === brand.toLowerCase())
+      ? this.rows().filter((row) => this.brandKey(row.brand) === this.brandKey(brand))
       : [...this.rows()];
 
     if (kind !== 'all') {
@@ -273,8 +300,13 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   toggleBrandFilter(): void {
-    this.brandFilterOpen.set(!this.brandFilterOpen());
+    const opening = !this.brandFilterOpen();
+    this.brandFilterOpen.set(opening);
     this.keyKindFilterOpen.set(false);
+    this.rowMenuOpenId.set(null);
+    if (opening) {
+      this.brandFilterMenuPos.set(this.computeFilterMenuPos(this.brandFilterRef));
+    }
   }
 
   keyKindFilterLabel(): string {
@@ -289,8 +321,43 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   toggleKeyKindFilter(): void {
-    this.keyKindFilterOpen.set(!this.keyKindFilterOpen());
+    const opening = !this.keyKindFilterOpen();
+    this.keyKindFilterOpen.set(opening);
     this.brandFilterOpen.set(false);
+    this.rowMenuOpenId.set(null);
+    if (opening) {
+      this.keyKindFilterMenuPos.set(this.computeFilterMenuPos(this.keyKindFilterRef));
+    }
+  }
+
+  // Listy filtrów (marka / klucz-QR) są renderowane jako position:fixed, żeby nie
+  // były przycinane przez przewijany poziomo kontener tabeli (.table-wrap), kiedy
+  // tabela ma mało wierszy i jest niska. Pozycję liczymy względem przycisku, który
+  // ją otwiera.
+  private computeFilterMenuPos(ref?: ElementRef): { top: number; right: number } {
+    const el = ref?.nativeElement as HTMLElement | undefined;
+    if (!el) return { top: 0, right: 0 };
+    const rect = el.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8,
+      right: Math.max(8, window.innerWidth - rect.right),
+    };
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (this.brandFilterOpen()) {
+      this.brandFilterMenuPos.set(this.computeFilterMenuPos(this.brandFilterRef));
+    }
+    if (this.keyKindFilterOpen()) {
+      this.keyKindFilterMenuPos.set(this.computeFilterMenuPos(this.keyKindFilterRef));
+    }
+  }
+
+  closeFilterMenus(): void {
+    if (this.brandFilterOpen()) this.brandFilterOpen.set(false);
+    if (this.keyKindFilterOpen()) this.keyKindFilterOpen.set(false);
+    if (this.rowMenuOpenId() !== null) this.rowMenuOpenId.set(null); 
   }
 
   constructor(
@@ -951,8 +1018,9 @@ export class AdminComponent implements OnInit, OnDestroy {
         return;
       }
 
+      const rawBrand = selected?.brand?.trim() || this.form.brand.trim() || '—';
       const payload: CarWritePayload = {
-        brand: selected?.brand?.trim() || this.form.brand.trim() || '—',
+        brand: this.normalizeBrand(rawBrand),
         model: selected?.model?.trim() || this.form.model.trim() || '—',
         registration: this.form.registration.trim(),
         keyNumber: selected?.keyNumber?.trim() || '',
@@ -1006,9 +1074,24 @@ export class AdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Zamienia markę na spójny zapis: pierwsza litera każdego słowa duża,
+  // reszta mała — "ford", "FORD", "fORD" -> "Ford". Działa też dla marek
+  // wielowyrazowych, np. "land rover" -> "Land Rover".
+  private normalizeBrand(value: string): string {
+    return value
+      .normalize('NFKC')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
   // Buduje dane do zapisu: jeden klucz albo para O+Z z unikalnymi kodami QR.
   private buildCreatePayloads(): CarWritePayload[] {
-    const brand = this.form.brand.trim() || '—';
+    const rawBrand = this.form.brand.trim();
+    const brand = rawBrand ? this.normalizeBrand(rawBrand) : '—';
     const model = this.form.model.trim() || '—';
     const registration = this.form.registration.trim();
     const base = { brand, model, registration };
@@ -1082,9 +1165,36 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   toggleRowMenu(row: Car, event: Event): void {
     event.stopPropagation();
-    this.rowMenuOpenId.set(this.rowMenuOpenId() === row.id ? null : row.id);
-  }
+    const opening = this.rowMenuOpenId() !== row.id;
+    this.rowMenuOpenId.set(opening ? row.id : null);
 
+    if (opening) {
+      this.brandFilterOpen.set(false);
+      this.keyKindFilterOpen.set(false);
+
+      const target = (event.currentTarget || event.target) as HTMLElement;
+      const btn = target.closest('.row-menu__trigger');
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const ESTIMATED_MENU_HEIGHT = 260; 
+
+        if (spaceBelow < ESTIMATED_MENU_HEIGHT) {
+          this.rowMenuPos.set({
+            top: rect.top - 8, 
+            right: Math.max(8, window.innerWidth - rect.right),
+            direction: 'up'
+          });
+        } else {
+          this.rowMenuPos.set({
+            top: rect.bottom + 8,
+            right: Math.max(8, window.innerWidth - rect.right),
+            direction: 'down'
+          });
+        }
+      }
+    }
+  }
   closeRowMenu(): void {
     this.rowMenuOpenId.set(null);
   }

@@ -520,7 +520,7 @@
   @if (loading()) {
   <p class="muted">Ładowanie rejestru…</p>
   } @else {
-  <div class="table-wrap registry__table" [class.table-wrap--menu]="brandFilterOpen() || keyKindFilterOpen()">
+  <div class="table-wrap registry__table" [class.table-wrap--menu]="brandFilterOpen() || keyKindFilterOpen()" (scroll)="closeFilterMenus()">
     <table>
       <thead>
         <tr>
@@ -537,7 +537,10 @@
                 <svg class="brand-filter__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
               </button>
               @if (keyKindFilterOpen()) {
-              <div class="settings-menu settings-menu--select brand-filter__menu key-kind-filter__menu" (click)="$event.stopPropagation()">
+              <div class="settings-menu settings-menu--select brand-filter__menu key-kind-filter__menu dropdown-menu--fixed"
+                   [style.top.px]="keyKindFilterMenuPos()?.top"
+                   [style.right.px]="keyKindFilterMenuPos()?.right"
+                   (click)="$event.stopPropagation()">
                 <button type="button"
                         class="settings-menu__item"
                         [class.settings-menu__item--active]="keyKindFilter() === 'all'"
@@ -581,7 +584,10 @@
                   <svg class="brand-filter__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>
                 </button>
                 @if (brandFilterOpen()) {
-                <div class="settings-menu settings-menu--select brand-filter__menu" (click)="$event.stopPropagation()">
+                <div class="settings-menu settings-menu--select brand-filter__menu dropdown-menu--fixed"
+                     [style.top.px]="brandFilterMenuPos()?.top"
+                     [style.right.px]="brandFilterMenuPos()?.right"
+                     (click)="$event.stopPropagation()">
                   <button type="button"
                           class="settings-menu__item"
                           [class.settings-menu__item--active]="!brandFilter()"
@@ -607,7 +613,7 @@
         @for (row of tableRows(); track row.id) {
         <tr [class.row--in-use]="row.status === 'IN_USE'">
           <td><strong class="plate">{{ row.registration || '—' }}</strong></td>
-          <td><strong>{{ row.brand }} {{ row.model }}</strong></td>
+          <td class="car-name-cell"><strong>{{ row.brand }} {{ row.model }}</strong></td>
           <td class="key-meta-cell">
             <div class="key-meta">
               <strong class="key-meta__type">{{ keyKindLabel(row) }}</strong>
@@ -625,11 +631,10 @@
           <td class="note-cell">
             @if (row.status === 'IN_USE') {
             <div class="note-wrap">
-              <button
-                type="button"
-                class="note-preview note-preview--clickable"
-                [class.note-preview--empty]="!row.note"
-                (click)="openNote(row)">
+              <button type="button"
+                      class="note-preview note-preview--clickable"
+                      [class.note-preview--empty]="!row.note"
+                      (click)="openNote(row)">
                 {{ row.note || 'Dodaj notatkę…' }}
               </button>
               @if (row.note) {
@@ -707,7 +712,10 @@
                 </button>
 
                 @if (rowMenuOpenId() === row.id) {
-                <div class="settings-menu row-menu__dropdown">
+                <div class="settings-menu row-menu__dropdown dropdown-menu--fixed"
+                     [style.top.px]="rowMenuPos()?.top"
+                     [style.right.px]="rowMenuPos()?.right"
+                     (click)="$event.stopPropagation()">
                   <button type="button" class="settings-menu__item" (click)="openHistoryForCar(row); closeRowMenu()">
                     Historia
                   </button>
@@ -725,18 +733,26 @@
                     Auto jest zagubione
                   </button>
                   }
-                  <button type="button"
-                          class="settings-menu__item settings-menu__item--danger"
-                          [disabled]="row.status === 'IN_USE'"
-                          (click)="deleteCar(row); closeRowMenu()">
-                    Usuń auto
-                  </button>
-                </div>
+                  <div class="delete-action-wrap">
+                    <button type="button"
+                            class="settings-menu__item settings-menu__item--danger"
+                            [disabled]="row.status === 'IN_USE'"
+                            (click)="deleteCar(row); closeRowMenu()">
+                      Usuń auto
+                    </button>
+
+                    @if (row.status === 'IN_USE') {
+                    <div class="delete-popover" role="tooltip">Nie można usunąć auta, które jest aktualnie w użyciu.</div>
+                    }
+                  </div>
+
+                </div> 
                 }
-              </div>
-            </div>
-          </td>
-        </tr>
+
+              </div> 
+            </div> 
+          </td> 
+        </tr> 
         }
         @if (tableRows().length === 0) {
         <tr>

@@ -1410,6 +1410,38 @@ tbody tr:last-child td {
     border-radius: 4px;
   }
 
+/* Lista marek (filtr) — zawsze pokazuje dokładnie 5 pełnych pozycji,
+   a jeśli jest ich więcej, 6-ta jest widoczna "w połowie" jako sygnał,
+   że trzeba przewinąć. !important celowo — to jedyne miejsce w apce,
+   które musi wygrać z każdą inną regułą dotyczącą tej listy. */
+.brand-filter__menu.settings-menu--select {
+  --menu-item-height: 2.75rem;
+  max-height: calc(var(--menu-item-height) * 5.5) !important;
+  overflow-y: auto !important;
+}
+
+.brand-filter__menu .settings-menu__item {
+  box-sizing: border-box !important;
+  height: var(--menu-item-height, 2.75rem) !important;
+  min-height: var(--menu-item-height, 2.75rem) !important;
+  max-height: var(--menu-item-height, 2.75rem) !important;
+  padding: 0 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Listy filtrów w nagłówku tabeli (marka, klucz/QR) renderujemy jako
+   position: fixed (pozycja liczona w TS z getBoundingClientRect) zamiast
+   position: absolute. Dzięki temu nie są przycinane przez .table-wrap,
+   który przy małej liczbie wierszy ma bardzo niski box i obcinał
+   rozwijaną listę. */
+.settings-menu.dropdown-menu--fixed {
+  position: fixed !important;
+  left: auto !important;
+  top: 0;
+  right: 0;
+}
+
 .confirm-overlay {
   position: fixed;
   inset: 0;
@@ -2114,4 +2146,82 @@ tbody tr:last-child td {
 
 :host-context(body.dark-theme) .registry__table tbody tr.row--in-use:hover td:first-child {
   background: #391c1d;
+}
+.car-name-cell {
+  white-space: normal !important;
+  vertical-align: middle;
+}
+
+  .car-name-cell strong {
+    display: block;
+    max-width: 220px;
+
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word; 
+    line-height: 1.4;
+  }
+/* --- STYLE DLA DYMKU PRZY USUWANIU AUTA --- */
+.delete-action-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+}
+
+  /* Przepuszczamy zdarzenia myszki przez zablokowany przycisk */
+  .delete-action-wrap button:disabled {
+    pointer-events: none;
+  }
+
+ 
+
+.delete-popover {
+  position: absolute;
+  right: calc(100% + 8px);
+  bottom: 0;
+  z-index: 110;
+  width: max-content;
+  max-width: 220px;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(11, 42, 74, 0.08);
+  box-shadow: 0 16px 36px rgba(26, 51, 82, 0.16);
+  color: #1a3352;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: normal;
+  display: none;
+  pointer-events: none;
+}
+
+.delete-action-wrap:hover .delete-popover {
+  display: block;
+}
+
+:host-context(body.dark-theme) .delete-popover {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--frame);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42);
+}
+/* --- MENU OTWIERANE DO GÓRY --- */
+.dropdown-menu--up {
+  /* Przesuwa menu o 100% jego własnej wysokości do góry */
+  transform: translateY(-100%);
+  animation: fadeInUpMenu 0.2s ease-out;
+}
+
+@keyframes fadeInUpMenu {
+  from {
+    opacity: 0;
+    /* Zaczyna animację odrobinę niżej */
+    transform: translateY(calc(-100% + 8px));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
 }
