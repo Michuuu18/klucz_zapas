@@ -115,6 +115,20 @@ Jeśli używasz innego edytora kodu (np. VS Code):
 3. Otwórz przeglądarkę pod adresem `https://localhost:4200`
 
 *Uwaga: Przy pierwszym starcie API za pomocą Entity Framework samo utworzy brakujące tabele w bazie i doda przykładowe auta.*
+
+**Opcja C: Testowanie na telefonie (urządzenia w tej samej sieci)**
+
+Aby sprawdzić aplikację na smartfonie bez konieczności wdrażania jej na serwer:
+
+1. Uruchom aplikację (korzystając z Opcji A lub B).
+2. Otwórz konsolę/terminal, w którym działa serwer Angulara.
+3. Znajdź w logach adres oznaczony jako **Network** (będzie wyglądał podobnie do `https://192.168.x.x:4200/`). 
+   > **Ważne:** Zamiast `x.x` zobaczysz swoje lokalne IP. Ten adres może ulegać zmianom (np. po resecie routera lub zmianie sieci),
+   > dlatego **za każdym razem sprawdzaj aktualny adres w terminalu** po uruchomieniu aplikacji.
+4. Przepisz ten dokładny adres do przeglądarki na swoim telefonie.
+
+*Wskazówka: Aby to zadziałało, Twój komputer oraz telefon muszą być połączone z tą samą siecią (np. tym samym domowym Wi-Fi).*
+
 ---
 
 ## Jak korzystać
