@@ -24,15 +24,15 @@ a także dodawanie nowych kluczy, edycję tablic rejestracyjnych oraz generowani
 
 ### Raport
 
-![Raport](docs/screenshots/12-raport.png)
+<img src="docs/screenshots/12-raport.png" width="100%">
 
 ### Wynik raportu
 
-![Wynik raportu](docs/screenshots/12-wynik-raportu.png)
+<img src="docs/screenshots/12-wynik-raportu.png" width="100%">
 
 ### Wynik raportu 2
 
-![Wynik raportu 2](docs/screenshots/12-wynik_raportu_2.png)
+<img src="docs/screenshots/12-wynik_raportu_2.png" width="100%">
 
 ### Historia kluczy
 
