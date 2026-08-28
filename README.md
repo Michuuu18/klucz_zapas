@@ -22,6 +22,17 @@ a także dodawanie nowych kluczy, edycję tablic rejestracyjnych oraz generowani
 
 ![Panel administratora - tryb jasny](docs/screenshots/03-panel-admin-jasny.png)
 
+### Raport
+
+![Raport](docs/screenshots/12-raport.png)
+
+### Wynik raportu
+
+![Wynik raportu](docs/screenshots/12-wynik-raportu.png)
+
+### Wynik raportu 2
+
+![Wynik raportu 2](docs/screenshots/12-wynik_raportu_2.png)
 ### Historia kluczy
 
 ![Historia kluczy](docs/screenshots/09-historia-kluczy.png)
