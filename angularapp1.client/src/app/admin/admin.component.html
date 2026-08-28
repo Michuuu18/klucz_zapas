@@ -692,14 +692,48 @@
                 @if (lostActionId() === row.id) { … } @else { Znaleziony }
               </button>
               }
-              @if (row.status === 'FREE' || row.status === 'IN_USE') {
-              <button type="button"
-                      class="btn btn--lost btn--sm"
-                      [disabled]="lostActionId() === row.id"
-                      (click)="markLost(row)">
-                @if (lostActionId() === row.id) { … } @else { Zagubiony }
-              </button>
-              }
+              <div class="row-menu">
+                <button type="button"
+                        class="btn btn--secondary btn--sm row-menu__trigger"
+                        [class.row-menu__trigger--open]="rowMenuOpenId() === row.id"
+                        (click)="toggleRowMenu(row, $event)"
+                        aria-label="Więcej opcji"
+                        title="Więcej opcji">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="2"></circle>
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <circle cx="12" cy="19" r="2"></circle>
+                  </svg>
+                </button>
+
+                @if (rowMenuOpenId() === row.id) {
+                <div class="settings-menu row-menu__dropdown">
+                  <button type="button" class="settings-menu__item" (click)="openHistoryForCar(row); closeRowMenu()">
+                    Historia
+                  </button>
+                  <button type="button" class="settings-menu__item" (click)="openEdit(row); closeRowMenu()">
+                    Edytuj rejestrację
+                  </button>
+                  <button type="button" class="settings-menu__item" (click)="openQrForCar(row); closeRowMenu()">
+                    Generuj kod QR
+                  </button>
+                  @if (row.status === 'FREE' || row.status === 'IN_USE') {
+                  <button type="button"
+                          class="settings-menu__item"
+                          [disabled]="lostActionId() === row.id"
+                          (click)="markLost(row); closeRowMenu()">
+                    Auto jest zagubione
+                  </button>
+                  }
+                  <button type="button"
+                          class="settings-menu__item settings-menu__item--danger"
+                          [disabled]="row.status === 'IN_USE'"
+                          (click)="deleteCar(row); closeRowMenu()">
+                    Usuń auto
+                  </button>
+                </div>
+                }
+              </div>
             </div>
           </td>
         </tr>

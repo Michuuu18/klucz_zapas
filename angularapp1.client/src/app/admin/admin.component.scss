@@ -1113,6 +1113,20 @@ tbody tr:last-child td {
     color: #e8edf3 !important;
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(126, 208, 168, 0.05);
   }
+
+  .row-menu__trigger.row-menu__trigger--open {
+    background: #252b36 !important;
+    border-color: rgba(126, 208, 168, 0.5) !important;
+    color: #e8edf3 !important;
+  }
+
+  .settings-menu__item--danger {
+    color: var(--accent-danger-soft);
+  }
+
+  .settings-menu__item--danger:hover {
+    background: rgba(222, 92, 84, 0.16);
+  }
 }
 
 .settings-btn {
@@ -1295,6 +1309,41 @@ tbody tr:last-child td {
 
 .settings-menu__item--empty:hover {
   background: transparent;
+}
+
+.settings-menu__item--danger {
+  color: var(--accent-danger-soft, #b42318);
+}
+
+.settings-menu__item--danger:hover {
+  background: rgba(222, 92, 84, 0.1);
+}
+
+.row-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.row-actions .row-menu__trigger {
+  width: 2.05rem;
+  height: 2.05rem;
+  min-width: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px !important;
+}
+
+.row-menu__trigger--open {
+  background: #e4eef8;
+  border-color: rgba(47, 154, 104, 0.55);
+}
+
+.row-menu__dropdown {
+  min-width: 210px;
+  right: 0;
+  left: auto;
 }
 
 .custom-select-btn {

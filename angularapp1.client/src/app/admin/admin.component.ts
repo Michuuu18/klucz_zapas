@@ -64,6 +64,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.keyKindFilterOpen() && this.keyKindFilterRef && !this.keyKindFilterRef.nativeElement.contains(target)) {
       this.keyKindFilterOpen.set(false);
     }
+    if (this.rowMenuOpenId() !== null && !(target instanceof Element && target.closest('.row-menu'))) {
+      this.rowMenuOpenId.set(null);
+    }
   }
 
   @HostListener('document:keydown.escape')
@@ -119,6 +122,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   readonly brandFilterOpen = signal(false);
   readonly keyKindFilter = signal<KeyKindFilter>('all');
   readonly keyKindFilterOpen = signal(false);
+  readonly rowMenuOpenId = signal<number | null>(null);
   noteDraft = '';
   confirmNoteDraft = '';
   private toastTimer?: ReturnType<typeof setTimeout>;
@@ -1074,6 +1078,55 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     this.openStatusConfirm(row, 'lost');
+  }
+
+  toggleRowMenu(row: Car, event: Event): void {
+    event.stopPropagation();
+    this.rowMenuOpenId.set(this.rowMenuOpenId() === row.id ? null : row.id);
+  }
+
+  closeRowMenu(): void {
+    this.rowMenuOpenId.set(null);
+  }
+
+  deleteCar(row: Car): void {
+    if (this.isConfirmBusy()) return;
+
+    if (row.status === 'IN_USE') {
+      this.error.set('Nie można usunąć auta, które jest aktualnie w użyciu.');
+      return;
+    }
+
+    this.openStatusConfirm(row, 'delete');
+  }
+
+  openQrForCar(row: Car): void {
+    this.formMode.set('closed');
+    this.showHistoryPanel.set(false);
+    this.closeNotePanel();
+    this.closeStatusConfirm();
+
+    this.showQrPanel.set(true);
+    this.qrDataUrl.set(null);
+    this.qrError.set('');
+    this.qrDropdownOpen.set(false);
+    this.qrKeyDropdownOpen.set(false);
+
+    const registration = row.registration?.trim() ?? '';
+    const key = registration.toUpperCase() || `__id_${row.id}`;
+    this.onQrVehicleSelect(key);
+    this.onQrKeyKindSelect(this.carKeyKind(row));
+  }
+
+  openHistoryForCar(row: Car): void {
+    this.formMode.set('closed');
+    this.showQrPanel.set(false);
+    this.closeNotePanel();
+    this.closeStatusConfirm();
+
+    this.showHistoryPanel.set(true);
+    this.historyDropdownOpen.set(false);
+    this.onHistoryCarChange(row.id);
   }
 
   markFound(row: Car): void {
