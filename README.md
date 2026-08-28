@@ -33,6 +33,7 @@ a także dodawanie nowych kluczy, edycję tablic rejestracyjnych oraz generowani
 ### Wynik raportu 2
 
 ![Wynik raportu 2](docs/screenshots/12-wynik_raportu_2.png)
+
 ### Historia kluczy
 
 ![Historia kluczy](docs/screenshots/09-historia-kluczy.png)
