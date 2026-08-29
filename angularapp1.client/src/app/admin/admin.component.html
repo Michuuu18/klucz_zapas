@@ -611,7 +611,7 @@
       </thead>
       <tbody>
         @for (row of tableRows(); track row.id) {
-        <tr [class.row--in-use]="row.status === 'IN_USE'">
+        <tr [class.row--in-use]="row.status === 'IN_USE'" [class.row--lost]="row.status === 'LOST'">
           <td><strong class="plate">{{ row.registration || '—' }}</strong></td>
           <td class="car-name-cell"><strong>{{ row.brand }} {{ row.model }}</strong></td>
           <td class="key-meta-cell">
@@ -713,6 +713,7 @@
 
                 @if (rowMenuOpenId() === row.id) {
                 <div class="settings-menu row-menu__dropdown dropdown-menu--fixed"
+                     [class.dropdown-menu--up]="rowMenuPos()?.direction === 'up'"
                      [style.top.px]="rowMenuPos()?.top"
                      [style.right.px]="rowMenuPos()?.right"
                      (click)="$event.stopPropagation()">
@@ -727,7 +728,7 @@
                   </button>
                   @if (row.status === 'FREE' || row.status === 'IN_USE') {
                   <button type="button"
-                          class="settings-menu__item"
+                          class="settings-menu__item settings-menu__item--warn"
                           [disabled]="lostActionId() === row.id"
                           (click)="markLost(row); closeRowMenu()">
                     Auto jest zagubione
@@ -742,7 +743,7 @@
                     </button>
 
                     @if (row.status === 'IN_USE') {
-                    <div class="delete-popover" role="tooltip">Nie można usunąć auta, które jest aktualnie w użyciu.</div>
+                    <div class="delete-popover" role="tooltip">Auto jest w użyciu!</div>
                     }
                   </div>
 
