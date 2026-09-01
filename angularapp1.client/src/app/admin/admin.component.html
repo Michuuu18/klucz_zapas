@@ -205,7 +205,7 @@
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(null); editDropdownOpen.set(false)">Wyczyść wybór</button>
             @for (row of filteredEditCars(); track row.id) {
             <button type="button" class="settings-menu__item" (click)="onEditCarSelect(row.id); editDropdownOpen.set(false)">
-              {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
+              {{ row.brand }} {{ row.model }} - {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
             </button>
             } @empty {
             <div class="settings-menu__item settings-menu__item--empty">Brak pasujących aut</div>
@@ -253,7 +253,7 @@
     @if (noteCarId() != null) {
     <p class="muted note-panel__car">{{ getCarLabel(noteCarId()) }}</p>
     } @else if (selectedHistoryCar(); as car) {
-    <p class="muted note-panel__car">{{ car.brand }} {{ car.model }} — {{ car.registration || 'brak tablic' }}</p>
+    <p class="muted note-panel__car">{{ car.brand }} {{ car.model }} - {{ car.registration || 'brak tablic' }}</p>
     }
 
     @if (noteError()) {
@@ -321,7 +321,7 @@
             <button type="button" class="settings-menu__item" (click)="onQrVehicleSelect(null); qrDropdownOpen.set(false)">Wyczyść wybór</button>
             @for (vehicle of filteredQrVehicles(); track vehicle.key) {
             <button type="button" class="settings-menu__item" (click)="onQrVehicleSelect(vehicle.key); qrDropdownOpen.set(false)">
-              {{ vehicle.brand }} {{ vehicle.model }} — {{ vehicle.registration || 'brak tablic' }}
+              {{ vehicle.brand }} {{ vehicle.model }} - {{ vehicle.registration || 'brak tablic' }}
             </button>
             } @empty {
             <div class="settings-menu__item settings-menu__item--empty">Brak pasujących aut</div>
@@ -371,7 +371,7 @@
       }
       <p class="muted">
         @if (qrDataUrl()) {
-        Etykieta gotowa do pobrania — kod i dane auta są już na obrazku.
+        Etykieta gotowa do pobrania - kod i dane auta są już na obrazku.
         } @else {
         Wybierz auto i klucz, potem kliknij Generuj.
         }
@@ -425,7 +425,7 @@
           <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(null); historyDropdownOpen.set(false)">Wyczyść wybór</button>
           @for (row of filteredHistoryCars(); track row.id) {
           <button type="button" class="settings-menu__item" (click)="onHistoryCarChange(row.id); historyDropdownOpen.set(false)">
-            {{ row.brand }} {{ row.model }} — {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
+            {{ row.brand }} {{ row.model }} - {{ row.registration || 'brak tablic' }} (Klucz: {{ keyKindLabel(row) }})
           </button>
           } @empty {
           <div class="settings-menu__item settings-menu__item--empty">Brak pasujących aut</div>
@@ -439,11 +439,11 @@
     @if (selectedHistoryCar(); as car) {
     <div class="history-summary">
       <div><span class="muted">Auto:</span> <strong>{{ car.brand }} {{ car.model }}</strong></div>
-      <div><span class="muted">Tablice:</span> <strong>{{ car.registration || '—' }}</strong></div>
+      <div><span class="muted">Tablice:</span> <strong>{{ car.registration || '-' }}</strong></div>
       <div><span class="muted">Klucz:</span> <strong>{{ keyKindLabel(car) }}</strong></div>
-      <div><span class="muted">Kod QR:</span> <code>{{ car.qrCode || '—' }}</code></div>
+      <div><span class="muted">Kod QR:</span> <code>{{ car.qrCode || '-' }}</code></div>
       <div><span class="muted">Status teraz:</span> <strong>{{ statusLabel(car.status) }}</strong></div>
-      <div><span class="muted">Posiada teraz:</span> <strong>{{ car.heldBy || '—' }}</strong></div>
+      <div><span class="muted">Posiada teraz:</span> <strong>{{ car.heldBy || '-' }}</strong></div>
     </div>
     }
 
@@ -466,26 +466,38 @@
           } @else if (historyRows().length === 0) {
           <tr><td colspan="7" class="muted" style="text-align: center; padding: 2rem;">Brak historii dla tego kluczyka w wybranym okresie.</td></tr>
           } @else {
-          @for (record of historyRows(); track record.id) {
+          @for (record of historyRows(); track record.id; let i = $index) {
           <tr>
             <td>
               <strong>{{ record.userDisplayName || record.user }}</strong>
               <div class="muted">{{ record.user }}</div>
+              @if (isTakeoverRecord(i)) {
+              <span class="history-flag history-flag--takeover"
+                    title="Klucz nie został zeskanowany jako zwrot przez {{ takeoverFromName(i) }} - {{ record.userDisplayName || record.user }} przejął(-ęła) go bez zeskanowania oddania.">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><path d="M12 9v4M12 17h.01" /></svg>
+                Przejęto niezeskanowany klucz
+              </span>
+              }
             </td>
             <td>{{ record.takenAt | date: 'dd.MM.yyyy HH:mm' }}</td>
             <td>
               @if (record.returnedBy) {
               <strong>{{ record.returnedByDisplayName || record.returnedBy }}</strong>
               <div class="muted">{{ record.returnedBy }}</div>
+              @if (isUnscannedReturn(record)) {
+              <span class="history-flag history-flag--warn" title="Zwrot nie został zeskanowany - wpis zamknął się sam, gdy klucz przejęła kolejna osoba.">
+                auto, bez skanu
+              </span>
+              }
               } @else {
-              <span class="muted">—</span>
+              <span class="muted">-</span>
               }
             </td>
             <td>
               @if (record.returnedAt) {
               {{ record.returnedAt | date: 'dd.MM.yyyy HH:mm' }}
               } @else {
-              <span class="muted">—</span>
+              <span class="muted">-</span>
               }
             </td>
             <td>
@@ -497,14 +509,16 @@
                 Notatka
               </button>
               } @else {
-              <span class="muted">—</span>
+              <span class="muted">-</span>
               }
             </td>
             <td>
               @if (record.status === 'W użyciu') {
-              <span class="badge badge--busy">W użyciu</span>
+              <span class="badge badge--busy">{{ historyStatusLabel(record) }}</span>
+              } @else if (isUnscannedReturn(record)) {
+              <span class="badge badge--warn" title="Poprzedni użytkownik nie zeskanował zwrotu tego klucza.">{{ historyStatusLabel(record) }}</span>
               } @else {
-              <span class="badge badge--free">Zwrócony</span>
+              <span class="badge badge--free">{{ historyStatusLabel(record) }}</span>
               }
             </td>
           </tr>
@@ -612,12 +626,12 @@
       <tbody>
         @for (row of tableRows(); track row.id) {
         <tr [class.row--in-use]="row.status === 'IN_USE'" [class.row--lost]="row.status === 'LOST'">
-          <td><strong class="plate">{{ row.registration || '—' }}</strong></td>
+          <td><strong class="plate">{{ row.registration || '-' }}</strong></td>
           <td class="car-name-cell"><strong>{{ row.brand }} {{ row.model }}</strong></td>
           <td class="key-meta-cell">
             <div class="key-meta">
               <strong class="key-meta__type">{{ keyKindLabel(row) }}</strong>
-              <span class="key-meta__qr">{{ row.qrCode || '—' }}</span>
+              <span class="key-meta__qr">{{ row.qrCode || '-' }}</span>
             </div>
           </td>
           <td class="status-cell">

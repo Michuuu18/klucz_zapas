@@ -14,7 +14,7 @@
       <div>
         <h2 class="inventory__card-title">Skanuj klucze po kolei</h2>
         <p class="inventory__hint">
-          Przykładaj telefon do QR. Aplikacja sama dopisze klucz i status — bez zabierania.
+          Przykładaj telefon do QR. Aplikacja sama dopisze klucz i status - bez zabierania.
         </p>
       </div>
       <button class="inventory__back" type="button" (click)="goBack()">WSTECZ</button>
@@ -150,7 +150,7 @@
         <li class="inventory__list-item">
           <div class="inventory__list-main">
             <div class="inventory__list-head">
-              <strong>{{ row.car.registration || '—' }}</strong>
+              <strong>{{ row.car.registration || '-' }}</strong>
               <span
                 class="inventory__status"
                 [class.inventory__status--busy]="row.car.status === 'IN_USE'"
@@ -189,7 +189,7 @@
         <li class="inventory__list-item">
           <div class="inventory__list-main">
             <div class="inventory__list-head">
-              <strong>{{ row.car.registration || '—' }}</strong>
+              <strong>{{ row.car.registration || '-' }}</strong>
               <span class="inventory__status inventory__status--free">{{ statusLabel(row.car.status) }}</span>
             </div>
             <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>
@@ -233,7 +233,7 @@
         <li class="inventory__list-item">
           <div class="inventory__list-main">
             <div class="inventory__list-head">
-              <strong>{{ row.car.registration || '—' }}</strong>
+              <strong>{{ row.car.registration || '-' }}</strong>
               <span
                 class="inventory__status"
                 [class.inventory__status--busy]="row.car.status === 'IN_USE'"
@@ -279,7 +279,7 @@
         <li class="inventory__list-item">
           <div class="inventory__list-main">
             <div class="inventory__list-head">
-              <strong>{{ row.car.registration || '—' }}</strong>
+              <strong>{{ row.car.registration || '-' }}</strong>
               <span class="inventory__status inventory__status--free">{{ statusLabel(row.car.status) }}</span>
             </div>
             <span>{{ row.car.brand }} {{ row.car.model }} · {{ row.keyKind }}</span>

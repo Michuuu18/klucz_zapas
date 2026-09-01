@@ -336,10 +336,10 @@ export class InventoryComponent implements OnInit, AfterViewInit, OnDestroy {
       const entry: ScanEntry = {
         qrCode: code,
         carId: null,
-        registration: '—',
+        registration: '-',
         brand: '',
         model: '',
-        keyKind: '—',
+        keyKind: '-',
         status: null,
         heldBy: null,
         flag: 'unknown',
@@ -358,7 +358,7 @@ export class InventoryComponent implements OnInit, AfterViewInit, OnDestroy {
     const entry: ScanEntry = {
       qrCode: car.qrCode,
       carId: car.id,
-      registration: car.registration || '—',
+      registration: car.registration || '-',
       brand: car.brand,
       model: car.model,
       keyKind: this.keyKindLabel(car),
@@ -371,7 +371,7 @@ export class InventoryComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scans.update((list) => [entry, ...list]);
     this.showToast(
       flag === 'attention'
-        ? `${entry.registration} · ${this.statusLabel(status)} — do sprawdzenia`
+        ? `${entry.registration} · ${this.statusLabel(status)} - do sprawdzenia`
         : `${entry.registration} · OK`,
     );
     this.cdr.detectChanges();

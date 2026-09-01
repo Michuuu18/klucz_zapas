@@ -8,6 +8,6 @@ import { ThemeService } from './theme';
   styleUrl: './app.css',
 })
 export class App {
-  // Od razu przy starcie aplikacji — ten sam motyw na loginie i po zalogowaniu.
+  // Od razu przy starcie aplikacji - ten sam motyw na loginie i po zalogowaniu.
   constructor(private readonly theme: ThemeService) {}
 }

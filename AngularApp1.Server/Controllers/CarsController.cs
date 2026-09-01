@@ -161,7 +161,7 @@ public class CarsController : ControllerBase
         User.Identity?.Name ??
         "unknown";
 
-    // Pracownik nie widzi, kto ma auto — zostawiamy heldBy tylko gdy to on sam.
+    // Pracownik nie widzi, kto ma auto - zostawiamy heldBy tylko gdy to on sam.
     private Car MaskHolderForEmployee(Car car)
     {
         if (User.IsInRole("Admin"))

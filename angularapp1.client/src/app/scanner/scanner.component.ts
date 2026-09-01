@@ -40,7 +40,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   get pageTitle(): string {
     return this.mode === 'return'
       ? 'Zeskanuj kluczyk QR (Oddaj klucz)'
-      : 'Zeskanuj kluczyk QR (Zbierz klucz)';
+      : 'Zeskanuj kluczyk QR (Zabierz klucz)';
   }
 
   async ngAfterViewInit(): Promise<void> {
@@ -74,7 +74,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
         );
       }
 
-      // Najpierw prośba o uprawnienie — na iOS/Brave etykiety kamer pojawiają się dopiero potem.
+      // Najpierw prośba o uprawnienie - na iOS/Brave etykiety kamer pojawiają się dopiero potem.
       await this.warmUpCameraPermission();
 
       this.html5QrCode = new Html5Qrcode(this.scannerElementId, {
@@ -157,7 +157,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
         }
       }
     } catch {
-      // Brak listy kamer — zostają facingMode.
+      // Brak listy kamer - zostają facingMode.
     }
 
     return sources;

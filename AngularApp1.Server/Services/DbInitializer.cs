@@ -43,7 +43,7 @@ public static class DbInitializer
         db.SaveChanges();
     }
 
-    // Ta sama rejestracja może mieć klucz O i Z — usuwa unikalny indeks na Registration.
+    // Ta sama rejestracja może mieć klucz O i Z - usuwa unikalny indeks na Registration.
     private static void AllowSpareKeysForSamePlate(AppDbContext db)
     {
         db.Database.ExecuteSqlRaw("""

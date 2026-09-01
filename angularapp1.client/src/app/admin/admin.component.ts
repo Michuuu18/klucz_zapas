@@ -192,7 +192,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (selectedKey) {
       const selected = list.find((item) => item.key === selectedKey);
       const selectedLabel = selected
-        ? `${selected.brand} ${selected.model} — ${selected.registration || 'brak tablic'}`.trim().toLowerCase()
+        ? `${selected.brand} ${selected.model} - ${selected.registration || 'brak tablic'}`.trim().toLowerCase()
         : '';
       if (!query || query === selectedLabel) return list;
     }
@@ -204,7 +204,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       return haystack.includes(query);
     });
   });
-  // Klucz do porównań marek — usuwa niewidoczne znaki (np. zero-width space
+  // Klucz do porównań marek - usuwa niewidoczne znaki (np. zero-width space
   // wklejone przypadkiem), normalizuje formy Unicode, ujednolica spacje
   // i wielkość liter. Dzięki temu porównanie jest odporne na "niewidzialne"
   // różnice w danych, które same trim()+toLowerCase() by nie złapały.
@@ -218,7 +218,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   readonly brands = computed(() => {
-    // Klucz mapy to znormalizowana (lowercase) nazwa marki — dzięki temu
+    // Klucz mapy to znormalizowana (lowercase) nazwa marki - dzięki temu
     // "Ford" i "ford" trafiają do tej samej pozycji, a w filtrze widać
     // tylko jedną, ładnie sformatowaną nazwę (np. "Ford").
     const map = new Map<string, string>();
@@ -498,7 +498,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.qrQuery.set(`${vehicle.brand} ${vehicle.model} — ${vehicle.registration || 'brak tablic'}`);
+    this.qrQuery.set(`${vehicle.brand} ${vehicle.model} - ${vehicle.registration || 'brak tablic'}`);
     const preferred = this.vehicleHasKind(vehicle, this.qrKeyKind())
       ? this.qrKeyKind()
       : vehicle.original
@@ -540,7 +540,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   qrVehicleLabel(): string {
     const vehicle = this.qrSelectedVehicle();
     if (!vehicle) return 'Wybierz auto...';
-    return `${vehicle.brand} ${vehicle.model} — ${vehicle.registration || 'brak tablic'}`;
+    return `${vehicle.brand} ${vehicle.model} - ${vehicle.registration || 'brak tablic'}`;
   }
 
   qrKeySelectLabel(): string {
@@ -651,6 +651,46 @@ export class AdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Gdy ktoś skanuje QR klucza, który wciąż widnieje jako "w użyciu" u innej
+  // osoby, backend zamyka poprzedni wpis automatycznie i wpisuje notatkę
+  // zaczynającą się od tego prefiksu (patrz zrzut "Automatyczny zwrot przy
+  // przejęciu przez ..."). Rozpoznajemy to po treści notatki, żeby odróżnić
+  // realny, zeskanowany zwrot od zwrotu wymuszonego przez przejęcie klucza.
+  private static readonly AUTO_TAKEOVER_NOTE_PREFIX = 'automatyczny zwrot przy przejęciu przez';
+
+  private isAutoTakeoverNote(note: string | null | undefined): boolean {
+    return !!note && note.trim().toLowerCase().startsWith(AdminComponent.AUTO_TAKEOVER_NOTE_PREFIX);
+  }
+
+  // Wpis, w którym poprzedni posiadacz klucza nie zeskanował zwrotu - system
+  // zamknął go sam w chwili, gdy ktoś inny zeskanował ten sam klucz.
+  isUnscannedReturn(record: HistoryRecord): boolean {
+    return record.status !== 'W użyciu' && this.isAutoTakeoverNote(record.note);
+  }
+
+  // Krótsza, jednoznaczna etykieta statusu w historii - zamiast mylącego
+  // "Zwrócony" (bo nikt faktycznie nic nie zeskanował).
+  historyStatusLabel(record: HistoryRecord): string {
+    if (record.status === 'W użyciu') return 'W użyciu';
+    return this.isUnscannedReturn(record) ? 'Nie zeskanowano' : 'Zwrócony';
+  }
+
+  // Wpis, który przejął klucz odłożony/porzucony bez zeskanowania - czyli
+  // poprzedni (starszy) wiersz dla tego samego klucza jest auto-zamknięty.
+  // `index` to pozycja w aktualnie wyświetlanej, posortowanej od najnowszych
+  // liście historyRows().
+  isTakeoverRecord(index: number): boolean {
+    const older = this.historyRows()[index + 1];
+    return !!older && this.isUnscannedReturn(older);
+  }
+
+  // Kto realnie trzymał klucz przed przejęciem - do dymka/podpowiedzi.
+  takeoverFromName(index: number): string {
+    const older = this.historyRows()[index + 1];
+    if (!older) return '';
+    return older.userDisplayName || older.user || '';
+  }
+
   async generateQr(): Promise<void> {
     if (!this.qrCanGenerate() || this.qrGenerating()) return;
 
@@ -680,7 +720,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.qrDataUrl.set(label);
     };
 
-    // Bez zmiany kodu QR tylko renderujemy etykietę — bez zapisu do API.
+    // Bez zmiany kodu QR tylko renderujemy etykietę - bez zapisu do API.
     if (car.qrCode === newCode) {
       try {
         await renderQr();
@@ -694,7 +734,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     const payload: CarWritePayload = {
       brand: car.brand,
-      model: car.model || '—',
+      model: car.model || '-',
       registration: car.registration,
       keyNumber: car.keyNumber,
       qrCode: newCode,
@@ -1018,10 +1058,10 @@ export class AdminComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const rawBrand = selected?.brand?.trim() || this.form.brand.trim() || '—';
+      const rawBrand = selected?.brand?.trim() || this.form.brand.trim() || '-';
       const payload: CarWritePayload = {
         brand: this.normalizeBrand(rawBrand),
-        model: selected?.model?.trim() || this.form.model.trim() || '—',
+        model: selected?.model?.trim() || this.form.model.trim() || '-',
         registration: this.form.registration.trim(),
         keyNumber: selected?.keyNumber?.trim() || '',
         qrCode: this.qrCodeForCar(
@@ -1075,7 +1115,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   // Zamienia markę na spójny zapis: pierwsza litera każdego słowa duża,
-  // reszta mała — "ford", "FORD", "fORD" -> "Ford". Działa też dla marek
+  // reszta mała - "ford", "FORD", "fORD" -> "Ford". Działa też dla marek
   // wielowyrazowych, np. "land rover" -> "Land Rover".
   private normalizeBrand(value: string): string {
     return value
@@ -1091,8 +1131,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   // Buduje dane do zapisu: jeden klucz albo para O+Z z unikalnymi kodami QR.
   private buildCreatePayloads(): CarWritePayload[] {
     const rawBrand = this.form.brand.trim();
-    const brand = rawBrand ? this.normalizeBrand(rawBrand) : '—';
-    const model = this.form.model.trim() || '—';
+    const brand = rawBrand ? this.normalizeBrand(rawBrand) : '-';
+    const model = this.form.model.trim() || '-';
     const registration = this.form.registration.trim();
     const base = { brand, model, registration };
 
@@ -1117,7 +1157,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     const qrCode = row.qrCode?.trim();
     if (!qrCode) {
-      this.error.set('To auto nie ma przypisanego kodu QR — edytuj auto i uzupełnij kod.');
+      this.error.set('To auto nie ma przypisanego kodu QR - edytuj auto i uzupełnij kod.');
       return;
     }
 
@@ -1305,7 +1345,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   confirmHint(): string {
     switch (this.confirmKind()) {
       case 'take':
-        return 'Opcjonalnie dodaj notatkę — będzie widoczna przy tym kluczyku do momentu zwrotu.';
+        return 'Opcjonalnie dodaj notatkę - będzie widoczna przy tym kluczyku do momentu zwrotu.';
       case 'return':
         return 'Notatka przy tym kluczyku zostanie zapisana w historii i wyczyszczona.';
       case 'found':
@@ -1332,7 +1372,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (kind === 'take') {
       const qrCode = row.qrCode?.trim();
       if (!qrCode) {
-        this.error.set('To auto nie ma przypisanego kodu QR — edytuj auto i uzupełnij kod.');
+        this.error.set('To auto nie ma przypisanego kodu QR - edytuj auto i uzupełnij kod.');
         return;
       }
 
@@ -1467,7 +1507,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   formatDuration(totalMinutes: number | null): string {
     if (totalMinutes == null || totalMinutes < 0) {
-      return '—';
+      return '-';
     }
 
     const hours = Math.floor(totalMinutes / 60);
@@ -1641,7 +1681,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     const car = this.rows().find(r => r.id === id);
     if (!car) return 'Wybierz auto...';
 
-    const base = `${car.brand} ${car.model} — ${car.registration || 'brak tablic'}`;
+    const base = `${car.brand} ${car.model} - ${car.registration || 'brak tablic'}`;
     return withKey ? `${base} (Klucz: ${this.keyKindLabel(car)})` : base;
   }
 

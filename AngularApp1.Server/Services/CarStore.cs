@@ -290,7 +290,7 @@ public class CarStore
         var model = string.IsNullOrWhiteSpace(request.Model) ? car.Model : request.Model.Trim();
         if (string.IsNullOrWhiteSpace(model))
         {
-            model = "—";
+            model = "-";
         }
 
         var oldPlate = car.Registration.Trim().ToUpperInvariant();
@@ -540,7 +540,7 @@ public class CarStore
         }
         catch (PostgresException ex) when (ex.SqlState == "42P01")
         {
-            // Brak tabeli car_logs — zwracamy pustą historię zamiast błędu.
+            // Brak tabeli car_logs - zwracamy pustą historię zamiast błędu.
             return [];
         }
 

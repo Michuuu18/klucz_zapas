@@ -18,7 +18,7 @@ public class AuthController : ControllerBase
         _jwt = jwt;
     }
 
-    // Logowanie — zwraca użytkownika i token JWT.
+    // Logowanie - zwraca użytkownika i token JWT.
     [HttpPost("login")]
     [AllowAnonymous]
     public ActionResult<LoginResponse> Login([FromBody] LoginRequest request)
